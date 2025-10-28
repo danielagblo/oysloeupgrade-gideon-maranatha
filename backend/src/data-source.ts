@@ -19,4 +19,5 @@ export const AppDataSource = new DataSource({
   entities: [...ENTITIES],
   migrations: [join(__dirname, "migrations", "*.{ts,js}")],
   subscribers: [],
+  ssl: config.server.isProduction ? { rejectUnauthorized: false } : false,
 });
