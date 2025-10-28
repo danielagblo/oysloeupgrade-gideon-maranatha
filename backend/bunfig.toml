@@ -1,0 +1,9 @@
+# bunfig.toml
+[test]
+root = "tests"                 # Test directory
+timeout = 30000                 # 30 second timeout for tests
+# jsx = "react-jsx"            # Only needed if testing React components
+
+[install]
+# Use bun's package manager optimizations
+cache = true

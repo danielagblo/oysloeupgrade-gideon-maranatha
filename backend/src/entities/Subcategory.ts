@@ -1,0 +1,55 @@
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import type { Category } from './Category.js';
+import type { Feature } from './Feature.js';
+import type { Product } from './Product.js';
+
+@Entity('subcategories')
+export class Subcategory {
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
+
+  @Column({ type: 'uuid', name: 'category_id' })
+  @Index()
+  categoryId!: string;
+
+  @Column({ type: 'varchar', length: 100 })
+  name!: string;
+
+  @Column({ type: 'text', nullable: true })
+  description?: string;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  slug?: string;
+
+  @Column({ type: 'integer', default: 0, name: 'display_order' })
+  displayOrder!: number;
+
+  @Column({ type: 'boolean', default: false })
+  archived!: boolean;
+
+  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
+  createdAt!: Date;
+
+  @UpdateDateColumn({ type: 'timestamp', name: 'updated_at' })
+  updatedAt!: Date;
+
+  @ManyToOne('Category', 'subcategories', { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'category_id' })
+  category?: Category;
+
+  @OneToMany('Feature', 'subcategory')
+  features?: Feature[];
+
+  @OneToMany('Product', 'subcategory')
+  products?: Product[];
+}

@@ -1,0 +1,2036 @@
+openapi: 3.0.3
+info:
+  title: Oysloe Marketplace API
+  version: 1.0.0
+  description: >-
+    A comprehensive marketplace API for buying and selling products with user
+    management, authentication, and product catalog features.
+  contact:
+    name: Oysloe Team
+    email: support@oysloe.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: https://api.oysloe.com
+    description: Production server
+  - url: https://staging-api.oysloe.com
+    description: Staging server
+  - url: http://localhost:3000
+    description: Development server
+security:
+  - BearerAuth: []
+tags:
+  - name: System
+    description: System health and status endpoints
+  - name: Authentication
+    description: User authentication and authorization
+  - name: Users
+    description: User profile management
+  - name: Products
+    description: Product catalog management
+  - name: Wallet
+    description: Wallet and payment management
+  - name: Coupons
+    description: Coupon and discount management
+  - name: Referrals
+    description: Referral system management
+  - name: Reviews
+    description: Product reviews and ratings
+  - name: FCM
+    description: Firebase Cloud Messaging for push notifications
+  - name: Chat
+    description: Real-time messaging system
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: User UUID
+        email:
+          type: string
+          maxLength: 50
+          format: email
+          description: User email address
+        phone:
+          type: string
+          pattern: ^\+?[1-9]\d{1,14}$
+          description: User phone number in E.164 format
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: User full name
+        address:
+          type: string
+          maxLength: 500
+          description: User address
+        avatar:
+          type: string
+          format: uri
+          description: User avatar URL
+        referralCode:
+          type: string
+          minLength: 6
+          maxLength: 20
+          description: User referral code
+        referralPoints:
+          type: integer
+          minimum: 0
+          default: 0
+          description: User referral points
+        level:
+          type: string
+          enum:
+            - BRONZE
+            - SILVER
+            - GOLD
+            - PLATINUM
+            - DIAMOND
+          default: SILVER
+          description: User level
+        isActive:
+          type: boolean
+          default: true
+          description: Whether user account is active
+        isStaff:
+          type: boolean
+          default: false
+          description: Whether user is staff
+        isSuperuser:
+          type: boolean
+          default: false
+          description: Whether user is superuser
+        phoneVerified:
+          type: boolean
+          default: false
+          description: Whether phone is verified
+        emailVerified:
+          type: boolean
+          default: false
+          description: Whether email is verified
+        preferredNotificationEmail:
+          type: string
+          maxLength: 50
+          format: email
+          description: Preferred notification email
+        preferredNotificationPhone:
+          type: string
+          pattern: ^\+?[1-9]\d{1,14}$
+          description: Preferred notification phone
+        createdFromApp:
+          type: boolean
+          default: true
+          description: Whether user was created from app
+        lastLogin:
+          type: string
+          format: date-time
+          description: Last login timestamp
+        createdAt:
+          type: string
+          format: date-time
+          description: User creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: User last update timestamp
+      required:
+        - id
+        - email
+        - name
+        - createdAt
+        - updatedAt
+      example:
+        id: 123e4567-e89b-12d3-a456-426614174000
+        email: john.doe@example.com
+        phone: '+233123456789'
+        name: John Doe
+        address: 123 Main St, Accra, Ghana
+        avatar: https://example.com/avatars/john.jpg
+        referralCode: JOHN123
+        referralPoints: 150
+        level: SILVER
+        isActive: true
+        isStaff: false
+        isSuperuser: false
+        phoneVerified: true
+        emailVerified: true
+        createdFromApp: true
+        lastLogin: '2024-01-15T10:30:00Z'
+        createdAt: '2024-01-01T00:00:00Z'
+        updatedAt: '2024-01-15T10:30:00Z'
+    CreateUserBody:
+      type: object
+      properties:
+        email:
+          type: string
+          maxLength: 50
+          format: email
+          description: User email address
+        phone:
+          type: string
+          pattern: ^\+?[1-9]\d{1,14}$
+          description: User phone number in E.164 format
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: User full name
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+          description: User password
+        address:
+          type: string
+          maxLength: 500
+          description: User address
+        referralCode:
+          type: string
+          minLength: 6
+          maxLength: 20
+          description: Referral code used during registration
+      required:
+        - email
+        - name
+        - password
+      example:
+        email: john.doe@example.com
+        phone: '+233123456789'
+        name: John Doe
+        password: SecurePassword123!
+        address: 123 Main St, Accra, Ghana
+        referralCode: FRIEND123
+    UpdateUserBody:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: User full name
+        address:
+          type: string
+          maxLength: 500
+          description: User address
+        avatar:
+          type: string
+          format: uri
+          description: User avatar URL
+        preferredNotificationEmail:
+          type: string
+          maxLength: 50
+          format: email
+          description: Preferred notification email
+        preferredNotificationPhone:
+          type: string
+          pattern: ^\+?[1-9]\d{1,14}$
+          description: Preferred notification phone
+      example:
+        name: John Doe
+        address: 456 New St, Accra, Ghana
+        avatar: https://example.com/avatars/john-new.jpg
+        preferredNotificationEmail: john.new@example.com
+    LoginBody:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          description: User email address
+        password:
+          type: string
+          minLength: 1
+          description: User password
+      required:
+        - email
+        - password
+      example:
+        email: john.doe@example.com
+        password: SecurePassword123!
+    UserWithWallet:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            wallet:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                  description: Wallet UUID
+                balance:
+                  type: number
+                  minimum: 0
+                  description: Wallet balance
+                currency:
+                  type: string
+                  default: GHS
+                  description: Wallet currency
+              required:
+                - id
+                - balance
+              description: User wallet information
+      example:
+        id: 123e4567-e89b-12d3-a456-426614174000
+        email: john.doe@example.com
+        phone: '+233123456789'
+        name: John Doe
+        address: 123 Main St, Accra, Ghana
+        avatar: https://example.com/avatars/john.jpg
+        referralCode: JOHN123
+        referralPoints: 150
+        level: SILVER
+        isActive: true
+        isStaff: false
+        isSuperuser: false
+        phoneVerified: true
+        emailVerified: true
+        createdFromApp: true
+        lastLogin: '2024-01-15T10:30:00Z'
+        createdAt: '2024-01-01T00:00:00Z'
+        updatedAt: '2024-01-15T10:30:00Z'
+        wallet:
+          id: 456e7890-e89b-12d3-a456-426614174001
+          balance: 250.5
+          currency: GHS
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Product UUID
+        pid:
+          type: string
+          minLength: 1
+          maxLength: 20
+          description: Product public ID
+        userId:
+          type: string
+          format: uuid
+          description: Product owner user ID
+        categoryId:
+          type: string
+          format: uuid
+          description: Product category ID
+        subcategoryId:
+          type: string
+          format: uuid
+          description: Product subcategory ID
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Product name
+        description:
+          type: string
+          minLength: 1
+          description: Product description
+        image:
+          type: string
+          format: uri
+          description: Primary product image URL
+        price:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          description: Product price
+        status:
+          type: string
+          enum:
+            - draft
+            - active
+            - paused
+            - archived
+            - sold
+          default: draft
+          description: Product status
+        viewsCount:
+          type: integer
+          minimum: 0
+          default: 0
+          description: Product view count
+        favoritesCount:
+          type: integer
+          minimum: 0
+          default: 0
+          description: Product favorites count
+        reportsCount:
+          type: integer
+          minimum: 0
+          default: 0
+          description: Product reports count
+        isPromoted:
+          type: boolean
+          default: false
+          description: Whether product is promoted
+        promotedUntil:
+          type: string
+          format: date-time
+          description: Promotion end date
+        createdAt:
+          type: string
+          format: date-time
+          description: Product creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Product last update timestamp
+      required:
+        - id
+        - userId
+        - name
+        - description
+        - price
+        - createdAt
+        - updatedAt
+      example:
+        id: 123e4567-e89b-12d3-a456-426614174000
+        pid: PROD123
+        userId: 456e7890-e89b-12d3-a456-426614174001
+        categoryId: 789e0123-e89b-12d3-a456-426614174002
+        subcategoryId: 012e3456-e89b-12d3-a456-426614174003
+        name: iPhone 13 Pro Max
+        description: Latest iPhone with 128GB storage, excellent condition
+        image: https://example.com/images/iphone13.jpg
+        price: 2500
+        status: active
+        viewsCount: 150
+        favoritesCount: 25
+        reportsCount: 0
+        isPromoted: true
+        promotedUntil: '2024-02-15T23:59:59Z'
+        createdAt: '2024-01-01T00:00:00Z'
+        updatedAt: '2024-01-15T10:30:00Z'
+    CreateProductBody:
+      type: object
+      properties:
+        categoryId:
+          type: string
+          format: uuid
+          description: Product category ID
+        subcategoryId:
+          type: string
+          format: uuid
+          description: Product subcategory ID
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Product name
+        description:
+          type: string
+          minLength: 1
+          description: Product description
+        image:
+          type: string
+          format: uri
+          description: Primary product image URL
+        price:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          description: Product price
+        status:
+          type: string
+          enum:
+            - draft
+            - active
+            - paused
+            - archived
+            - sold
+          default: draft
+          description: Product status
+      required:
+        - name
+        - description
+        - price
+      example:
+        categoryId: 789e0123-e89b-12d3-a456-426614174002
+        subcategoryId: 012e3456-e89b-12d3-a456-426614174003
+        name: iPhone 13 Pro Max
+        description: Latest iPhone with 128GB storage, excellent condition
+        image: https://example.com/images/iphone13.jpg
+        price: 2500
+        status: draft
+    UpdateProductBody:
+      type: object
+      properties:
+        categoryId:
+          type: string
+          format: uuid
+          description: Product category ID
+        subcategoryId:
+          type: string
+          format: uuid
+          description: Product subcategory ID
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Product name
+        description:
+          type: string
+          minLength: 1
+          description: Product description
+        image:
+          type: string
+          format: uri
+          description: Primary product image URL
+        price:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          description: Product price
+        status:
+          type: string
+          enum:
+            - draft
+            - active
+            - paused
+            - archived
+            - sold
+          description: Product status
+        isPromoted:
+          type: boolean
+          description: Whether product is promoted
+        promotedUntil:
+          type: string
+          format: date-time
+          description: Promotion end date
+      example:
+        name: iPhone 13 Pro Max - Updated
+        description: Latest iPhone with 128GB storage, excellent condition. Price reduced!
+        price: 2300
+        status: active
+        isPromoted: true
+        promotedUntil: '2024-02-15T23:59:59Z'
+    ProductWithDetails:
+      allOf:
+        - $ref: '#/components/schemas/Product'
+        - type: object
+          properties:
+            user:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                  description: User UUID
+                name:
+                  type: string
+                  description: User name
+                avatar:
+                  type: string
+                  format: uri
+                  description: User avatar URL
+              required:
+                - id
+                - name
+              description: Product owner information
+            category:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                  description: Category UUID
+                name:
+                  type: string
+                  description: Category name
+              required:
+                - id
+                - name
+              description: Product category information
+            subcategory:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                  description: Subcategory UUID
+                name:
+                  type: string
+                  description: Subcategory name
+              required:
+                - id
+                - name
+              description: Product subcategory information
+            images:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: Image UUID
+                  url:
+                    type: string
+                    format: uri
+                    description: Image URL
+                  isPrimary:
+                    type: boolean
+                    description: Whether this is the primary image
+                required:
+                  - id
+                  - url
+                  - isPrimary
+              description: Product images
+            features:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: Feature UUID
+                  name:
+                    type: string
+                    description: Feature name
+                  value:
+                    type: string
+                    description: Feature value
+                required:
+                  - id
+                  - name
+                  - value
+              description: Product features
+            reviews:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: Review UUID
+                  rating:
+                    type: integer
+                    minimum: 1
+                    maximum: 5
+                    description: Review rating
+                  comment:
+                    type: string
+                    description: Review comment
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        description: User UUID
+                      name:
+                        type: string
+                        description: User name
+                    required:
+                      - id
+                      - name
+                    description: Reviewer information
+                  createdAt:
+                    type: string
+                    format: date-time
+                    description: Review creation timestamp
+                required:
+                  - id
+                  - rating
+                  - user
+                  - createdAt
+              description: Product reviews
+      example:
+        id: 123e4567-e89b-12d3-a456-426614174000
+        pid: PROD123
+        userId: 456e7890-e89b-12d3-a456-426614174001
+        categoryId: 789e0123-e89b-12d3-a456-426614174002
+        subcategoryId: 012e3456-e89b-12d3-a456-426614174003
+        name: iPhone 13 Pro Max
+        description: Latest iPhone with 128GB storage, excellent condition
+        image: https://example.com/images/iphone13.jpg
+        price: 2500
+        status: active
+        viewsCount: 150
+        favoritesCount: 25
+        reportsCount: 0
+        isPromoted: true
+        promotedUntil: '2024-02-15T23:59:59Z'
+        createdAt: '2024-01-01T00:00:00Z'
+        updatedAt: '2024-01-15T10:30:00Z'
+        user:
+          id: 456e7890-e89b-12d3-a456-426614174001
+          name: John Doe
+          avatar: https://example.com/avatars/john.jpg
+        category:
+          id: 789e0123-e89b-12d3-a456-426614174002
+          name: Electronics
+        subcategory:
+          id: 012e3456-e89b-12d3-a456-426614174003
+          name: Smartphones
+        images:
+          - id: img1-uuid
+            url: https://example.com/images/iphone13-1.jpg
+            isPrimary: true
+        features:
+          - id: feat1-uuid
+            name: Storage
+            value: 128GB
+          - id: feat2-uuid
+            name: Color
+            value: Graphite
+        reviews:
+          - id: rev1-uuid
+            rating: 5
+            comment: Great phone!
+            user:
+              id: user2-uuid
+              name: Jane Smith
+            createdAt: '2024-01-10T00:00:00Z'
+    ProductQueryParams:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          default: 1
+          description: Page number
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+          description: Items per page
+        search:
+          type: string
+          description: Search term
+        categoryId:
+          type: string
+          format: uuid
+          description: Filter by category ID
+        subcategoryId:
+          type: string
+          format: uuid
+          description: Filter by subcategory ID
+        minPrice:
+          type: number
+          minimum: 0
+          description: Minimum price filter
+        maxPrice:
+          type: number
+          minimum: 0
+          description: Maximum price filter
+        status:
+          type: string
+          enum:
+            - draft
+            - active
+            - paused
+            - archived
+            - sold
+          description: Filter by status
+        isPromoted:
+          type: boolean
+          description: Filter by promotion status
+        sortBy:
+          type: string
+          enum:
+            - createdAt
+            - updatedAt
+            - price
+            - viewsCount
+            - favoritesCount
+          default: createdAt
+          description: Sort field
+        sortOrder:
+          type: string
+          enum:
+            - asc
+            - desc
+          default: desc
+          description: Sort order
+      example:
+        page: 1
+        limit: 20
+        search: iPhone
+        categoryId: 789e0123-e89b-12d3-a456-426614174002
+        minPrice: 1000
+        maxPrice: 3000
+        status: active
+        isPromoted: true
+        sortBy: createdAt
+        sortOrder: desc
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          nullable: true
+          description: Additional error details
+        traceId:
+          type: string
+          description: Request trace ID for debugging
+      required:
+        - code
+        - message
+      example:
+        code: VALIDATION_ERROR
+        message: Invalid input data
+        details:
+          field: email
+          reason: Invalid email format
+        traceId: req_123456789
+    TokenResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token
+        refreshToken:
+          type: string
+          description: JWT refresh token
+        expiresIn:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+          description: Token expiration time in seconds
+        tokenType:
+          type: string
+          default: Bearer
+          description: Token type
+      required:
+        - accessToken
+        - refreshToken
+        - expiresIn
+      example:
+        accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        refreshToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        expiresIn: 3600
+        tokenType: Bearer
+    HealthCheckResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - healthy
+            - unhealthy
+          description: Service health status
+        timestamp:
+          type: string
+          format: date-time
+          description: Health check timestamp
+        uptime:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          description: Service uptime in seconds
+        version:
+          type: string
+          description: Service version
+        environment:
+          type: string
+          description: Environment name
+        database:
+          type: object
+          properties:
+            status:
+              type: string
+              enum:
+                - connected
+                - disconnected
+              description: Database connection status
+            responseTime:
+              type: number
+              minimum: 0
+              exclusiveMinimum: true
+              description: Database response time in ms
+          required:
+            - status
+          description: Database health information
+        redis:
+          type: object
+          properties:
+            status:
+              type: string
+              enum:
+                - connected
+                - disconnected
+              description: Redis connection status
+            responseTime:
+              type: number
+              minimum: 0
+              exclusiveMinimum: true
+              description: Redis response time in ms
+          required:
+            - status
+          description: Redis health information
+      required:
+        - status
+        - timestamp
+        - uptime
+        - version
+        - environment
+        - database
+        - redis
+      example:
+        status: healthy
+        timestamp: '2024-01-15T10:30:00Z'
+        uptime: 86400
+        version: 1.0.0
+        environment: production
+        database:
+          status: connected
+          responseTime: 15.5
+        redis:
+          status: connected
+          responseTime: 2.1
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: true
+          description: Success indicator
+        data:
+          nullable: true
+          description: Response data
+        message:
+          type: string
+          description: Success message
+      description: Success response
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          description: Current page number
+        limit:
+          type: integer
+          minimum: 1
+          description: Items per page
+        total:
+          type: integer
+          minimum: 0
+          description: Total number of items
+        totalPages:
+          type: integer
+          minimum: 0
+          description: Total number of pages
+        hasNext:
+          type: boolean
+          description: Whether there is a next page
+        hasPrev:
+          type: boolean
+          description: Whether there is a previous page
+      required:
+        - page
+        - limit
+        - total
+        - totalPages
+        - hasNext
+        - hasPrev
+      example:
+        page: 1
+        limit: 20
+        total: 150
+        totalPages: 8
+        hasNext: true
+        hasPrev: false
+      description: Pagination metadata
+    PaginatedProducts:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+          description: Array of items
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+      required:
+        - data
+        - meta
+      description: Paginated response
+    PaginatedProductsWithDetails:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductWithDetails'
+          description: Array of items
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+      required:
+        - data
+        - meta
+      description: Paginated response
+    SuccessUser:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: true
+          description: Success indicator
+        data:
+          allOf:
+            - $ref: '#/components/schemas/User'
+            - description: Response data
+        message:
+          type: string
+          description: Success message
+      required:
+        - data
+      description: Success response
+    SuccessUserWithWallet:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: true
+          description: Success indicator
+        data:
+          allOf:
+            - $ref: '#/components/schemas/UserWithWallet'
+            - description: Response data
+        message:
+          type: string
+          description: Success message
+      required:
+        - data
+      description: Success response
+    SuccessProduct:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: true
+          description: Success indicator
+        data:
+          allOf:
+            - $ref: '#/components/schemas/Product'
+            - description: Response data
+        message:
+          type: string
+          description: Success message
+      required:
+        - data
+      description: Success response
+    SuccessProductWithDetails:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: true
+          description: Success indicator
+        data:
+          allOf:
+            - $ref: '#/components/schemas/ProductWithDetails'
+            - description: Response data
+        message:
+          type: string
+          description: Success message
+      required:
+        - data
+      description: Success response
+    SuccessToken:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: true
+          description: Success indicator
+        data:
+          allOf:
+            - $ref: '#/components/schemas/TokenResponse'
+            - description: Response data
+        message:
+          type: string
+          description: Success message
+      required:
+        - data
+      description: Success response
+  parameters: {}
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from login endpoint
+paths:
+  /api-v1/profile:
+    get:
+      tags:
+        - User
+      responses:
+        '200':
+          description: Success
+    put:
+      tags:
+        - User
+      responses:
+        '200':
+          description: Success
+  /api-v1/me:
+    get:
+      tags:
+        - User
+      responses:
+        '200':
+          description: Success
+    put:
+      tags:
+        - User
+      responses:
+        '200':
+          description: Success
+  /api-v1/password:
+    put:
+      tags:
+        - User
+      responses:
+        '200':
+          description: Success
+  /api-v1/products:
+    get:
+      tags:
+        - Analytics
+      responses:
+        '200':
+          description: Success
+  /api-v1/reviews:
+    get:
+      tags:
+        - User
+      responses:
+        '200':
+          description: Success
+  /api-v1/wallet/transactions:
+    get:
+      tags:
+        - User
+      responses:
+        '200':
+          description: Success
+  /api-v1/preferences:
+    get:
+      tags:
+        - User
+      responses:
+        '200':
+          description: Success
+    put:
+      tags:
+        - User
+      responses:
+        '200':
+          description: Success
+  /api-v1/account:
+    delete:
+      tags:
+        - User
+      responses:
+        '200':
+          description: Success
+  /api-v1/ping:
+    get:
+      tags:
+        - Fcm Test
+      responses:
+        '200':
+          description: Success
+  /api-v1/token:
+    get:
+      tags:
+        - Fcm Test
+      responses:
+        '200':
+          description: Success
+  /api-v1/validate:
+    post:
+      tags:
+        - Fcm Test
+      responses:
+        '200':
+          description: Success
+    get:
+      tags:
+        - Coupon
+      responses:
+        '200':
+          description: Success
+  /api-v1/send:
+    post:
+      tags:
+        - Fcm Test
+      responses:
+        '200':
+          description: Success
+  /api-v1/batch:
+    post:
+      tags:
+        - Fcm Test
+      responses:
+        '200':
+          description: Success
+  /api-v1/:
+    post:
+      tags:
+        - Referral
+      responses:
+        '200':
+          description: Success
+    get:
+      tags:
+        - Coupon
+      responses:
+        '200':
+          description: Success
+  /api-v1/categories:
+    get:
+      tags:
+        - Product
+      responses:
+        '200':
+          description: Success
+  /api-v1/features/:subcategoryId:
+    get:
+      tags:
+        - Product
+      responses:
+        '200':
+          description: Success
+  /api-v1/related:
+    get:
+      tags:
+        - Product
+      responses:
+        '200':
+          description: Success
+  /api-v1/:id:
+    get:
+      tags:
+        - Coupon
+      responses:
+        '200':
+          description: Success
+    put:
+      tags:
+        - Coupon
+      responses:
+        '200':
+          description: Success
+    delete:
+      tags:
+        - Referral
+      responses:
+        '200':
+          description: Success
+    patch:
+      tags:
+        - Review
+      responses:
+        '200':
+          description: Success
+  /api-v1/:id/favorite:
+    post:
+      tags:
+        - Product
+      responses:
+        '200':
+          description: Success
+    delete:
+      tags:
+        - Product
+      responses:
+        '200':
+          description: Success
+  /api-v1/:id/is-favorite:
+    get:
+      tags:
+        - Product
+      responses:
+        '200':
+          description: Success
+  /api-v1/suggestions:
+    get:
+      tags:
+        - Search
+      responses:
+        '200':
+          description: Success
+  /api-v1/enhanced:
+    get:
+      tags:
+        - Search
+      responses:
+        '200':
+          description: Success
+  /api-v1/history:
+    get:
+      tags:
+        - Referral
+      responses:
+        '200':
+          description: Success
+    delete:
+      tags:
+        - Search
+      responses:
+        '200':
+          description: Success
+  /api-v1/recently-viewed:
+    get:
+      tags:
+        - Search
+      responses:
+        '200':
+          description: Success
+    delete:
+      tags:
+        - Search
+      responses:
+        '200':
+          description: Success
+  /api-v1/trending:
+    get:
+      tags:
+        - Search
+      responses:
+        '200':
+          description: Success
+  /api-v1/google:
+    get:
+      tags:
+        - Google
+      responses:
+        '200':
+          description: Success
+  /api-v1/google/callback:
+    get:
+      tags:
+        - Google
+      responses:
+        '200':
+          description: Success
+  /api-v1/google/failure:
+    get:
+      tags:
+        - Google
+      responses:
+        '200':
+          description: Success
+  /api-v1/register:
+    post:
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: Success
+  /api-v1/device/:token:
+    delete:
+      tags:
+        - Fcm
+      responses:
+        '200':
+          description: Success
+  /api-v1/devices:
+    get:
+      tags:
+        - Fcm
+      responses:
+        '200':
+          description: Success
+  /api-v1/test:
+    post:
+      tags:
+        - Fcm
+      responses:
+        '200':
+          description: Success
+  /api-v1/user/redemptions:
+    get:
+      tags:
+        - Coupon
+      responses:
+        '200':
+          description: Success
+  /api-v1/:id/expire:
+    post:
+      tags:
+        - Coupon
+      responses:
+        '200':
+          description: Success
+  /api-v1/redeem:
+    post:
+      tags:
+        - Referral
+      responses:
+        '200':
+          description: Success
+  /api-v1/:id/stats:
+    get:
+      tags:
+        - Coupon
+      responses:
+        '200':
+          description: Success
+  /api-v1/balance:
+    get:
+      tags:
+        - Wallet
+      responses:
+        '200':
+          description: Success
+  /api-v1/transactions:
+    get:
+      tags:
+        - Wallet
+      responses:
+        '200':
+          description: Success
+  /api-v1/summary:
+    get:
+      tags:
+        - Wallet
+      responses:
+        '200':
+          description: Success
+  /api-v1/transfer:
+    post:
+      tags:
+        - Wallet
+      responses:
+        '200':
+          description: Success
+  /api-v1/room-id:
+    get:
+      tags:
+        - Chat
+      responses:
+        '200':
+          description: Success
+  /api-v1/:id/read:
+    put:
+      tags:
+        - Notification
+      responses:
+        '200':
+          description: Success
+  /api-v1/unread-count:
+    get:
+      tags:
+        - Notification
+      responses:
+        '200':
+          description: Success
+  /api-v1/mark-all-read:
+    put:
+      tags:
+        - Notification
+      responses:
+        '200':
+          description: Success
+  /api-v1/settings:
+    get:
+      tags:
+        - Notification
+      responses:
+        '200':
+          description: Success
+    put:
+      tags:
+        - Notification
+      responses:
+        '200':
+          description: Success
+  /api-v1/login:
+    post:
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: Success
+  /api-v1/otp/send:
+    post:
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: Success
+  /api-v1/otp/verify:
+    post:
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: Success
+  /api-v1/password/reset:
+    post:
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: Success
+  /api-v1/logout:
+    post:
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: Success
+  /api-v1/session:
+    get:
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: Success
+  /api-v1/confirm/:userId:
+    post:
+      tags:
+        - Referral
+      responses:
+        '200':
+          description: Success
+  /api-v1/stats:
+    get:
+      tags:
+        - Referral
+      responses:
+        '200':
+          description: Success
+  /api-v1/redemptions:
+    get:
+      tags:
+        - Referral
+      responses:
+        '200':
+          description: Success
+  /api-v1/all:
+    get:
+      tags:
+        - Referral
+      responses:
+        '200':
+          description: Success
+  /api-v1/leaderboard:
+    get:
+      tags:
+        - Referral
+      responses:
+        '200':
+          description: Success
+  /api-v1/generate-code:
+    post:
+      tags:
+        - Referral
+      responses:
+        '200':
+          description: Success
+  /api-v1/products/:id/track-view:
+    post:
+      tags:
+        - Analytics
+      responses:
+        '200':
+          description: Success
+  /api-v1/products/:id/track-click:
+    post:
+      tags:
+        - Analytics
+      responses:
+        '200':
+          description: Success
+  /api-v1/user-engagement:
+    get:
+      tags:
+        - Analytics
+      responses:
+        '200':
+          description: Success
+  /api-v1/top-products:
+    get:
+      tags:
+        - Analytics
+      responses:
+        '200':
+          description: Success
+  /api-v1/trending-searches:
+    get:
+      tags:
+        - Analytics
+      responses:
+        '200':
+          description: Success
+  /websocket:
+    get:
+      operationId: websocketConnection
+      summary: WebSocket connection endpoint
+      description: Connect to the WebSocket server for real-time chat functionality
+      tags:
+        - WebSocket
+      parameters:
+        - name: token
+          in: query
+          description: JWT authentication token
+          required: true
+          schema:
+            type: string
+      responses:
+        '101':
+          description: WebSocket connection established
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  socketId:
+                    type: string
+                  transport:
+                    type: string
+                    enum:
+                      - websocket
+                      - polling
+                  authenticated:
+                    type: boolean
+                  userId:
+                    type: string
+                    format: uuid
+                  userEmail:
+                    type: string
+                    format: email
+                required:
+                  - socketId
+                  - transport
+                  - authenticated
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /websocket/events:
+    post:
+      operationId: websocketEvents
+      summary: WebSocket event documentation
+      description: Documentation for all available WebSocket events and their schemas
+      tags:
+        - WebSocket
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  properties:
+                    event:
+                      type: string
+                      enum:
+                        - join_room
+                    data:
+                      type: object
+                      properties:
+                        roomId:
+                          type: string
+                        roomName:
+                          type: string
+                  required:
+                    - event
+                    - data
+                - type: object
+                  properties:
+                    event:
+                      type: string
+                      enum:
+                        - send_message
+                    data:
+                      type: object
+                      properties:
+                        message:
+                          type: string
+                          minLength: 1
+                          maxLength: 1000
+                        roomId:
+                          type: string
+                        messageType:
+                          type: string
+                          enum:
+                            - text
+                            - image
+                            - file
+                            - system
+                          default: text
+                      required:
+                        - message
+                        - roomId
+                  required:
+                    - event
+                    - data
+                - type: object
+                  properties:
+                    event:
+                      type: string
+                      enum:
+                        - typing
+                    data:
+                      type: object
+                      properties:
+                        roomId:
+                          type: string
+                      required:
+                        - roomId
+                  required:
+                    - event
+                    - data
+                - type: object
+                  properties:
+                    event:
+                      type: string
+                      enum:
+                        - stop_typing
+                    data:
+                      type: object
+                      properties:
+                        roomId:
+                          type: string
+                      required:
+                        - roomId
+                  required:
+                    - event
+                    - data
+                - type: object
+                  properties:
+                    event:
+                      type: string
+                      enum:
+                        - join_private_chat
+                    data:
+                      type: object
+                      properties:
+                        otherUserEmail:
+                          type: string
+                          format: email
+                      required:
+                        - otherUserEmail
+                  required:
+                    - event
+                    - data
+                - type: object
+                  properties:
+                    event:
+                      type: string
+                      enum:
+                        - get_chatrooms
+                    data:
+                      type: object
+                      properties: {}
+                  required:
+                    - event
+                    - data
+                - type: object
+                  properties:
+                    event:
+                      type: string
+                      enum:
+                        - get_unread_count
+                    data:
+                      type: object
+                      properties: {}
+                  required:
+                    - event
+                    - data
+      responses:
+        '200':
+          description: WebSocket event documentation
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - chat_history
+                      messages:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            sender:
+                              type: string
+                            email:
+                              type: string
+                              format: email
+                            content:
+                              type: string
+                            timestamp:
+                              type: string
+                              format: date-time
+                          required:
+                            - id
+                            - sender
+                            - email
+                            - content
+                            - timestamp
+                    required:
+                      - type
+                      - messages
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - chat_message
+                      message:
+                        type: string
+                      username:
+                        type: string
+                      email:
+                        type: string
+                        format: email
+                      timestamp:
+                        type: string
+                        format: date-time
+                    required:
+                      - type
+                      - message
+                      - username
+                      - email
+                      - timestamp
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - typing_notification
+                      is_typing:
+                        type: boolean
+                      username:
+                        type: string
+                    required:
+                      - type
+                      - is_typing
+                      - username
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - stop_typing_notification
+                      is_typing:
+                        type: boolean
+                      username:
+                        type: string
+                    required:
+                      - type
+                      - is_typing
+                      - username
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - chatrooms_list
+                      chatrooms:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            roomId:
+                              type: string
+                            name:
+                              type: string
+                            isGroup:
+                              type: boolean
+                            unreadCount:
+                              type: integer
+                              minimum: 0
+                            lastMessage:
+                              type: object
+                              properties:
+                                content:
+                                  type: string
+                                timestamp:
+                                  type: string
+                                  format: date-time
+                                sender:
+                                  type: string
+                              required:
+                                - content
+                                - timestamp
+                                - sender
+                            otherUser:
+                              type: string
+                            otherUserAvatar:
+                              type: string
+                          required:
+                            - id
+                            - roomId
+                            - name
+                            - isGroup
+                            - unreadCount
+                    required:
+                      - type
+                      - chatrooms
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - unread_count
+                      count:
+                        type: integer
+                        minimum: 0
+                    required:
+                      - type
+                      - count
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - unread_count_update
+                    required:
+                      - type
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - error
+                      message:
+                        type: string
+                    required:
+                      - type
+                      - message
+  /websocket/stats:
+    get:
+      operationId: websocketStats
+      summary: Get WebSocket server statistics
+      description: >-
+        Retrieve real-time statistics about WebSocket connections and
+        performance
+      tags:
+        - WebSocket
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: WebSocket statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - properties:
+                      success:
+                        type: boolean
+                        default: true
+                        description: Success indicator
+                      data:
+                        type: object
+                        properties:
+                          totalConnections:
+                            type: integer
+                            minimum: 0
+                          activeRooms:
+                            type: integer
+                            minimum: 0
+                          messagesPerSecond:
+                            type: number
+                            minimum: 0
+                          averageLatency:
+                            type: number
+                            minimum: 0
+                          uptime:
+                            type: integer
+                            minimum: 0
+                        required:
+                          - totalConnections
+                          - activeRooms
+                          - messagesPerSecond
+                          - averageLatency
+                          - uptime
+                        description: Response data
+                      message:
+                        type: string
+                        description: Success message
+                    required:
+                      - data
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /websocket/schemas:
+    get:
+      operationId: websocketSchemas
+      summary: Get WebSocket event schemas
+      description: Retrieve all available WebSocket event schemas for client implementation
+      tags:
+        - WebSocket
+      responses:
+        '200':
+          description: WebSocket schemas retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  events:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        schema:
+                          nullable: true
+                        description:
+                          type: string
+                      required:
+                        - name
+                        - description
+                  requests:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        schema:
+                          nullable: true
+                        description:
+                          type: string
+                      required:
+                        - name
+                        - description
+                required:
+                  - events
+                  - requests
