@@ -1,0 +1,74 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: oysloe-backend-prod
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env.production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - oysloe-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: oysloe-postgres-prod
+    environment:
+      POSTGRES_DB: oysloe_prod
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_prod_password
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - oysloe-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: oysloe-redis-prod
+    ports:
+      - "6381:6379"
+    command: redis-server --requirepass redis_prod_password
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - oysloe-network
+    restart: unless-stopped
+    volumes:
+      - redis_prod_data:/data
+
+volumes:
+  postgres_prod_data:
+  redis_prod_data:
+
+networks:
+  oysloe-network:
+    driver: bridge
