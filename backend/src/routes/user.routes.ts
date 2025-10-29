@@ -49,6 +49,13 @@ const getUserReviewsSchema = z.object({
   }),
 });
 
+const getUserFavoritesSchema = z.object({
+  query: z.object({
+    page: z.string().optional(),
+    limit: z.string().optional(),
+  }),
+});
+
 const getWalletTransactionsSchema = z.object({
   query: z.object({
     page: z.string().optional(),
@@ -107,7 +114,6 @@ router.put(
   userController.changePassword.bind(userController)
 );
 
-
 router.get(
   "/products",
   authenticate,
@@ -120,6 +126,13 @@ router.get(
   authenticate,
   validateRequest(getUserReviewsSchema),
   userController.getUserReviews.bind(userController)
+);
+
+router.get(
+  "/favorites",
+  authenticate,
+  validateRequest(getUserFavoritesSchema),
+  userController.getUserFavorites.bind(userController)
 );
 
 router.get(

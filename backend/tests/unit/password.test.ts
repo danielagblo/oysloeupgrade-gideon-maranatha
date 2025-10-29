@@ -118,10 +118,10 @@ describe("Password Utilities", () => {
       const passwordWithoutSpecial = "Password123";
 
       expect(
-        /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(passwordWithSpecial)
+        /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(passwordWithSpecial)
       ).toBe(true);
       expect(
-        /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(passwordWithoutSpecial)
+        /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(passwordWithoutSpecial)
       ).toBe(false);
     });
   });

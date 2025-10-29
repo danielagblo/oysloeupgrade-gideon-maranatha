@@ -17,7 +17,7 @@ import {
 } from "../test-helpers";
 
 describe("Notifications API", () => {
-  let server: any;
+  let server: unknown;
   let baseURL: string;
 
   beforeAll(async () => {

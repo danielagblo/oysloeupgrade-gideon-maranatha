@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 import { createTestServer, closeTestServer } from "../test-helpers";
 
 describe("Health API", () => {
-  let server: any;
+  let server: unknown;
   let baseURL: string;
 
   beforeAll(async () => {

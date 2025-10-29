@@ -16,7 +16,7 @@ import {
 } from "../test-helpers";
 
 describe("Users API", () => {
-  let server: any;
+  let server: unknown;
   let baseURL: string;
 
   beforeAll(async () => {
@@ -35,7 +35,7 @@ describe("Users API", () => {
 
   describe("GET /api-v1/users/profile", () => {
     it("returns user profile for authenticated user", async () => {
-      const { user, token } = await createUserAndToken(
+      const { user: _user, token } = await createUserAndToken(
         {
           email: "test@example.com",
           firstName: "John",
@@ -79,7 +79,7 @@ describe("Users API", () => {
 
   describe("PUT /api-v1/users/profile", () => {
     it("updates user profile with valid data", async () => {
-      const { user, token } = await createUserAndToken(
+      const { user: _user, token } = await createUserAndToken(
         {
           email: "test@example.com",
           firstName: "John",

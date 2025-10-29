@@ -1,65 +1,61 @@
 # Oysloe Backend
 
-Node.js backend for Oysloe marketplace with TypeScript, PostgreSQL, Redis, and Socket.IO.
+Backend for Oysloe marketplace (TypeScript, PostgreSQL, Redis, Socket.IO).
 
 ## Prerequisites
 
-- [Bun](https://bun.sh/) runtime
-- [Docker](https://www.docker.com/) and Docker Compose
-- Firebase project (for push notifications)
-- Arkesel account (for SMS/OTP)
+- Bun
+- Docker + Docker Compose
 
-## Setup
+## Quick start (local dev)
 
-### 1. Clone and Install Dependencies
+1. Install deps
 
 ```bash
-git clone <repository-url>
-cd oysloeupgrade-backend
 bun install
 ```
 
-### 2. Environment Configuration
+2. Configure env
 
 ```bash
 cp .env.example .env
+# Edit .env (DB_HOST/PORT/NAME/USER/PASSWORD, JWT_SECRET, etc.)
 ```
 
-Edit `.env` with your configuration:
-
-
-
-### 3. Start Database Services
+3. Start Postgres + Redis
 
 ```bash
 docker-compose up -d postgres redis
 ```
 
-### 4. Run Database Migrations
+4. Create database (once) and enable uuid-ossp
+
+```bash
+# Use values from your .env (defaults: host=localhost port=5433 user=postgres)
+psql -h localhost -p 5433 -U postgres -c "CREATE DATABASE <DB_NAME_FROM_ENV>;"
+psql -h localhost -p 5433 -U postgres -d <DB_NAME_FROM_ENV> -f scripts/init-db.sql
+```
+
+5. Run migrations
 
 ```bash
 bun run migration:run
 ```
 
-### 5. Start Development Server
+6. Start server
 
 ```bash
 bun run dev
 ```
 
-Server runs on `http://localhost:3000`
+7. Verify health
 
-## Available Scripts
+```bash
+curl http://localhost:3000/health
+# {"status":"ok", ...}
+```
 
-- `bun run dev` - Start development server with hot reload
-- `bun run build` - Build for production
-- `bun run start` - Start production server
-- `bun run test` - Run test suite
-- `bun run migration:generate` - Generate new migration
-- `bun run migration:run` - Run pending migrations
+Notes
 
-## Production Deployment
-
-1. Set `NODE_ENV=production` in environment
-2. Configure production database and Redis URLs
-3. Run `bun run build && bun run start`
+- OpenAPI spec is generated on dev start; docs available at `/docs`.
+- If you see “database does not exist”, ensure step 4 used the same `DB_NAME` as in `.env`.

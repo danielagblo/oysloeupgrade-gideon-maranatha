@@ -10,7 +10,6 @@ import {
   createTestServer,
   closeTestServer,
   resetDb,
-  seedUser,
   seedProduct,
   createUserAndToken,
   expectError,
@@ -18,7 +17,7 @@ import {
 } from "../test-helpers";
 
 describe("Products API", () => {
-  let server: any;
+  let server: unknown;
   let baseURL: string;
 
   beforeAll(async () => {
@@ -54,7 +53,9 @@ describe("Products API", () => {
       expect(body.data.products).toHaveLength(2);
       expect(body.data.pagination.total).toBe(2);
 
-      const productNames = body.data.products.map((p: any) => p.name);
+      const productNames = body.data.products.map(
+        (p: { name: string }) => p.name
+      );
       expect(productNames).toContain("Test Product 1");
       expect(productNames).toContain("Test Product 2");
     });

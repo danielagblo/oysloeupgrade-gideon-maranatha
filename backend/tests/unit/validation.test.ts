@@ -44,9 +44,23 @@ const productSchema = {
   },
 };
 
+interface ValidationRule {
+  type?: string;
+  minLength?: number;
+  maxLength?: number;
+  pattern?: string;
+  minimum?: number;
+  maximum?: number;
+}
+
+interface ValidationSchema {
+  required?: string[];
+  properties?: Record<string, ValidationRule>;
+}
+
 function validateSchema(
-  data: any,
-  schema: any
+  data: Record<string, unknown>,
+  schema: ValidationSchema
 ): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
 
@@ -65,7 +79,7 @@ function validateSchema(
   if (schema.properties) {
     for (const [field, rules] of Object.entries(schema.properties)) {
       const value = data[field];
-      const rule = rules as any;
+      const rule = rules;
 
       if (value !== undefined) {
         if (rule.type === "string" && typeof value !== "string") {

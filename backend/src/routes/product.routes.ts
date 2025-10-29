@@ -131,6 +131,48 @@ router.get(
   productController.getProduct.bind(productController)
 );
 
+const productIdParamsSchema = z.object({
+  params: z.object({
+    id: z.string().uuid(),
+  }),
+});
+
+const paginationQuerySchema = z.object({
+  query: z.object({
+    page: z.string().optional(),
+    limit: z.string().optional(),
+  }),
+});
+
+router.post(
+  "/:id/mark-as-sold",
+  authenticate,
+  validateRequest(productIdParamsSchema),
+  productController.markAsSold.bind(productController)
+);
+
+router.post(
+  "/:id/pause",
+  authenticate,
+  validateRequest(productIdParamsSchema),
+  productController.pauseProduct.bind(productController)
+);
+
+router.post(
+  "/:id/activate",
+  authenticate,
+  validateRequest(productIdParamsSchema),
+  productController.activateProduct.bind(productController)
+);
+
+router.get(
+  "/:id/reviews",
+  authenticate,
+  validateRequest(productIdParamsSchema),
+  validateRequest(paginationQuerySchema),
+  productController.listProductReviews.bind(productController)
+);
+
 router.put(
   "/:id",
   authenticate,

@@ -16,7 +16,7 @@ import {
 } from "../test-helpers";
 
 describe("Referrals API", () => {
-  let server: any;
+  let server: unknown;
   let baseURL: string;
 
   beforeAll(async () => {
@@ -35,7 +35,7 @@ describe("Referrals API", () => {
 
   describe("GET /api-v1/referrals/stats", () => {
     it("returns referral stats for authenticated user", async () => {
-      const { user, token } = await createUserAndToken({}, baseURL);
+      const { user: _user, token } = await createUserAndToken({}, baseURL);
 
       const response = await fetch(`${baseURL}/api-v1/referrals/stats`, {
         method: "GET",
@@ -77,7 +77,7 @@ describe("Referrals API", () => {
         {},
         baseURL
       );
-      const { user: referee, token: refereeToken } = await createUserAndToken(
+      const { user: referee, token: _refereeToken } = await createUserAndToken(
         {},
         baseURL
       );
@@ -170,7 +170,7 @@ describe("Referrals API", () => {
         {},
         baseURL
       );
-      const { user: referee, token: refereeToken } = await createUserAndToken(
+      const { user: referee, token: _refereeToken } = await createUserAndToken(
         {},
         baseURL
       );

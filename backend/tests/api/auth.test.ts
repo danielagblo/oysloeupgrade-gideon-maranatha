@@ -16,7 +16,7 @@ import {
 } from "../test-helpers";
 
 describe("Auth API", () => {
-  let server: any;
+  let server: unknown;
   let baseURL: string;
 
   beforeAll(async () => {
@@ -113,7 +113,7 @@ describe("Auth API", () => {
 
   describe("POST /api-v1/auth/login", () => {
     it("authenticates valid credentials", async () => {
-      const user = await seedUser({
+      const _user = await seedUser({
         email: "test@example.com",
         password: "TestPass123!",
       });
@@ -122,18 +122,18 @@ describe("Auth API", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: user.email,
+          email: _user.email,
           password: "TestPass123!",
         }),
       });
 
       const body = await expectSuccess(response, 200);
       expect(body.data.token).toBeDefined();
-      expect(body.data.user.email).toBe(user.email);
+      expect(body.data.user.email).toBe(_user.email);
     });
 
     it("rejects invalid credentials", async () => {
-      const user = await seedUser({
+      const _user = await seedUser({
         email: "test@example.com",
         password: "TestPass123!",
       });
@@ -142,7 +142,7 @@ describe("Auth API", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: user.email,
+          email: _user.email,
           password: "WrongPassword",
         }),
       });
@@ -176,7 +176,7 @@ describe("Auth API", () => {
 
   describe("POST /api-v1/auth/logout", () => {
     it("logs out authenticated user", async () => {
-      const user = await seedUser({
+      const _user = await seedUser({
         email: "test@example.com",
         password: "TestPass123!",
       });
@@ -228,7 +228,7 @@ describe("Auth API", () => {
 
   describe("GET /api-v1/auth/session", () => {
     it("returns session for authenticated user", async () => {
-      const user = await seedUser({
+      const _user = await seedUser({
         email: "test@example.com",
         password: "TestPass123!",
       });

@@ -403,6 +403,46 @@ export class UserController {
     }
   }
 
+  async getUserFavorites(req: Request, res: Response) {
+    try {
+      const { page = 1, limit = 20 } = req.query;
+      const offset = (Number(page) - 1) * Number(limit);
+
+      const [users, total] = await this.userRepository
+        .createQueryBuilder("user")
+        .leftJoinAndSelect("user.favorites", "favorite")
+        .leftJoinAndSelect("favorite.product", "product")
+        .leftJoinAndSelect("product.images", "image")
+        .where("user.id = :userId", { userId: req.user?.id || "" })
+        .orderBy("favorite.createdAt", "DESC")
+        .skip(offset)
+        .take(Number(limit))
+        .getManyAndCount();
+
+      const favorites = users[0]?.favorites || [];
+
+      res.json({
+        success: true,
+        data: {
+          favorites,
+          pagination: {
+            page: Number(page),
+            limit: Number(limit),
+            total,
+            pages: Math.ceil(total / Number(limit)),
+          },
+        },
+      });
+    } catch (error) {
+      logError("Error getting user favorites:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to get user favorites",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
   async getWalletTransactions(req: Request, res: Response) {
     try {
       const { page = 1, limit = 20, type } = req.query;

@@ -17,7 +17,7 @@ import {
 } from "../test-helpers";
 
 describe("Wallet API", () => {
-  let server: any;
+  let server: unknown;
   let baseURL: string;
 
   beforeAll(async () => {
@@ -36,8 +36,8 @@ describe("Wallet API", () => {
 
   describe("GET /api-v1/wallet/balance", () => {
     it("returns wallet balance for authenticated user", async () => {
-      const { user, token } = await createUserAndToken({}, baseURL);
-      await seedWallet({ userId: user.id, balance: 1500 });
+      const { user: _user, token } = await createUserAndToken({}, baseURL);
+      await seedWallet({ userId: _user.id, balance: 1500 });
 
       const response = await fetch(`${baseURL}/api-v1/wallet/balance`, {
         method: "GET",
@@ -87,9 +87,9 @@ describe("Wallet API", () => {
 
   describe("POST /api-v1/wallet/transfer", () => {
     it("transfers funds to wallet", async () => {
-      const { user, token } = await createUserAndToken({}, baseURL);
+      const { user: _user, token } = await createUserAndToken({}, baseURL);
       const { user: recipientUser } = await createUserAndToken({}, baseURL);
-      await seedWallet({ userId: user.id, balance: 100 });
+      await seedWallet({ userId: _user.id, balance: 100 });
 
       const response = await fetch(`${baseURL}/api-v1/wallet/transfer`, {
         method: "POST",
@@ -112,7 +112,7 @@ describe("Wallet API", () => {
     });
 
     it("rejects transfer with insufficient funds", async () => {
-      const { user, token } = await createUserAndToken({}, baseURL);
+      const { user: _user, token } = await createUserAndToken({}, baseURL);
       const { user: recipientUser } = await createUserAndToken({}, baseURL);
 
       const response = await fetch(`${baseURL}/api-v1/wallet/transfer`, {
@@ -132,7 +132,7 @@ describe("Wallet API", () => {
     });
 
     it("rejects self transfer", async () => {
-      const { user, token } = await createUserAndToken({}, baseURL);
+      const { user: _user, token } = await createUserAndToken({}, baseURL);
 
       const response = await fetch(`${baseURL}/api-v1/wallet/transfer`, {
         method: "POST",
@@ -141,7 +141,7 @@ describe("Wallet API", () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          toUserId: user.id,
+          toUserId: _user.id,
           amount: 10,
           reason: "Self",
         }),
@@ -151,9 +151,9 @@ describe("Wallet API", () => {
     });
 
     it("prevents double-spend on sequential transfers", async () => {
-      const { user, token } = await createUserAndToken({}, baseURL);
+      const { user: _user, token } = await createUserAndToken({}, baseURL);
       const { user: recipientUser } = await createUserAndToken({}, baseURL);
-      await seedWallet({ userId: user.id, balance: 100 });
+      await seedWallet({ userId: _user.id, balance: 100 });
 
       const first = await fetch(`${baseURL}/api-v1/wallet/transfer`, {
         method: "POST",

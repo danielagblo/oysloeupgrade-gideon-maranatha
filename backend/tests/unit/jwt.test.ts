@@ -4,6 +4,14 @@ import jwt from "jsonwebtoken";
 const JWT_SECRET = "test-secret-key";
 const JWT_EXPIRES_IN = "1h";
 
+interface DecodedToken {
+  userId?: string;
+  email?: string;
+  iat?: number;
+  exp?: number;
+  [key: string]: unknown;
+}
+
 describe("JWT Utilities", () => {
   describe("token generation", () => {
     it("generates valid JWT token", () => {
@@ -44,8 +52,8 @@ describe("JWT Utilities", () => {
         expiresIn: JWT_EXPIRES_IN,
       });
 
-      const decoded1 = jwt.decode(token1) as any;
-      const decoded2 = jwt.decode(token2) as any;
+      const decoded1 = jwt.decode(token1) as DecodedToken;
+      const decoded2 = jwt.decode(token2) as DecodedToken;
 
       expect(decoded1.iat).toBeLessThan(decoded2.iat);
       expect(decoded1.exp).toBeLessThan(decoded2.exp);
@@ -55,7 +63,7 @@ describe("JWT Utilities", () => {
       const payload = { userId: "test-user" };
       const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" });
 
-      const decoded = jwt.decode(token) as any;
+      const decoded = jwt.decode(token) as DecodedToken;
       expect(decoded.exp).toBeDefined();
       expect(typeof decoded.exp).toBe("number");
     });
@@ -68,7 +76,7 @@ describe("JWT Utilities", () => {
         expiresIn: JWT_EXPIRES_IN,
       });
 
-      const decoded = jwt.verify(token, JWT_SECRET) as any;
+      const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
 
       expect(decoded.userId).toBe("test-user-123");
       expect(decoded.email).toBe("test@example.com");
@@ -113,7 +121,7 @@ describe("JWT Utilities", () => {
       const payload = { userId: "test-user" };
       const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "1s" });
 
-      const decoded = jwt.decode(token) as any;
+      const decoded = jwt.decode(token) as DecodedToken;
       const now = Math.floor(Date.now() / 1000);
 
       expect(decoded.exp).toBeGreaterThan(now);
@@ -124,7 +132,7 @@ describe("JWT Utilities", () => {
       const payload = { userId: "test-user" };
       const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "24h" });
 
-      const decoded = jwt.decode(token) as any;
+      const decoded = jwt.decode(token) as DecodedToken;
       const now = Math.floor(Date.now() / 1000);
       const twentyFourHours = 24 * 60 * 60;
 
@@ -151,7 +159,7 @@ describe("JWT Utilities", () => {
         expiresIn: JWT_EXPIRES_IN,
       });
 
-      const decoded = jwt.decode(token) as any;
+      const decoded = jwt.decode(token) as DecodedToken;
 
       expect(decoded.userId).toBe("test-user");
       expect(decoded.email).toBe("test@example.com");
@@ -182,7 +190,7 @@ describe("JWT Utilities", () => {
       const token = jwt.sign(complexPayload, JWT_SECRET, {
         expiresIn: JWT_EXPIRES_IN,
       });
-      const decoded = jwt.verify(token, JWT_SECRET) as any;
+      const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
 
       expect(decoded.userId).toBe(complexPayload.userId);
       expect(decoded.email).toBe(complexPayload.email);
@@ -196,7 +204,7 @@ describe("JWT Utilities", () => {
         expiresIn: JWT_EXPIRES_IN,
       });
 
-      const decoded = jwt.verify(token, JWT_SECRET) as any;
+      const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
       expect(decoded).toBeDefined();
       expect(decoded.iat).toBeDefined();
       expect(decoded.exp).toBeDefined();

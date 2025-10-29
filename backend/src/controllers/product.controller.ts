@@ -265,9 +265,19 @@ export class ProductController {
         }
       }
 
+      const reviews = Array.isArray(product.reviews) ? product.reviews : [];
+      const ratingCount = reviews.length;
+      const ratingAverage = ratingCount
+        ? reviews.reduce((sum: number, r: Review) => sum + (r.rating || 0), 0) /
+          ratingCount
+        : 0;
+
       res.json({
         success: true,
-        data: { product },
+        data: {
+          product,
+          rating: { average: ratingAverage, count: ratingCount },
+        },
       });
     } catch (error) {
       this.handleProductError(res, error, "getting product");
@@ -684,6 +694,153 @@ export class ProductController {
       });
     } catch (error) {
       this.handleProductError(res, error, "deleting review");
+    }
+  }
+
+  async listProductReviews(req: Request, res: Response) {
+    try {
+      const { id } = req.params as { id: string };
+      const { page = 1, limit = 20 } = req.query as {
+        page?: string | number;
+        limit?: string | number;
+      };
+
+      const offset = (Number(page) - 1) * Number(limit);
+
+      const [items, total] = await this.reviewRepository
+        .createQueryBuilder("review")
+        .leftJoinAndSelect("review.user", "user")
+        .where("review.productId = :productId", { productId: id })
+        .orderBy("review.createdAt", "DESC")
+        .skip(offset)
+        .take(Number(limit))
+        .getManyAndCount();
+
+      res.json({
+        success: true,
+        data: {
+          reviews: items,
+          pagination: {
+            page: Number(page),
+            limit: Number(limit),
+            total,
+            pages: Math.ceil(total / Number(limit)),
+          },
+        },
+      });
+    } catch (error) {
+      this.handleProductError(res, error, "listing product reviews");
+    }
+  }
+
+  async markAsSold(req: Request, res: Response) {
+    try {
+      const { id } = req.params as { id: string };
+
+      const product = await this.productRepository.findOne({
+        where: { id, deleted: false },
+      });
+
+      if (!product) {
+        throw new NotFoundError("Product not found");
+      }
+
+      if (!req.user?.id) {
+        throw new BadRequestError("User not authenticated");
+      }
+
+      if (
+        product.userId !== req.user.id &&
+        !req.user.isStaff &&
+        !req.user.isSuperuser
+      ) {
+        throw new ForbiddenError("You can only update your own products");
+      }
+
+      product.status = "sold" as const;
+      await this.productRepository.save(product);
+
+      res.json({
+        success: true,
+        message: "Product marked as sold",
+        data: { product },
+      });
+    } catch (error) {
+      this.handleProductError(res, error, "marking product as sold");
+    }
+  }
+
+  async pauseProduct(req: Request, res: Response) {
+    try {
+      const { id } = req.params as { id: string };
+
+      const product = await this.productRepository.findOne({
+        where: { id, deleted: false },
+      });
+
+      if (!product) {
+        throw new NotFoundError("Product not found");
+      }
+
+      if (!req.user?.id) {
+        throw new BadRequestError("User not authenticated");
+      }
+
+      if (
+        product.userId !== req.user.id &&
+        !req.user.isStaff &&
+        !req.user.isSuperuser
+      ) {
+        throw new ForbiddenError("You can only update your own products");
+      }
+
+      product.status = "paused" as const;
+      await this.productRepository.save(product);
+
+      res.json({
+        success: true,
+        message: "Product paused",
+        data: { product },
+      });
+    } catch (error) {
+      this.handleProductError(res, error, "pausing product");
+    }
+  }
+
+  async activateProduct(req: Request, res: Response) {
+    try {
+      const { id } = req.params as { id: string };
+
+      const product = await this.productRepository.findOne({
+        where: { id, deleted: false },
+      });
+
+      if (!product) {
+        throw new NotFoundError("Product not found");
+      }
+
+      if (!req.user?.id) {
+        throw new BadRequestError("User not authenticated");
+      }
+
+      if (
+        product.userId !== req.user.id &&
+        !req.user.isStaff &&
+        !req.user.isSuperuser
+      ) {
+        throw new ForbiddenError("You can only update your own products");
+      }
+
+      product.status = "active" as const;
+      await this.productRepository.save(product);
+
+      res.json({
+        success: true,
+        message: "Product activated",
+        data: { product },
+      });
+    } catch (error) {
+      this.handleProductError(res, error, "activating product");
     }
   }
 

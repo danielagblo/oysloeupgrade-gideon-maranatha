@@ -1,19 +1,36 @@
-import { cloudinary } from "../../config/cloudinary.js";
 import crypto from "node:crypto";
 
 type Kind = "product_image" | "avatar";
 
 function folderFor(kind: Kind, entityId: string) {
-  const root = process.env.CLOUDINARY_ROOT_FOLDER!;
+  const root = process.env.CLOUDINARY_ROOT_FOLDER;
+  if (!root) {
+    throw new Error("CLOUDINARY_ROOT_FOLDER environment variable is required");
+  }
   return kind === "avatar"
     ? `${root}/avatars/${entityId}`
     : `${root}/products/${entityId}`;
 }
 
 function presetFor(kind: Kind) {
-  return kind === "avatar"
-    ? process.env.CLOUDINARY_UPLOAD_PRESET_AVATARS!
-    : process.env.CLOUDINARY_UPLOAD_PRESET_PRODUCTS!;
+  const avatarPreset = process.env.CLOUDINARY_UPLOAD_PRESET_AVATARS;
+  const productPreset = process.env.CLOUDINARY_UPLOAD_PRESET_PRODUCTS;
+
+  if (kind === "avatar") {
+    if (!avatarPreset) {
+      throw new Error(
+        "CLOUDINARY_UPLOAD_PRESET_AVATARS environment variable is required"
+      );
+    }
+    return avatarPreset;
+  } else {
+    if (!productPreset) {
+      throw new Error(
+        "CLOUDINARY_UPLOAD_PRESET_PRODUCTS environment variable is required"
+      );
+    }
+    return productPreset;
+  }
 }
 
 export function buildSignatureParams(params: Record<string, string | number>) {
@@ -22,7 +39,10 @@ export function buildSignatureParams(params: Record<string, string | number>) {
     .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
     .map(([k, v]) => `${k}=${v}`)
     .join("&");
-  const secret = process.env.CLOUDINARY_API_SECRET!;
+  const secret = process.env.CLOUDINARY_API_SECRET;
+  if (!secret) {
+    throw new Error("CLOUDINARY_API_SECRET environment variable is required");
+  }
   const hash = crypto
     .createHash("sha1")
     .update(entries + secret)
@@ -51,9 +71,19 @@ export function signUpload(
 
   const signature = buildSignatureParams(toSign);
 
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  const apiKey = process.env.CLOUDINARY_API_KEY;
+
+  if (!cloudName) {
+    throw new Error("CLOUDINARY_CLOUD_NAME environment variable is required");
+  }
+  if (!apiKey) {
+    throw new Error("CLOUDINARY_API_KEY environment variable is required");
+  }
+
   return {
-    cloudName: process.env.CLOUDINARY_CLOUD_NAME!,
-    apiKey: process.env.CLOUDINARY_API_KEY!,
+    cloudName,
+    apiKey,
     timestamp,
     signature,
     folder,

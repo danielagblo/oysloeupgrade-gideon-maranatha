@@ -16,7 +16,7 @@ import {
 } from "../test-helpers";
 
 describe("Search API", () => {
-  let server: any;
+  let server: unknown;
   let baseURL: string;
 
   beforeAll(async () => {

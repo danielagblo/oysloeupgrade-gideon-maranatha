@@ -17,7 +17,7 @@ import {
 } from "../test-helpers";
 
 describe("Coupons API", () => {
-  let server: any;
+  let server: unknown;
   let baseURL: string;
 
   beforeAll(async () => {
@@ -81,13 +81,13 @@ describe("Coupons API", () => {
       const body = await expectSuccess(response, 200);
       expect(body.data.coupons).toHaveLength(2);
       expect(
-        body.data.coupons.find((c: any) => c.code === "SAVE10")
+        body.data.coupons.find((c: { code: string }) => c.code === "SAVE10")
       ).toBeDefined();
       expect(
-        body.data.coupons.find((c: any) => c.code === "SAVE20")
+        body.data.coupons.find((c: { code: string }) => c.code === "SAVE20")
       ).toBeDefined();
       expect(
-        body.data.coupons.find((c: any) => c.code === "EXPIRED")
+        body.data.coupons.find((c: { code: string }) => c.code === "EXPIRED")
       ).toBeUndefined();
     });
 
