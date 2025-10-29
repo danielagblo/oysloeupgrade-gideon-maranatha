@@ -25,10 +25,10 @@ export class Wallet {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 
-  @OneToOne('User', 'wallet')
+  @OneToOne(() => User, 'wallet')
   @JoinColumn({ name: 'user_id' })
   user?: User;
 
-  @OneToMany('WalletLedger', 'wallet')
+  @OneToMany(() => WalletLedger, 'wallet')
   ledger?: WalletLedger[];
 }

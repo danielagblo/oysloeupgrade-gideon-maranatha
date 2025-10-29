@@ -1,0 +1,54 @@
+#!/usr/bin/expect -f
+
+set timeout 15
+
+spawn ssh -o StrictHostKeyChecking=no root@207.154.219.165
+expect "password:"
+send "qazRyb-kexfy6-ketken\r"
+expect "# "
+
+send "cd ~/oysloe-backend/backend\r"
+expect "# "
+
+send "echo '=== CURRENT CONTAINER STATUS ==='\r"
+expect "# "
+send "docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'\r"
+expect "# "
+
+send "echo ''\r"
+expect "# "
+send "echo '=== APP LOGS (LAST 20 LINES) ==='\r"
+expect "# "
+send "docker logs --tail 20 oysloe-backend-prod 2>&1\r"
+expect "# "
+
+send "echo ''\r"
+expect "# "
+send "echo '=== DATABASE TEST ==='\r"
+expect "# "
+send "docker exec postgres psql -U oysloe_user -d oysloe_prod -c 'SELECT version();' 2>/dev/null | head -1 || echo '❌ DB connection failed'\r"
+expect "# "
+
+send "echo ''\r"
+expect "# "
+send "echo '=== REDIS TEST ==='\r"
+expect "# "
+send "docker exec redis redis-cli -a qazRyb-kexfy6-ketken ping 2>/dev/null || echo '❌ Redis connection failed'\r"
+expect "# "
+
+send "echo ''\r"
+expect "# "
+send "echo '=== HEALTH CHECK ==='\r"
+expect "# "
+send "curl -f -s --max-time 5 http://localhost:3000/health && echo '✅ APP IS LIVE!' || echo '❌ APP NOT RESPONDING'\r"
+expect "# "
+
+send "echo ''\r"
+expect "# "
+send "echo '=== EXTERNAL ACCESS TEST ==='\r"
+expect "# "
+send "curl -f -s --max-time 5 http://207.154.219.165/health && echo '✅ EXTERNAL ACCESS WORKS!' || echo '❌ EXTERNAL ACCESS FAILED'\r"
+expect "# "
+
+send "exit\r"
+expect eof

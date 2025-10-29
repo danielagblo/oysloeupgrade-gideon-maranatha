@@ -8,21 +8,20 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-
-import { Product } from "./Product.js";
-import { Review } from "./Review.js";
-import { ChatroomMember } from "./ChatroomMember.js";
-import { Message } from "./Message.js";
-import { Referral } from "./Referral.js";
-import { ReferralRedemption } from "./ReferralRedemption.js";
-import { FCMDevice } from "./FCMDevice.js";
-import { CouponRedemption } from "./CouponRedemption.js";
-import { Wallet } from "./Wallet.js";
-import { Favorite } from "./Favorite.js";
-import { NotificationHistory } from "./NotificationHistory.js";
-import { UserAnalytics } from "./UserAnalytics.js";
-import { SearchHistory } from "./SearchHistory.js";
-import { RecentlyViewed } from "./RecentlyViewed.js";
+import type { Product } from "./Product.js";
+import type { Review } from "./Review.js";
+import type { ChatroomMember } from "./ChatroomMember.js";
+import type { Message } from "./Message.js";
+import type { Referral } from "./Referral.js";
+import type { ReferralRedemption } from "./ReferralRedemption.js";
+import type { FCMDevice } from "./FCMDevice.js";
+import type { CouponRedemption } from "./CouponRedemption.js";
+import type { Wallet } from "./Wallet.js";
+import type { Favorite } from "./Favorite.js";
+import type { NotificationHistory } from "./NotificationHistory.js";
+import type { UserAnalytics } from "./UserAnalytics.js";
+import type { SearchHistory } from "./SearchHistory.js";
+import type { RecentlyViewed } from "./RecentlyViewed.js";
 
 @Entity("users")
 export class User {
@@ -136,48 +135,48 @@ export class User {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @OneToMany("Product", "user")
-  products: any;
+  @OneToMany(() => Product, "user")
+  products?: Product[];
 
-  @OneToMany("Review", "user")
-  reviews: any;
+  @OneToMany(() => Review, "user")
+  reviews?: Review[];
 
-  @OneToMany("ChatroomMember", "user")
-  chatroomMembers: any;
+  @OneToMany(() => ChatroomMember, "user")
+  chatroomMembers?: ChatroomMember[];
 
-  @OneToMany("Message", "sender")
-  messages: any;
+  @OneToMany(() => Message, "sender")
+  messages?: Message[];
 
-  @OneToMany("Referral", "referrer")
-  referralsGiven: any;
+  @OneToMany(() => Referral, "referrer")
+  referralsGiven?: Referral[];
 
-  @OneToMany("Referral", "referredUser")
-  referralsReceived: any;
+  @OneToMany(() => Referral, "referredUser")
+  referralsReceived?: Referral[];
 
-  @OneToMany("ReferralRedemption", "user")
-  referralRedemptions: any;
+  @OneToMany(() => ReferralRedemption, "user")
+  referralRedemptions?: ReferralRedemption[];
 
-  @OneToMany("FCMDevice", "user")
-  fcmDevices: any;
+  @OneToMany(() => FCMDevice, "user")
+  fcmDevices?: FCMDevice[];
 
-  @OneToMany("CouponRedemption", "user")
-  couponRedemptions: any;
+  @OneToMany(() => CouponRedemption, "user")
+  couponRedemptions?: CouponRedemption[];
 
-  @OneToOne("Wallet", "user")
-  wallet: any;
+  @OneToOne(() => Wallet, "user")
+  wallet?: Wallet;
 
-  @OneToMany("Favorite", "user")
-  favorites: any;
+  @OneToMany(() => Favorite, "user")
+  favorites?: Favorite[];
 
-  @OneToMany("NotificationHistory", "user")
-  notificationHistory: any;
+  @OneToMany(() => NotificationHistory, "user")
+  notificationHistory?: NotificationHistory[];
 
-  @OneToMany("UserAnalytics", "user")
-  analytics: any;
+  @OneToMany(() => UserAnalytics, "user")
+  analytics?: UserAnalytics[];
 
-  @OneToMany("SearchHistory", "user")
-  searchHistory: any;
+  @OneToMany(() => SearchHistory, "user")
+  searchHistory?: SearchHistory[];
 
-  @OneToMany("RecentlyViewed", "user")
-  recentlyViewed: any;
+  @OneToMany(() => RecentlyViewed, "user")
+  recentlyViewed?: RecentlyViewed[];
 }

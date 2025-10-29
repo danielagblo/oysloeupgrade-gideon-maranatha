@@ -44,13 +44,13 @@ export class Subcategory {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @ManyToOne("Category", "subcategories", { onDelete: "RESTRICT" })
+  @ManyToOne(() => Category, "subcategories", { onDelete: "RESTRICT" })
   @JoinColumn({ name: "category_id" })
-  category: any;
+  category?: Category;
 
-  @OneToMany("Feature", "subcategory")
-  features: any;
+  @OneToMany(() => Feature, "subcategory")
+  features?: Feature[];
 
-  @OneToMany("Product", "subcategory")
-  products: any;
+  @OneToMany(() => Product, "subcategory")
+  products?: Product[];
 }

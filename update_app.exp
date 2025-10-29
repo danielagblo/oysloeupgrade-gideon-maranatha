@@ -1,0 +1,109 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+
+spawn ssh -o StrictHostKeyChecking=no root@207.154.219.165
+expect "password:"
+send "qazRyb-kexfy6-ketken\r"
+expect "# "
+
+send "cd ~\r"
+expect "# "
+
+send "echo '=== BACKING UP CURRENT CONFIG ==='\r"
+expect "# "
+send "cp ~/oysloe-backend/backend/.env.production ~/env.production.backup\r"
+expect "# "
+
+send "echo '=== DOWNLOADING NEW CODE ==='\r"
+expect "# "
+send "wget -q https://github.com/danielagblo/oysloeupgrade-gideon-maranatha/archive/refs/heads/main.zip\r"
+expect "# "
+send "ls -la main.zip\r"
+expect "# "
+
+send "echo '=== UNZIPPING NEW CODE ==='\r"
+expect "# "
+send "unzip -q main.zip\r"
+expect "# "
+send "ls -la oysloeupgrade-gideon-maranatha-main/\r"
+expect "# "
+
+send "echo '=== REPLACING BACKEND CODE ==='\r"
+expect "# "
+send "rm -rf ~/oysloe-backend/backend\r"
+expect "# "
+send "mv ~/oysloeupgrade-gideon-maranatha-main/backend ~/oysloe-backend/\r"
+expect "# "
+send "cd ~/oysloe-backend/backend\r"
+expect "# "
+
+send "echo '=== RESTORING CONFIG ==='\r"
+expect "# "
+send "cp ~/env.production.backup .env.production\r"
+expect "# "
+
+send "echo '=== INSTALLING DEPENDENCIES ==='\r"
+expect "# "
+send "export PATH=\"\$HOME/.bun/bin:\$PATH\"\r"
+expect "# "
+send "\$HOME/.bun/bin/bun install\r"
+expect "# "
+
+send "echo '=== BUILDING APPLICATION ==='\r"
+expect "# "
+send "\$HOME/.bun/bin/bun run build\r"
+expect "# "
+
+send "echo '=== BUILDING NEW DOCKER IMAGE ==='\r"
+expect "# "
+send "docker build -t oysloe-backend-prod:new .\r"
+expect "# "
+
+send "echo '=== STOPPING OLD CONTAINER ==='\r"
+expect "# "
+send "docker stop oysloe-backend-prod 2>/dev/null || true\r"
+expect "# "
+send "docker rm oysloe-backend-prod 2>/dev/null || true\r"
+expect "# "
+
+send "echo '=== STARTING NEW CONTAINER ==='\r"
+expect "# "
+send "docker run -d --name oysloe-backend-prod --env-file .env.production --network oysloe-net -p 3000:3000 -v /srv/oysloe/uploads:/app/uploads --restart unless-stopped oysloe-backend-prod:new\r"
+expect "# "
+
+send "echo '=== WAITING FOR STARTUP ==='\r"
+expect "# "
+send "sleep 15\r"
+expect "# "
+
+send "echo '=== CHECKING STATUS ==='\r"
+expect "# "
+send "docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'\r"
+expect "# "
+
+send "echo ''\r"
+expect "# "
+send "echo '=== TESTING APP ==='\r"
+expect "# "
+send "curl -f -s --max-time 10 http://localhost:3000/health && echo '✅ APP IS LIVE!' || echo '❌ APP NOT STARTING'\r"
+expect "# "
+
+send "echo ''\r"
+expect "# "
+send "echo '=== EXTERNAL ACCESS TEST ==='\r"
+expect "# "
+send "curl -f -s --max-time 10 http://207.154.219.165/health && echo '✅ EXTERNAL ACCESS WORKS!' || echo '❌ EXTERNAL ACCESS FAILED'\r"
+expect "# "
+
+send "echo ''\r"
+expect "# "
+send "echo '=== CLEANUP ==='\r"
+expect "# "
+send "rm -f ~/main.zip ~/env.production.backup\r"
+expect "# "
+send "rm -rf ~/oysloeupgrade-gideon-maranatha-main\r"
+expect "# "
+
+send "exit\r"
+expect eof

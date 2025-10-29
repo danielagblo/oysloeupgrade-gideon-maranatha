@@ -8,8 +8,8 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 
-import { Product } from "./Product.js";
-import { Subcategory } from "./Subcategory.js";
+import type { Product } from "./Product.js";
+import type { Subcategory } from "./Subcategory.js";
 
 @Entity("categories")
 export class Category {
@@ -41,9 +41,9 @@ export class Category {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @OneToMany("Subcategory", "category")
-  subcategories: any;
+  @OneToMany(() => Subcategory, "category")
+  subcategories?: Subcategory[];
 
-  @OneToMany("Product", "category")
-  products: any;
+  @OneToMany(() => Product, "category")
+  products?: Product[];
 }

@@ -77,6 +77,6 @@ export class Coupon {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @OneToMany("CouponRedemption", "coupon")
+  @OneToMany(() => CouponRedemption, "coupon")
   redemptions?: CouponRedemption[];
 }
