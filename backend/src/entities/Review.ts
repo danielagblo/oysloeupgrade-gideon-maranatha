@@ -41,11 +41,11 @@ export class Review {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @ManyToOne("Product", "reviews", { onDelete: "CASCADE" })
+  @ManyToOne(() => Product, (p) => p.reviews, { onDelete: "CASCADE" })
   @JoinColumn({ name: "product_id" })
-  product: any;
+  product?: Product;
 
-  @ManyToOne("User", "reviews", { onDelete: "CASCADE" })
+  @ManyToOne(() => User, (u) => u.reviews, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
-  user: any;
+  user?: User;
 }

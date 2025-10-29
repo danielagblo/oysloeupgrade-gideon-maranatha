@@ -37,10 +37,10 @@ export class Feature {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @ManyToOne("Subcategory", "features", { onDelete: "CASCADE" })
+  @ManyToOne(() => Subcategory, (s) => s.features, { onDelete: "CASCADE" })
   @JoinColumn({ name: "subcategory_id" })
-  subcategory: any;
+  subcategory?: Subcategory;
 
-  @OneToMany("ProductFeature", "feature")
-  productFeatures: any;
+  @OneToMany(() => ProductFeature, (pf) => pf.feature)
+  productFeatures?: ProductFeature[];
 }

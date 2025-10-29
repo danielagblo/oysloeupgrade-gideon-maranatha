@@ -83,30 +83,30 @@ export class Product {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @ManyToOne("User", "products", { onDelete: "CASCADE" })
+  @ManyToOne(() => User, (u) => u.products, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
-  user: any;
+  user?: User;
 
-  @ManyToOne("Category", "products", { onDelete: "RESTRICT" })
+  @ManyToOne(() => Category, (c) => c.products, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "category_id" })
-  category: any;
+  category?: Category;
 
-  @ManyToOne("Subcategory", "products", { onDelete: "RESTRICT" })
+  @ManyToOne(() => Subcategory, (s) => s.products, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "subcategory_id" })
-  subcategory: any;
+  subcategory?: Subcategory;
 
-  @OneToMany("ProductImage", "product")
-  images: any;
+  @OneToMany(() => ProductImage, (pi) => pi.product)
+  images?: ProductImage[];
 
-  @OneToMany("ProductFeature", "product")
-  productFeatures: any;
+  @OneToMany(() => ProductFeature, (pf) => pf.product)
+  productFeatures?: ProductFeature[];
 
-  @OneToMany("Review", "product")
-  reviews: any;
+  @OneToMany(() => Review, (r) => r.product)
+  reviews?: Review[];
 
-  @OneToMany("Favorite", "product")
-  favorites: any;
+  @OneToMany(() => Favorite, (f) => f.product)
+  favorites?: Favorite[];
 
-  @OneToMany("RecentlyViewed", "product")
-  recentlyViewed: any;
+  @OneToMany(() => RecentlyViewed, (rv) => rv.product)
+  recentlyViewed?: RecentlyViewed[];
 }

@@ -34,11 +34,11 @@ export class ProductFeature {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @ManyToOne("Product", "productFeatures", { onDelete: "CASCADE" })
+  @ManyToOne(() => Product, (p) => p.productFeatures, { onDelete: "CASCADE" })
   @JoinColumn({ name: "product_id" })
-  product: any;
+  product?: Product;
 
-  @ManyToOne("Feature", "productFeatures", { onDelete: "CASCADE" })
+  @ManyToOne(() => Feature, (f) => f.productFeatures, { onDelete: "CASCADE" })
   @JoinColumn({ name: "feature_id" })
-  feature: any;
+  feature?: Feature;
 }

@@ -47,7 +47,7 @@ export class ProductImage {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @ManyToOne("Product", "images", { onDelete: "CASCADE" })
+  @ManyToOne(() => Product, (p) => p.images, { onDelete: "CASCADE" })
   @JoinColumn({ name: "product_id" })
-  product: any;
+  product?: Product;
 }

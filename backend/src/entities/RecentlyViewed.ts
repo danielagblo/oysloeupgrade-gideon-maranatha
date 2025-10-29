@@ -27,11 +27,11 @@ export class RecentlyViewed {
   @CreateDateColumn({ type: "timestamp", name: "viewed_at" })
   viewedAt!: Date;
 
-  @ManyToOne("User", "recentlyViewed", { onDelete: "CASCADE" })
+  @ManyToOne(() => User, (u) => u.recentlyViewed, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
-  user: any;
+  user?: User;
 
-  @ManyToOne("Product", "recentlyViewed", { onDelete: "CASCADE" })
+  @ManyToOne(() => Product, (p) => p.recentlyViewed, { onDelete: "CASCADE" })
   @JoinColumn({ name: "product_id" })
-  product: any;
+  product?: Product;
 }

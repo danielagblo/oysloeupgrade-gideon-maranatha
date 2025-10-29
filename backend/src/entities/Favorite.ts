@@ -29,11 +29,11 @@ export class Favorite {
   @CreateDateColumn({ type: "timestamp", name: "created_at" })
   createdAt!: Date;
 
-  @ManyToOne("User", "favorites", { onDelete: "CASCADE" })
+  @ManyToOne(() => User, (u) => u.favorites, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
-  user: any;
+  user?: User;
 
-  @ManyToOne("Product", "favorites", { onDelete: "CASCADE" })
+  @ManyToOne(() => Product, (p) => p.favorites, { onDelete: "CASCADE" })
   @JoinColumn({ name: "product_id" })
-  product: any;
+  product?: Product;
 }
