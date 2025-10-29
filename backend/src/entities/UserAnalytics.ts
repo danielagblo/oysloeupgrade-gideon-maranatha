@@ -7,7 +7,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import type { User } from "./User.js";
+import { User } from "./User.js";
 
 export type EventType =
   | "product_view"
@@ -47,7 +47,7 @@ export class UserAnalytics {
   @CreateDateColumn({ type: "timestamp", name: "created_at" })
   createdAt!: Date;
 
-  @ManyToOne("User", "analytics", { onDelete: "CASCADE" })
+  @ManyToOne(() => User, (u) => u.analytics, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user?: User;
 }

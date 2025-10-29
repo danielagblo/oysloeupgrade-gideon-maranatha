@@ -136,48 +136,48 @@ export class User {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @OneToMany("Product", "user")
-  products: any;
+  @OneToMany(() => Product, (p) => p.user)
+  products?: Product[];
 
-  @OneToMany("Review", "user")
-  reviews: any;
+  @OneToMany(() => Review, (r) => r.user)
+  reviews?: Review[];
 
-  @OneToMany("ChatroomMember", "user")
-  chatroomMembers: any;
+  @OneToMany(() => ChatroomMember, (cm) => cm.user)
+  chatroomMembers?: ChatroomMember[];
 
-  @OneToMany("Message", "sender")
-  messages: any;
+  @OneToMany(() => Message, (m) => m.sender)
+  messages?: Message[];
 
-  @OneToMany("Referral", "referrer")
-  referralsGiven: any;
+  @OneToMany(() => Referral, (r) => r.referrer)
+  referralsGiven?: Referral[];
 
-  @OneToMany("Referral", "referredUser")
-  referralsReceived: any;
+  @OneToMany(() => Referral, (r) => r.referredUser)
+  referralsReceived?: Referral[];
 
-  @OneToMany("ReferralRedemption", "user")
-  referralRedemptions: any;
+  @OneToMany(() => ReferralRedemption, (rr) => rr.user)
+  referralRedemptions?: ReferralRedemption[];
 
-  @OneToMany("FCMDevice", "user")
-  fcmDevices: any;
+  @OneToMany(() => FCMDevice, (fd) => fd.user)
+  fcmDevices?: FCMDevice[];
 
-  @OneToMany("CouponRedemption", "user")
-  couponRedemptions: any;
+  @OneToMany(() => CouponRedemption, (cr) => cr.user)
+  couponRedemptions?: CouponRedemption[];
 
-  @OneToOne("Wallet", "user")
-  wallet: any;
+  @OneToOne(() => Wallet, (w) => w.user)
+  wallet?: Wallet;
 
-  @OneToMany("Favorite", "user")
-  favorites: any;
+  @OneToMany(() => Favorite, (f) => f.user)
+  favorites?: Favorite[];
 
-  @OneToMany("NotificationHistory", "user")
-  notificationHistory: any;
+  @OneToMany(() => NotificationHistory, (nh) => nh.user)
+  notificationHistory?: NotificationHistory[];
 
-  @OneToMany("UserAnalytics", "user")
-  analytics: any;
+  @OneToMany(() => UserAnalytics, (ua) => ua.user)
+  analytics?: UserAnalytics[];
 
-  @OneToMany("SearchHistory", "user")
-  searchHistory: any;
+  @OneToMany(() => SearchHistory, (sh) => sh.user)
+  searchHistory?: SearchHistory[];
 
-  @OneToMany("RecentlyViewed", "user")
-  recentlyViewed: any;
+  @OneToMany(() => RecentlyViewed, (rv) => rv.user)
+  recentlyViewed?: RecentlyViewed[];
 }

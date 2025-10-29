@@ -1502,6 +1502,18 @@
         }
       }
     },
+    "/api-v1/favorites": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api-v1/wallet/transactions": {
       "get": {
         "tags": [
@@ -1710,6 +1722,54 @@
       "patch": {
         "tags": [
           "Review"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api-v1/:id/mark-as-sold": {
+      "post": {
+        "tags": [
+          "Product"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api-v1/:id/pause": {
+      "post": {
+        "tags": [
+          "Product"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api-v1/:id/activate": {
+      "post": {
+        "tags": [
+          "Product"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api-v1/:id/reviews": {
+      "get": {
+        "tags": [
+          "Product"
         ],
         "responses": {
           "200": {

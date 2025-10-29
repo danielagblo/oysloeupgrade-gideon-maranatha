@@ -7,7 +7,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import type { User } from "./User.js";
+import { User } from "./User.js";
 
 export type NotificationType =
   | "chat_message"
@@ -51,7 +51,7 @@ export class NotificationHistory {
   @CreateDateColumn({ type: "timestamp", name: "created_at" })
   createdAt!: Date;
 
-  @ManyToOne("User", "notificationHistory", { onDelete: "CASCADE" })
+  @ManyToOne(() => User, (u) => u.notificationHistory, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user?: User;
 }

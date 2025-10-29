@@ -7,7 +7,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import type { User } from "./User.js";
+import { User } from "./User.js";
 
 @Entity("search_history")
 @Index(["userId", "createdAt"])
@@ -29,7 +29,7 @@ export class SearchHistory {
   @CreateDateColumn({ type: "timestamp", name: "created_at" })
   createdAt!: Date;
 
-  @ManyToOne("User", "searchHistory", { onDelete: "CASCADE" })
+  @ManyToOne(() => User, (u) => u.searchHistory, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user?: User;
 }
