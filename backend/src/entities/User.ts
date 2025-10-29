@@ -37,7 +37,12 @@ export class User {
   @Index()
   phone?: string;
 
-  @Column({ type: "varchar", length: 128, name: "password_hash", nullable: true })
+  @Column({
+    type: "varchar",
+    length: 128,
+    name: "password_hash",
+    nullable: true,
+  })
   passwordHash?: string;
 
   @Column({ type: "varchar", length: 50, nullable: true })
@@ -67,7 +72,13 @@ export class User {
   @Column({ type: "integer", nullable: true, name: "avatar_height" })
   avatarHeight?: number;
 
-  @Column({ type: "varchar", length: 20, unique: true, nullable: true, name: "referral_code" })
+  @Column({
+    type: "varchar",
+    length: 20,
+    unique: true,
+    nullable: true,
+    name: "referral_code",
+  })
   referralCode?: string;
 
   @Column({ type: "bigint", default: 0, name: "referral_points" })
@@ -91,10 +102,20 @@ export class User {
   @Column({ type: "boolean", default: false, name: "email_verified" })
   emailVerified!: boolean;
 
-  @Column({ type: "varchar", length: 50, nullable: true, name: "preferred_notification_email" })
+  @Column({
+    type: "varchar",
+    length: 50,
+    nullable: true,
+    name: "preferred_notification_email",
+  })
   preferredNotificationEmail?: string;
 
-  @Column({ type: "varchar", length: 15, nullable: true, name: "preferred_notification_phone" })
+  @Column({
+    type: "varchar",
+    length: 15,
+    nullable: true,
+    name: "preferred_notification_phone",
+  })
   preferredNotificationPhone?: string;
 
   @Column({ type: "boolean", default: true, name: "created_from_app" })
@@ -115,48 +136,48 @@ export class User {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @OneToMany(() => Product, (p) => p.user)
-  products?: Product[];
+  @OneToMany("Product", "user")
+  products: any;
 
-  @OneToMany(() => Review, (r) => r.user)
-  reviews?: Review[];
+  @OneToMany("Review", "user")
+  reviews: any;
 
-  @OneToMany(() => ChatroomMember, (cm) => cm.user)
-  chatroomMembers?: ChatroomMember[];
+  @OneToMany("ChatroomMember", "user")
+  chatroomMembers: any;
 
-  @OneToMany(() => Message, (m) => m.sender)
-  messages?: Message[];
+  @OneToMany("Message", "sender")
+  messages: any;
 
-  @OneToMany(() => Referral, (ref) => ref.referrer)
-  referralsGiven?: Referral[];
+  @OneToMany("Referral", "referrer")
+  referralsGiven: any;
 
-  @OneToMany(() => Referral, (ref) => ref.referredUser)
-  referralsReceived?: Referral[];
+  @OneToMany("Referral", "referredUser")
+  referralsReceived: any;
 
-  @OneToMany(() => ReferralRedemption, (rr) => rr.user)
-  referralRedemptions?: ReferralRedemption[];
+  @OneToMany("ReferralRedemption", "user")
+  referralRedemptions: any;
 
-  @OneToMany(() => FCMDevice, (d) => d.user)
-  fcmDevices?: FCMDevice[];
+  @OneToMany("FCMDevice", "user")
+  fcmDevices: any;
 
-  @OneToMany(() => CouponRedemption, (cr) => cr.user)
-  couponRedemptions?: CouponRedemption[];
+  @OneToMany("CouponRedemption", "user")
+  couponRedemptions: any;
 
-  @OneToOne(() => Wallet, (w) => w.user)
-  wallet?: Wallet;
+  @OneToOne("Wallet", "user")
+  wallet: any;
 
-  @OneToMany(() => Favorite, (f) => f.user)
-  favorites?: Favorite[];
+  @OneToMany("Favorite", "user")
+  favorites: any;
 
-  @OneToMany(() => NotificationHistory, (nh) => nh.user)
-  notificationHistory?: NotificationHistory[];
+  @OneToMany("NotificationHistory", "user")
+  notificationHistory: any;
 
-  @OneToMany(() => UserAnalytics, (ua) => ua.user)
-  analytics?: UserAnalytics[];
+  @OneToMany("UserAnalytics", "user")
+  analytics: any;
 
-  @OneToMany(() => SearchHistory, (sh) => sh.user)
-  searchHistory?: SearchHistory[];
+  @OneToMany("SearchHistory", "user")
+  searchHistory: any;
 
-  @OneToMany(() => RecentlyViewed, (rv) => rv.user)
-  recentlyViewed?: RecentlyViewed[];
+  @OneToMany("RecentlyViewed", "user")
+  recentlyViewed: any;
 }

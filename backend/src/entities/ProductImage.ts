@@ -6,8 +6,10 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from "typeorm";
-import type { Product } from "./Product.js";
+
+import { Product } from "./Product.js";
 
 @Entity("product_images")
 export class ProductImage {
@@ -18,29 +20,23 @@ export class ProductImage {
   @Index()
   productId!: string;
 
-  @Column({ type: "text", name: "cdn_public_id" })
-  cdnPublicId!: string;
+  @Column({ type: "text", name: "public_id" })
+  publicId!: string;
 
-  @Column({ type: "text", name: "cdn_url" })
-  cdnUrl!: string;
+  @Column({ type: "text", name: "url" })
+  url!: string;
 
-  @Column({ type: "text", name: "cdn_resource_type" })
-  cdnResourceType!: string;
+  @Column({ type: "varchar", length: 10, nullable: true })
+  format?: string;
 
-  @Column({ type: "text", name: "cdn_format" })
-  cdnFormat!: string;
+  @Column({ type: "integer", nullable: true })
+  bytes?: number;
 
-  @Column({ type: "integer", name: "cdn_bytes" })
-  cdnBytes!: number;
+  @Column({ type: "integer", nullable: true })
+  width?: number;
 
-  @Column({ type: "integer", nullable: true, name: "cdn_width" })
-  cdnWidth?: number;
-
-  @Column({ type: "integer", nullable: true, name: "cdn_height" })
-  cdnHeight?: number;
-
-  @Column({ type: "boolean", default: false, name: "is_primary" })
-  isPrimary!: boolean;
+  @Column({ type: "integer", nullable: true })
+  height?: number;
 
   @Column({ type: "integer", default: 0, name: "display_order" })
   displayOrder!: number;
@@ -48,7 +44,10 @@ export class ProductImage {
   @CreateDateColumn({ type: "timestamp", name: "created_at" })
   createdAt!: Date;
 
+  @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
+  updatedAt!: Date;
+
   @ManyToOne("Product", "images", { onDelete: "CASCADE" })
   @JoinColumn({ name: "product_id" })
-  product?: Product;
+  product: any;
 }

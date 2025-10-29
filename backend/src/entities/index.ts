@@ -49,6 +49,7 @@ import { FCMDevice } from "./FCMDevice.js";
 import { Feature } from "./Feature.js";
 
 export const ENTITIES = [
+  // Base entities first (no dependencies)
   Category,
   Subcategory,
   Feature,
@@ -59,9 +60,12 @@ export const ENTITIES = [
   OTPCode,
   Chatroom,
 
+  // Product and related entities
   Product,
   ProductImage,
   ProductFeature,
+
+  // Entities that depend on Product/User
   Review,
   Favorite,
   RecentlyViewed,

@@ -1,36 +1,44 @@
 import {
   Column,
+  CreateDateColumn,
   Entity,
   Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
-  Unique,
-} from 'typeorm';
-import type { Feature } from './Feature.js';
-import type { Product } from './Product.js';
+  UpdateDateColumn,
+} from "typeorm";
 
-@Entity('product_features')
-@Unique(['productId', 'featureId'])
+import { Product } from "./Product.js";
+import { Feature } from "./Feature.js";
+
+@Entity("product_features")
 export class ProductFeature {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column({ type: 'uuid', name: 'product_id' })
+  @Column({ type: "uuid", name: "product_id" })
   @Index()
   productId!: string;
 
-  @Column({ type: 'uuid', name: 'feature_id' })
+  @Column({ type: "uuid", name: "feature_id" })
+  @Index()
   featureId!: string;
 
-  @Column({ type: 'varchar', length: 255 })
-  value!: string;
+  @Column({ type: "text", nullable: true })
+  value?: string;
 
-  @ManyToOne('Product', 'features', { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'product_id' })
-  product?: Product;
+  @CreateDateColumn({ type: "timestamp", name: "created_at" })
+  createdAt!: Date;
 
-  @ManyToOne('Feature', 'productFeatures', { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'feature_id' })
-  feature?: Feature;
+  @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
+  updatedAt!: Date;
+
+  @ManyToOne("Product", "productFeatures", { onDelete: "CASCADE" })
+  @JoinColumn({ name: "product_id" })
+  product: any;
+
+  @ManyToOne("Feature", "productFeatures", { onDelete: "CASCADE" })
+  @JoinColumn({ name: "feature_id" })
+  feature: any;
 }

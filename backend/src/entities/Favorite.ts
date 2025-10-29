@@ -9,12 +9,11 @@ import {
   Unique,
 } from "typeorm";
 
-import { Product } from "./Product.js";
 import { User } from "./User.js";
+import { Product } from "./Product.js";
 
-@Entity("user_favorites")
-@Unique(["userId", "productId"])
-@Index(["userId", "createdAt"])
+@Entity("favorites")
+@Unique("uq_favorites_user_product", ["userId", "productId"])
 export class Favorite {
   @PrimaryGeneratedColumn("uuid")
   id!: string;

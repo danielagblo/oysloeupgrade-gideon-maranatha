@@ -6,14 +6,12 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
-  Unique,
 } from "typeorm";
-import type { Product } from "./Product.js";
-import type { User } from "./User.js";
+
+import { User } from "./User.js";
+import { Product } from "./Product.js";
 
 @Entity("recently_viewed")
-@Unique(["userId", "productId"])
-@Index(["userId", "viewedAt"])
 export class RecentlyViewed {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
@@ -26,17 +24,14 @@ export class RecentlyViewed {
   @Index()
   productId!: string;
 
-  @CreateDateColumn({ type: "timestamp", name: "created_at" })
-  createdAt!: Date;
-
-  @Column({ type: "timestamp", name: "viewed_at" })
+  @CreateDateColumn({ type: "timestamp", name: "viewed_at" })
   viewedAt!: Date;
 
   @ManyToOne("User", "recentlyViewed", { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
-  user?: User;
+  user: any;
 
   @ManyToOne("Product", "recentlyViewed", { onDelete: "CASCADE" })
   @JoinColumn({ name: "product_id" })
-  product?: Product;
+  product: any;
 }
