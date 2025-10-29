@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
   Unique,
 } from 'typeorm';
-import type { User } from './User.js';
+import { User } from './User.js';
 
 @Entity('referrals')
 @Unique(['referrerId', 'referredUserId'])
@@ -41,11 +41,11 @@ export class Referral {
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt!: Date;
 
-  @ManyToOne('User', 'referralsGiven', { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (u) => u.referralsGiven, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'referrer_id' })
   referrer?: User;
 
-  @ManyToOne('User', 'referralsReceived', { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (u) => u.referralsReceived, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'referred_user_id' })
   referredUser?: User;
 }

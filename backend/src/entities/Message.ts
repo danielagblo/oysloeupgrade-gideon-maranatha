@@ -7,8 +7,8 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import type { Chatroom } from './Chatroom.js';
-import type { User } from './User.js';
+import { Chatroom } from './Chatroom.js';
+import { User } from './User.js';
 
 export type MessageType = 'text' | 'audio' | 'image';
 
@@ -45,11 +45,11 @@ export class Message {
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt!: Date;
 
-  @ManyToOne('Chatroom', 'messages', { onDelete: 'CASCADE' })
+  @ManyToOne(() => Chatroom, (room) => room.messages, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'room_id' })
   room?: Chatroom;
 
-  @ManyToOne('User', 'messages', { onDelete: 'SET NULL' })
+  @ManyToOne(() => User, (user) => user.messages, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'sender_id' })
   sender?: User;
 }

@@ -6,8 +6,8 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import type { Chatroom } from './Chatroom.js';
-import type { User } from './User.js';
+import { Chatroom } from './Chatroom.js';
+import { User } from './User.js';
 
 @Entity('chatroom_members')
 export class ChatroomMember {
@@ -29,11 +29,11 @@ export class ChatroomMember {
   @CreateDateColumn({ name: 'joined_at' })
   joinedAt!: Date;
 
-  @ManyToOne('Chatroom', 'members')
+  @ManyToOne(() => Chatroom, (room) => room.members, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'chatroom_id' })
   chatroom?: Chatroom;
 
-  @ManyToOne('User', 'chatroomMembers')
+  @ManyToOne(() => User, (user) => user.chatroomMembers, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user?: User;
 }

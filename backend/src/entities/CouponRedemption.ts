@@ -8,8 +8,8 @@ import {
   PrimaryGeneratedColumn,
   Unique,
 } from 'typeorm';
-import type { Coupon } from './Coupon.js';
-import type { User } from './User.js';
+import { Coupon } from './Coupon.js';
+import { User } from './User.js';
 
 @Entity('coupon_redemptions')
 @Unique(['userId', 'couponId'])
@@ -34,11 +34,11 @@ export class CouponRedemption {
   @CreateDateColumn({ type: 'timestamp', name: 'redeemed_at' })
   redeemedAt!: Date;
 
-  @ManyToOne('Coupon', 'redemptions', { onDelete: 'CASCADE' })
+  @ManyToOne(() => Coupon, (c) => c.redemptions, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'coupon_id' })
   coupon?: Coupon;
 
-  @ManyToOne('User', 'couponRedemptions', { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (u) => u.couponRedemptions, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user?: User;
 }
