@@ -16,7 +16,9 @@ export const AppDataSource = new DataSource({
   database: config.database.name,
   synchronize: false,
   logging: config.database.logging,
-  entities: [...ENTITIES],
+  entities: config.server.isProduction
+    ? [...ENTITIES] // In production, use bundled ENTITIES array
+    : [join(__dirname, "entities", "**", "*.{ts,js}")], // In development, use glob pattern
   migrations: [join(__dirname, "migrations", "*.{ts,js}")],
   subscribers: [],
   ssl: config.server.isProduction ? { rejectUnauthorized: false } : false,
