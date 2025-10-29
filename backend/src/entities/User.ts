@@ -8,6 +8,20 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import type { Product } from "./Product.js";
+import type { Review } from "./Review.js";
+import type { ChatroomMember } from "./ChatroomMember.js";
+import type { Message } from "./Message.js";
+import type { Referral } from "./Referral.js";
+import type { ReferralRedemption } from "./ReferralRedemption.js";
+import type { FCMDevice } from "./FCMDevice.js";
+import type { CouponRedemption } from "./CouponRedemption.js";
+import type { Wallet } from "./Wallet.js";
+import type { Favorite } from "./Favorite.js";
+import type { NotificationHistory } from "./NotificationHistory.js";
+import type { UserAnalytics } from "./UserAnalytics.js";
+import type { SearchHistory } from "./SearchHistory.js";
+import type { RecentlyViewed } from "./RecentlyViewed.js";
 
 @Entity("users")
 export class User {
@@ -121,52 +135,48 @@ export class User {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @OneToMany("Product", "user")
-  products?: unknown[];
+  @OneToMany(() => Product, "user")
+  products?: Product[];
 
-  @OneToMany("Review", "user")
-  reviews?: unknown[];
+  @OneToMany(() => Review, "user")
+  reviews?: Review[];
 
-  @OneToMany("ChatroomMember", "user")
-  chatroomMembers?: unknown[];
+  @OneToMany(() => ChatroomMember, "user")
+  chatroomMembers?: ChatroomMember[];
 
-  @OneToMany("Message", "sender")
-  messages?: unknown[];
+  @OneToMany(() => Message, "sender")
+  messages?: Message[];
 
-  @OneToMany("Referral", "referrer")
-  referralsGiven?: unknown[];
+  @OneToMany(() => Referral, "referrer")
+  referralsGiven?: Referral[];
 
-  @OneToMany("Referral", "referredUser")
-  referralsReceived?: unknown[];
+  @OneToMany(() => Referral, "referredUser")
+  referralsReceived?: Referral[];
 
-  @OneToMany("ReferralRedemption", "user")
-  referralRedemptions?: unknown[];
+  @OneToMany(() => ReferralRedemption, "user")
+  referralRedemptions?: ReferralRedemption[];
 
-  @OneToMany("FCMDevice", "user")
-  fcmDevices?: unknown[];
+  @OneToMany(() => FCMDevice, "user")
+  fcmDevices?: FCMDevice[];
 
-  @OneToMany("CouponRedemption", "user")
-  couponRedemptions?: unknown[];
+  @OneToMany(() => CouponRedemption, "user")
+  couponRedemptions?: CouponRedemption[];
 
-  @OneToOne("Wallet", "user")
-  wallet?: {
-    id: string;
-    balance: number;
-    ledger?: unknown[];
-  };
+  @OneToOne(() => Wallet, "user")
+  wallet?: Wallet;
 
-  @OneToMany("Favorite", "user")
-  favorites?: unknown[];
+  @OneToMany(() => Favorite, "user")
+  favorites?: Favorite[];
 
-  @OneToMany("NotificationHistory", "user")
-  notificationHistory?: unknown[];
+  @OneToMany(() => NotificationHistory, "user")
+  notificationHistory?: NotificationHistory[];
 
-  @OneToMany("UserAnalytics", "user")
-  analytics?: unknown[];
+  @OneToMany(() => UserAnalytics, "user")
+  analytics?: UserAnalytics[];
 
-  @OneToMany("SearchHistory", "user")
-  searchHistory?: unknown[];
+  @OneToMany(() => SearchHistory, "user")
+  searchHistory?: SearchHistory[];
 
-  @OneToMany("RecentlyViewed", "user")
-  recentlyViewed?: unknown[];
+  @OneToMany(() => RecentlyViewed, "user")
+  recentlyViewed?: RecentlyViewed[];
 }

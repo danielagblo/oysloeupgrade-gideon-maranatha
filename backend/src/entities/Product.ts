@@ -80,34 +80,34 @@ export class Product {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @ManyToOne("User", "products", { onDelete: "CASCADE" })
+  @ManyToOne(() => User, "products", { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user?: User;
 
-  @ManyToOne("Category", "products", {
+  @ManyToOne(() => Category, "products", {
     onDelete: "RESTRICT",
   })
   @JoinColumn({ name: "category_id" })
   category?: Category;
 
-  @ManyToOne("Subcategory", "products", {
+  @ManyToOne(() => Subcategory, "products", {
     onDelete: "RESTRICT",
   })
   @JoinColumn({ name: "subcategory_id" })
   subcategory?: Subcategory;
 
-  @OneToMany("ProductImage", "product")
+  @OneToMany(() => ProductImage, "product")
   images?: ProductImage[];
 
-  @OneToMany("ProductFeature", "product")
+  @OneToMany(() => ProductFeature, "product")
   productFeatures?: ProductFeature[];
 
-  @OneToMany("Review", "product")
+  @OneToMany(() => Review, "product")
   reviews?: Review[];
 
-  @OneToMany("Favorite", "product")
-  favorites?: unknown[];
+  @OneToMany(() => Favorite, "product")
+  favorites?: Favorite[];
 
-  @OneToMany("RecentlyViewed", "product")
-  recentlyViewed?: unknown[];
+  @OneToMany(() => RecentlyViewed, "product")
+  recentlyViewed?: RecentlyViewed[];
 }
