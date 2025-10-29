@@ -5,35 +5,37 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
-} from 'typeorm';
-import { Chatroom } from './Chatroom.js';
-import { User } from './User.js';
+} from "typeorm";
+import { Chatroom } from "./Chatroom.js";
+import { User } from "./User.js";
 
-@Entity('chatroom_members')
+@Entity("chatroom_members")
 export class ChatroomMember {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column('uuid', { name: 'chatroom_id' })
+  @Column("uuid", { name: "chatroom_id" })
   chatroomId!: string;
 
-  @Column('uuid', { name: 'user_id' })
+  @Column("uuid", { name: "user_id" })
   userId!: string;
 
-  @Column('uuid', { nullable: true, name: 'last_read_message_id' })
+  @Column("uuid", { nullable: true, name: "last_read_message_id" })
   lastReadMessageId?: string;
 
-  @Column({ nullable: true, name: 'last_read_at' })
+  @Column({ nullable: true, name: "last_read_at" })
   lastReadAt?: Date;
 
-  @CreateDateColumn({ name: 'joined_at' })
+  @CreateDateColumn({ name: "joined_at" })
   joinedAt!: Date;
 
-  @ManyToOne(() => Chatroom, (room) => room.members, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'chatroom_id' })
+  @ManyToOne(() => Chatroom, (room) => room.members, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "chatroom_id" })
   chatroom?: Chatroom;
 
-  @ManyToOne(() => User, (user) => user.chatroomMembers, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'user_id' })
+  @ManyToOne(() => User, (user) => user.chatroomMembers, {
+    onDelete: "CASCADE",
+  })
+  @JoinColumn({ name: "user_id" })
   user?: User;
 }
