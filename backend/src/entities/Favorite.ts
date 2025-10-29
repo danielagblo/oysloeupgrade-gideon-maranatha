@@ -8,8 +8,9 @@ import {
   PrimaryGeneratedColumn,
   Unique,
 } from "typeorm";
-import type { Product } from "./Product.js";
-import type { User } from "./User.js";
+
+import { Product } from "./Product.js";
+import { User } from "./User.js";
 
 @Entity("user_favorites")
 @Unique(["userId", "productId"])
@@ -31,9 +32,9 @@ export class Favorite {
 
   @ManyToOne("User", "favorites", { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
-  user?: User;
+  user: any;
 
   @ManyToOne("Product", "favorites", { onDelete: "CASCADE" })
   @JoinColumn({ name: "product_id" })
-  product?: Product;
+  product: any;
 }

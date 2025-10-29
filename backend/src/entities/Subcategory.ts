@@ -8,48 +8,49 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-} from 'typeorm';
-import type { Category } from './Category.js';
-import type { Feature } from './Feature.js';
-import type { Product } from './Product.js';
+} from "typeorm";
 
-@Entity('subcategories')
+import { Category } from "./Category.js";
+import { Feature } from "./Feature.js";
+import { Product } from "./Product.js";
+
+@Entity("subcategories")
 export class Subcategory {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column({ type: 'uuid', name: 'category_id' })
+  @Column({ type: "uuid", name: "category_id" })
   @Index()
   categoryId!: string;
 
-  @Column({ type: 'varchar', length: 100 })
+  @Column({ type: "varchar", length: 100 })
   name!: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: "text", nullable: true })
   description?: string;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
+  @Column({ type: "varchar", length: 100, nullable: true })
   slug?: string;
 
-  @Column({ type: 'integer', default: 0, name: 'display_order' })
+  @Column({ type: "integer", default: 0, name: "display_order" })
   displayOrder!: number;
 
-  @Column({ type: 'boolean', default: false })
+  @Column({ type: "boolean", default: false })
   archived!: boolean;
 
-  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
+  @CreateDateColumn({ type: "timestamp", name: "created_at" })
   createdAt!: Date;
 
-  @UpdateDateColumn({ type: 'timestamp', name: 'updated_at' })
+  @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @ManyToOne('Category', 'subcategories', { onDelete: 'RESTRICT' })
-  @JoinColumn({ name: 'category_id' })
-  category?: Category;
+  @ManyToOne("Category", "subcategories", { onDelete: "RESTRICT" })
+  @JoinColumn({ name: "category_id" })
+  category: any;
 
-  @OneToMany('Feature', 'subcategory')
-  features?: Feature[];
+  @OneToMany("Feature", "subcategory")
+  features: any;
 
-  @OneToMany('Product', 'subcategory')
-  products?: Product[];
+  @OneToMany("Product", "subcategory")
+  products: any;
 }

@@ -49,15 +49,19 @@ import { FCMDevice } from "./FCMDevice.js";
 import { Feature } from "./Feature.js";
 
 export const ENTITIES = [
-  User,
-  Product,
-  Coupon,
-  Wallet,
-  NotificationHistory,
-  Referral,
-  ReferralRedemption,
+
   Category,
   Subcategory,
+  Feature,
+  Coupon,
+  User,
+  Wallet,
+  FCMDevice,
+  OTPCode,
+  Chatroom,
+
+  
+  Product,
   ProductImage,
   ProductFeature,
   Review,
@@ -67,10 +71,9 @@ export const ENTITIES = [
   UserAnalytics,
   WalletLedger,
   CouponRedemption,
-  Chatroom,
+  Referral,
+  ReferralRedemption,
+  NotificationHistory,
   ChatroomMember,
   Message,
-  OTPCode,
-  FCMDevice,
-  Feature,
 ] as const;
