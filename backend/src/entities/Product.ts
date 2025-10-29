@@ -10,14 +10,14 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 
-import type { Category } from "./Category.js";
-import type { ProductFeature } from "./ProductFeature.js";
-import type { ProductImage } from "./ProductImage.js";
-import type { Review } from "./Review.js";
-import type { Subcategory } from "./Subcategory.js";
-import type { User } from "./User.js";
-import type { Favorite } from "./Favorite.js";
-import type { RecentlyViewed } from "./RecentlyViewed.js";
+import { Category } from "./Category.js";
+import { ProductFeature } from "./ProductFeature.js";
+import { ProductImage } from "./ProductImage.js";
+import { Review } from "./Review.js";
+import { Subcategory } from "./Subcategory.js";
+import { User } from "./User.js";
+import { Favorite } from "./Favorite.js";
+import { RecentlyViewed } from "./RecentlyViewed.js";
 
 export type ProductStatus = "draft" | "active" | "paused" | "archived" | "sold";
 
@@ -83,30 +83,30 @@ export class Product {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @ManyToOne(() => User, "products", { onDelete: "CASCADE" })
+  @ManyToOne(() => User, (u) => u.products, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user?: User;
 
-  @ManyToOne(() => Category, "products", { onDelete: "RESTRICT" })
+  @ManyToOne(() => Category, (c) => c.products, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "category_id" })
   category?: Category;
 
-  @ManyToOne(() => Subcategory, "products", { onDelete: "RESTRICT" })
+  @ManyToOne(() => Subcategory, (s) => s.products, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "subcategory_id" })
   subcategory?: Subcategory;
 
-  @OneToMany(() => ProductImage, "product")
+  @OneToMany(() => ProductImage, (img) => img.product)
   images?: ProductImage[];
 
-  @OneToMany(() => ProductFeature, "product")
+  @OneToMany(() => ProductFeature, (pf) => pf.product)
   productFeatures?: ProductFeature[];
 
-  @OneToMany(() => Review, "product")
+  @OneToMany(() => Review, (r) => r.product)
   reviews?: Review[];
 
-  @OneToMany(() => Favorite, "product")
+  @OneToMany(() => Favorite, (f) => f.product)
   favorites?: Favorite[];
 
-  @OneToMany(() => RecentlyViewed, "product")
+  @OneToMany(() => RecentlyViewed, (rv) => rv.product)
   recentlyViewed?: RecentlyViewed[];
 }

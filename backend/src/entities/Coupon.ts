@@ -7,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import type { CouponRedemption } from "./CouponRedemption.js";
+import { CouponRedemption } from "./CouponRedemption.js";
 
 export type DiscountType = "percent" | "fixed";
 
@@ -50,25 +50,13 @@ export class Coupon {
   @Column({ type: "uuid", nullable: true, name: "created_by" })
   createdBy?: string;
 
-  @Column({
-    type: "decimal",
-    precision: 10,
-    scale: 2,
-    nullable: true,
-    name: "min_order_amount",
-  })
+  @Column({ type: "decimal", precision: 10, scale: 2, nullable: true, name: "min_order_amount" })
   minOrderAmount?: number;
 
   @Column({ type: "integer", nullable: true, name: "usage_limit" })
   usageLimit?: number;
 
-  @Column({
-    type: "decimal",
-    precision: 10,
-    scale: 2,
-    nullable: true,
-    name: "max_discount_amount",
-  })
+  @Column({ type: "decimal", precision: 10, scale: 2, nullable: true, name: "max_discount_amount" })
   maxDiscountAmount?: number;
 
   @CreateDateColumn({ type: "timestamp", name: "created_at" })
@@ -77,6 +65,6 @@ export class Coupon {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @OneToMany(() => CouponRedemption, "coupon")
+  @OneToMany(() => CouponRedemption, (cr) => cr.coupon)
   redemptions?: CouponRedemption[];
 }

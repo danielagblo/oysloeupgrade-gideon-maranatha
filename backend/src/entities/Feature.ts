@@ -10,8 +10,8 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 
-import type { ProductFeature } from "./ProductFeature.js";
-import type { Subcategory } from "./Subcategory.js";
+import { ProductFeature } from "./ProductFeature.js";
+import { Subcategory } from "./Subcategory.js";
 
 @Entity("features")
 export class Feature {
@@ -37,10 +37,10 @@ export class Feature {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @ManyToOne(() => Subcategory, "features", { onDelete: "CASCADE" })
+  @ManyToOne(() => Subcategory, (s) => s.features, { onDelete: "CASCADE" })
   @JoinColumn({ name: "subcategory_id" })
   subcategory?: Subcategory;
 
-  @OneToMany(() => ProductFeature, "feature")
+  @OneToMany(() => ProductFeature, (pf) => pf.feature)
   productFeatures?: ProductFeature[];
 }

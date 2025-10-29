@@ -8,20 +8,21 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import type { Product } from "./Product.js";
-import type { Review } from "./Review.js";
-import type { ChatroomMember } from "./ChatroomMember.js";
-import type { Message } from "./Message.js";
-import type { Referral } from "./Referral.js";
-import type { ReferralRedemption } from "./ReferralRedemption.js";
-import type { FCMDevice } from "./FCMDevice.js";
-import type { CouponRedemption } from "./CouponRedemption.js";
-import type { Wallet } from "./Wallet.js";
-import type { Favorite } from "./Favorite.js";
-import type { NotificationHistory } from "./NotificationHistory.js";
-import type { UserAnalytics } from "./UserAnalytics.js";
-import type { SearchHistory } from "./SearchHistory.js";
-import type { RecentlyViewed } from "./RecentlyViewed.js";
+
+import { Product } from "./Product.js";
+import { Review } from "./Review.js";
+import { ChatroomMember } from "./ChatroomMember.js";
+import { Message } from "./Message.js";
+import { Referral } from "./Referral.js";
+import { ReferralRedemption } from "./ReferralRedemption.js";
+import { FCMDevice } from "./FCMDevice.js";
+import { CouponRedemption } from "./CouponRedemption.js";
+import { Wallet } from "./Wallet.js";
+import { Favorite } from "./Favorite.js";
+import { NotificationHistory } from "./NotificationHistory.js";
+import { UserAnalytics } from "./UserAnalytics.js";
+import { SearchHistory } from "./SearchHistory.js";
+import { RecentlyViewed } from "./RecentlyViewed.js";
 
 @Entity("users")
 export class User {
@@ -36,12 +37,7 @@ export class User {
   @Index()
   phone?: string;
 
-  @Column({
-    type: "varchar",
-    length: 128,
-    name: "password_hash",
-    nullable: true,
-  })
+  @Column({ type: "varchar", length: 128, name: "password_hash", nullable: true })
   passwordHash?: string;
 
   @Column({ type: "varchar", length: 50, nullable: true })
@@ -71,13 +67,7 @@ export class User {
   @Column({ type: "integer", nullable: true, name: "avatar_height" })
   avatarHeight?: number;
 
-  @Column({
-    type: "varchar",
-    length: 20,
-    unique: true,
-    nullable: true,
-    name: "referral_code",
-  })
+  @Column({ type: "varchar", length: 20, unique: true, nullable: true, name: "referral_code" })
   referralCode?: string;
 
   @Column({ type: "bigint", default: 0, name: "referral_points" })
@@ -101,20 +91,10 @@ export class User {
   @Column({ type: "boolean", default: false, name: "email_verified" })
   emailVerified!: boolean;
 
-  @Column({
-    type: "varchar",
-    length: 50,
-    nullable: true,
-    name: "preferred_notification_email",
-  })
+  @Column({ type: "varchar", length: 50, nullable: true, name: "preferred_notification_email" })
   preferredNotificationEmail?: string;
 
-  @Column({
-    type: "varchar",
-    length: 15,
-    nullable: true,
-    name: "preferred_notification_phone",
-  })
+  @Column({ type: "varchar", length: 15, nullable: true, name: "preferred_notification_phone" })
   preferredNotificationPhone?: string;
 
   @Column({ type: "boolean", default: true, name: "created_from_app" })
@@ -135,48 +115,48 @@ export class User {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @OneToMany(() => Product, "user")
+  @OneToMany(() => Product, (p) => p.user)
   products?: Product[];
 
-  @OneToMany(() => Review, "user")
+  @OneToMany(() => Review, (r) => r.user)
   reviews?: Review[];
 
-  @OneToMany(() => ChatroomMember, "user")
+  @OneToMany(() => ChatroomMember, (cm) => cm.user)
   chatroomMembers?: ChatroomMember[];
 
-  @OneToMany(() => Message, "sender")
+  @OneToMany(() => Message, (m) => m.sender)
   messages?: Message[];
 
-  @OneToMany(() => Referral, "referrer")
+  @OneToMany(() => Referral, (ref) => ref.referrer)
   referralsGiven?: Referral[];
 
-  @OneToMany(() => Referral, "referredUser")
+  @OneToMany(() => Referral, (ref) => ref.referredUser)
   referralsReceived?: Referral[];
 
-  @OneToMany(() => ReferralRedemption, "user")
+  @OneToMany(() => ReferralRedemption, (rr) => rr.user)
   referralRedemptions?: ReferralRedemption[];
 
-  @OneToMany(() => FCMDevice, "user")
+  @OneToMany(() => FCMDevice, (d) => d.user)
   fcmDevices?: FCMDevice[];
 
-  @OneToMany(() => CouponRedemption, "user")
+  @OneToMany(() => CouponRedemption, (cr) => cr.user)
   couponRedemptions?: CouponRedemption[];
 
-  @OneToOne(() => Wallet, "user")
+  @OneToOne(() => Wallet, (w) => w.user)
   wallet?: Wallet;
 
-  @OneToMany(() => Favorite, "user")
+  @OneToMany(() => Favorite, (f) => f.user)
   favorites?: Favorite[];
 
-  @OneToMany(() => NotificationHistory, "user")
+  @OneToMany(() => NotificationHistory, (nh) => nh.user)
   notificationHistory?: NotificationHistory[];
 
-  @OneToMany(() => UserAnalytics, "user")
+  @OneToMany(() => UserAnalytics, (ua) => ua.user)
   analytics?: UserAnalytics[];
 
-  @OneToMany(() => SearchHistory, "user")
+  @OneToMany(() => SearchHistory, (sh) => sh.user)
   searchHistory?: SearchHistory[];
 
-  @OneToMany(() => RecentlyViewed, "user")
+  @OneToMany(() => RecentlyViewed, (rv) => rv.user)
   recentlyViewed?: RecentlyViewed[];
 }
