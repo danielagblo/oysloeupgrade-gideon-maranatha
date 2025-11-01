@@ -35,7 +35,7 @@ passport.use(
 
           user.googleId = profile.id;
           if (profile.photos?.[0]?.value) {
-            user.avatar = profile.photos[0].value;
+            user.avatarUrl = profile.photos[0].value;
           }
           await userRepository.save(user);
           return done(null, user);
@@ -45,7 +45,7 @@ passport.use(
         newUser.googleId = profile.id;
         newUser.email = profile.emails?.[0]?.value || '';
         newUser.name = profile.displayName || '';
-        newUser.avatar = profile.photos?.[0]?.value;
+        newUser.avatarUrl = profile.photos?.[0]?.value;
         newUser.referralCode = generateReferralCode();
         newUser.isActive = true;
         newUser.emailVerified = true;

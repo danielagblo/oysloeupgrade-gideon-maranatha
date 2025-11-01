@@ -34,11 +34,11 @@ export class CouponRedemption {
   @CreateDateColumn({ type: "timestamp", name: "redeemed_at" })
   redeemedAt!: Date;
 
-  @ManyToOne(() => Coupon, (c) => c.redemptions, { onDelete: "CASCADE" })
+  @ManyToOne(() => Coupon, (c: any) => c.redemptions, { onDelete: "CASCADE" })
   @JoinColumn({ name: "coupon_id" })
   coupon?: Coupon;
 
-  @ManyToOne(() => User, (u) => u.couponRedemptions, { onDelete: "CASCADE" })
+  @ManyToOne(() => User, (u: any) => u.couponRedemptions, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user?: User;
 }

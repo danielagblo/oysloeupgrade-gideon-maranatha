@@ -29,11 +29,11 @@ export class ChatroomMember {
   @CreateDateColumn({ name: "joined_at" })
   joinedAt!: Date;
 
-  @ManyToOne(() => Chatroom, (room) => room.members, { onDelete: "CASCADE" })
+  @ManyToOne(() => Chatroom, (room: any) => room.members, { onDelete: "CASCADE" })
   @JoinColumn({ name: "chatroom_id" })
   chatroom?: Chatroom;
 
-  @ManyToOne(() => User, (user) => user.chatroomMembers, {
+  @ManyToOne(() => User, (user: any) => user.chatroomMembers, {
     onDelete: "CASCADE",
   })
   @JoinColumn({ name: "user_id" })

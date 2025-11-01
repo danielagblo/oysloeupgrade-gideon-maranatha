@@ -1,0 +1,52 @@
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from "typeorm";
+
+import { AdminUser } from "./AdminUser.js";
+import { User } from "./User.js";
+
+@Entity('user_reports')
+export class UserReport {
+  @PrimaryGeneratedColumn()
+  id!: number;
+
+  @Column({ name: 'reporter_user_id' })
+  reporterUserId!: string;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'reporter_user_id' })
+  reporterUser?: any;
+
+  @Column({ name: 'reported_user_id' })
+  reportedUserId!: string;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'reported_user_id' })
+  reportedUser?: any;
+
+  @Column({ type: 'varchar', length: 50 })
+  reportType!: string;
+
+  @Column({ type: 'text' })
+  description!: string;
+
+  @Column({ type: 'varchar', length: 20, default: 'pending' })
+  status!: string; // 'pending', 'investigating', 'resolved', 'dismissed'
+
+  @Column({ name: 'admin_user_id', nullable: true })
+  adminUserId?: number;
+
+  @ManyToOne(() => AdminUser)
+  @JoinColumn({ name: 'admin_user_id' })
+  adminUser?: any;
+
+  @Column({ type: 'text', nullable: true })
+  resolution?: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  resolvedAt?: Date;
+
+  @CreateDateColumn()
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
+}

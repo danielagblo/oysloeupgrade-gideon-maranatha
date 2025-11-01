@@ -1,0 +1,93 @@
+import type { Request, Response, NextFunction } from "express";
+import { AdminAlertsService } from "../services/admin-alerts.service.js";
+import { SendAlertSchema, CreateCouponSchema, GetAlertsHistoryQuerySchema } from "../schemas/admin.js";
+
+const alertsService = new AdminAlertsService();
+
+export const sendAlert = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const body = SendAlertSchema.parse(req.body);
+    if (!req.admin?.id) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+        error: { code: "UNAUTHORIZED" },
+      });
+    }
+    const createdBy = req.admin.id!;
+      ...body,
+      createdBy,
+    });
+
+    res.json({
+      success: true,
+      data: {
+        alert: result.alert,
+        coupon: result.coupon,
+        recipients: result.recipients,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createCoupon = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const body = CreateCouponSchema.parse(req.body);
+    if (!req.admin?.id) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+        error: { code: "UNAUTHORIZED" },
+      });
+    }
+    const createdBy = req.admin.id;
+
+    const result = await alertsService.createCoupon({
+      ...body,
+      createdBy,
+    });
+
+    res.json({
+      success: true,
+      data: {
+        coupon: result.coupon,
+        alert: result.alert,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAlertsHistory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const query = GetAlertsHistoryQuerySchema.parse(req.query);
+    const result = await alertsService.getAlertsHistory(query);
+
+    res.json({
+      success: true,
+      data: {
+        alerts: result.alerts,
+        pagination: result.pagination,
+        stats: result.stats,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

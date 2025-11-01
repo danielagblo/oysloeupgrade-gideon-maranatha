@@ -31,9 +31,9 @@ export class Chatroom {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @OneToMany(() => ChatroomMember, (cm) => cm.chatroom)
+  @OneToMany(() => ChatroomMember,  (cm: any) => cm.chatroom)
   members?: ChatroomMember[];
 
-  @OneToMany(() => Message, (m) => m.room)
+  @OneToMany(() => Message,  (m: any) => m.room)
   messages?: Message[];
 }

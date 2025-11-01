@@ -22,60 +22,17 @@ export { Message } from "./Message.js";
 export { OTPCode } from "./OTPCode.js";
 export { FCMDevice } from "./FCMDevice.js";
 export { Feature } from "./Feature.js";
+export { AdminUser } from "./AdminUser.js";
+export { AdminSession } from "./AdminSession.js";
+export { AdminAuditLog } from "./AdminAuditLog.js";
+export { AdModerationHistory } from "./AdModerationHistory.js";
+export { SupportCase } from "./SupportCase.js";
+export { SupportMessage } from "./SupportMessage.js";
+export { SupportCaseAssignment } from "./SupportCaseAssignment.js";
+export { UserReport } from "./UserReport.js";
+export { SystemSettings } from "./SystemSettings.js";
+export { Alert } from "./Alert.js";
+export { JobApplication } from "./JobApplication.js";
+export { ApplicationDocument } from "./ApplicationDocument.js";
+export { ApplicationReview } from "./ApplicationReview.js";
 
-import { User } from "./User.js";
-import { Product } from "./Product.js";
-import { Coupon } from "./Coupon.js";
-import { Wallet } from "./Wallet.js";
-import { NotificationHistory } from "./NotificationHistory.js";
-import { Referral } from "./Referral.js";
-import { ReferralRedemption } from "./ReferralRedemption.js";
-import { Category } from "./Category.js";
-import { Subcategory } from "./Subcategory.js";
-import { ProductImage } from "./ProductImage.js";
-import { ProductFeature } from "./ProductFeature.js";
-import { Review } from "./Review.js";
-import { Favorite } from "./Favorite.js";
-import { RecentlyViewed } from "./RecentlyViewed.js";
-import { SearchHistory } from "./SearchHistory.js";
-import { UserAnalytics } from "./UserAnalytics.js";
-import { WalletLedger } from "./WalletLedger.js";
-import { CouponRedemption } from "./CouponRedemption.js";
-import { Chatroom } from "./Chatroom.js";
-import { ChatroomMember } from "./ChatroomMember.js";
-import { Message } from "./Message.js";
-import { OTPCode } from "./OTPCode.js";
-import { FCMDevice } from "./FCMDevice.js";
-import { Feature } from "./Feature.js";
-
-export const ENTITIES = [
-  // Base entities first (no dependencies)
-  Category,
-  Subcategory,
-  Feature,
-  Coupon,
-  User,
-  Wallet,
-  FCMDevice,
-  OTPCode,
-  Chatroom,
-
-  // Product and related entities
-  Product,
-  ProductImage,
-  ProductFeature,
-
-  // Entities that depend on Product/User
-  Review,
-  Favorite,
-  RecentlyViewed,
-  SearchHistory,
-  UserAnalytics,
-  WalletLedger,
-  CouponRedemption,
-  Referral,
-  ReferralRedemption,
-  NotificationHistory,
-  ChatroomMember,
-  Message,
-] as const;

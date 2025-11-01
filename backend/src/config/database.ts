@@ -2,7 +2,10 @@ import "reflect-metadata";
 import { DataSource } from "typeorm";
 import { logError, logInfo } from "../utils/logger.js";
 import { config } from "./env.js";
-import { ENTITIES } from "../entities/index.js";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -13,7 +16,7 @@ export const AppDataSource = new DataSource({
   database: config.database.name,
   synchronize: false,
   logging: config.database.logging,
-  entities: [...ENTITIES],
+  entities: [join(__dirname, "..", "entities", "**", "*.{ts,js}")],
   subscribers: [],
   extra: {
     max: 20,

@@ -10,16 +10,22 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 
+import { AdminUser } from "./AdminUser.js";
 import { Category } from "./Category.js";
+import { Favorite } from "./Favorite.js";
 import { ProductFeature } from "./ProductFeature.js";
 import { ProductImage } from "./ProductImage.js";
+import { RecentlyViewed } from "./RecentlyViewed.js";
 import { Review } from "./Review.js";
 import { Subcategory } from "./Subcategory.js";
 import { User } from "./User.js";
-import { Favorite } from "./Favorite.js";
-import { RecentlyViewed } from "./RecentlyViewed.js";
 
 export type ProductStatus = "draft" | "active" | "paused" | "archived" | "sold";
+export type ProductModerationStatus =
+  | "pending"
+  | "active"
+  | "suspended"
+  | "rejected";
 
 @Entity("products")
 export class Product {
@@ -77,36 +83,75 @@ export class Product {
   @Column({ type: "timestamp", nullable: true, name: "deleted_at" })
   deletedAt?: Date;
 
+  // Admin moderation fields
+  @Column({
+    type: "varchar",
+    length: 20,
+    default: "pending",
+    name: "moderation_status",
+  })
+  @Index()
+  moderationStatus!: ProductModerationStatus;
+
+  @Column({ name: "moderated_by", nullable: true })
+  moderatedBy?: number;
+
+  @ManyToOne(() => AdminUser, { nullable: true })
+  @JoinColumn({ name: "moderated_by" })
+  moderator?: any;
+
+  @Column({ type: "timestamp", nullable: true, name: "moderated_at" })
+  moderatedAt?: Date;
+
+  @Column({ type: "text", nullable: true, name: "suspension_reason" })
+  suspensionReason?: string;
+
+  @Column({ name: "approved_by", nullable: true })
+  approvedBy?: number;
+
+  @ManyToOne(() => AdminUser, { nullable: true })
+  @JoinColumn({ name: "approved_by" })
+  approver?: any;
+
+  @Column({ type: "timestamp", nullable: true, name: "approved_at" })
+  approvedAt?: Date;
+
+  @Column({ type: "text", nullable: true, name: "rejection_reason" })
+  rejectionReason?: string;
+
+  @Column({ type: "text", nullable: true, name: "admin_notes" })
+  adminNotes?: string;
+
   @CreateDateColumn({ type: "timestamp", name: "created_at" })
   createdAt!: Date;
 
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @ManyToOne(() => User, (u) => u.products, { onDelete: "CASCADE" })
+  @ManyToOne(() => User, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
-  user?: User;
+  user?: any;
 
-  @ManyToOne(() => Category, (c) => c.products, { onDelete: "RESTRICT" })
+  @ManyToOne(() => Category, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "category_id" })
-  category?: Category;
+  category?: any;
 
-  @ManyToOne(() => Subcategory, (s) => s.products, { onDelete: "RESTRICT" })
+  @ManyToOne(() => Subcategory, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "subcategory_id" })
-  subcategory?: Subcategory;
+  subcategory?: any;
 
-  @OneToMany(() => ProductImage, (pi) => pi.product)
-  images?: ProductImage[];
+  @OneToMany(() => ProductImage,  (pi: any) => pi.product)
+  images?: any[];
 
-  @OneToMany(() => ProductFeature, (pf) => pf.product)
-  productFeatures?: ProductFeature[];
+  @OneToMany(() => ProductFeature,  (pf: any) => pf.product)
+  productFeatures?: any[];
 
-  @OneToMany(() => Review, (r) => r.product)
-  reviews?: Review[];
+  @OneToMany(() => Review,  (r: any) => r.product)
+  reviews?: any[];
 
-  @OneToMany(() => Favorite, (f) => f.product)
-  favorites?: Favorite[];
+  @OneToMany(() => Favorite,  (f: any) => f.product)
+  favorites?: any[];
 
-  @OneToMany(() => RecentlyViewed, (rv) => rv.product)
-  recentlyViewed?: RecentlyViewed[];
+  @OneToMany(() => RecentlyViewed,  (rv: any) => rv.product)
+  recentlyViewed?: any[];
 }

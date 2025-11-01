@@ -9,7 +9,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-
 import { Category } from "./Category.js";
 import { Feature } from "./Feature.js";
 import { Product } from "./Product.js";
@@ -44,13 +43,13 @@ export class Subcategory {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @ManyToOne(() => Category, (c) => c.subcategories, { onDelete: "RESTRICT" })
+  @ManyToOne(() => Category, (c: any) => c.subcategories, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "category_id" })
   category?: Category;
 
-  @OneToMany(() => Feature, (f) => f.subcategory)
+  @OneToMany(() => Feature, (f: any) => f.subcategory)
   features?: Feature[];
 
-  @OneToMany(() => Product, (p) => p.subcategory)
+  @OneToMany(() => Product, (p: any) => p.subcategory)
   products?: Product[];
 }

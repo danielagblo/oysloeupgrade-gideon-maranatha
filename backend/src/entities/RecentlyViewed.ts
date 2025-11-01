@@ -7,9 +7,9 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
-
 import { User } from "./User.js";
 import { Product } from "./Product.js";
+
 
 @Entity("recently_viewed")
 export class RecentlyViewed {
@@ -27,11 +27,11 @@ export class RecentlyViewed {
   @CreateDateColumn({ type: "timestamp", name: "viewed_at" })
   viewedAt!: Date;
 
-  @ManyToOne(() => User, (u) => u.recentlyViewed, { onDelete: "CASCADE" })
+  @ManyToOne(() => User, (u: any) => u.recentlyViewed, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user?: User;
 
-  @ManyToOne(() => Product, (p) => p.recentlyViewed, { onDelete: "CASCADE" })
+  @ManyToOne(() => Product, (p: any) => p.recentlyViewed, { onDelete: "CASCADE" })
   @JoinColumn({ name: "product_id" })
   product?: Product;
 }

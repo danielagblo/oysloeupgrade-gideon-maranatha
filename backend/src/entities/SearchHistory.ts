@@ -29,7 +29,7 @@ export class SearchHistory {
   @CreateDateColumn({ type: "timestamp", name: "created_at" })
   createdAt!: Date;
 
-  @ManyToOne(() => User, (u) => u.searchHistory, { onDelete: "CASCADE" })
+  @ManyToOne(() => User, (u: any) => u.searchHistory, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user?: User;
 }

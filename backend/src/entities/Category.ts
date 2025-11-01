@@ -41,9 +41,9 @@ export class Category {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @OneToMany(() => Subcategory, (s) => s.category)
+  @OneToMany(() => Subcategory, (s: any) => s.category)
   subcategories?: Subcategory[];
 
-  @OneToMany(() => Product, (p) => p.category)
+  @OneToMany(() => Product, (p: any) => p.category)
   products?: Product[];
 }

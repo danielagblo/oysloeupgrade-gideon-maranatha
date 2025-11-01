@@ -8,6 +8,7 @@ import {
   PrimaryColumn,
   UpdateDateColumn,
 } from "typeorm";
+
 import { User } from "./User.js";
 import { WalletLedger } from "./WalletLedger.js";
 
@@ -25,10 +26,10 @@ export class Wallet {
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt!: Date;
 
-  @OneToOne(() => User, (u) => u.wallet, { onDelete: "CASCADE" })
+  @OneToOne(() => User, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
-  user!: User;
+  user!: any;
 
-  @OneToMany(() => WalletLedger, (wl) => wl.wallet)
-  ledger?: WalletLedger[];
+  @OneToMany(() => WalletLedger,  (wl: any) => wl.wallet)
+  ledger?: any[];
 }

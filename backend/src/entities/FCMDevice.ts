@@ -32,7 +32,7 @@ export class FCMDevice {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @ManyToOne(() => User, (u) => u.fcmDevices, { onDelete: "CASCADE" })
+  @ManyToOne(() => User, (u: any) => u.fcmDevices, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user?: User;
 }

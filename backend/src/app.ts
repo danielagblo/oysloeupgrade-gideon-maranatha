@@ -29,6 +29,7 @@ import reviewRoutes from "./routes/review.routes.js";
 import searchRoutes from "./routes/search.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import walletRoutes from "./routes/wallet.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
 import { AuthService } from "./services/auth.service.js";
 import { makeNotificationService } from "./services/notification.factory.js";
 import { logInfo } from "./utils/logger.js";
@@ -140,6 +141,9 @@ export const createApp = (): Application => {
   app.use(`${apiPrefix}/analytics`, analyticsRoutes);
   app.use(`${apiPrefix}/notifications`, notificationRoutes);
   app.use(`${apiPrefix}/uploads`, uploadRoutes);
+
+  // Admin routes
+  app.use(`${apiPrefix}/admin`, adminRoutes);
 
   app.use(`${apiPrefix}/fcm/test`, fcmTestRoutes);
   app.use(`${apiPrefix}/fcm`, fcmRoutes);

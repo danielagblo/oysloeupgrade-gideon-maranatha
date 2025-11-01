@@ -45,11 +45,11 @@ export class Message {
   @CreateDateColumn({ type: "timestamp", name: "created_at" })
   createdAt!: Date;
 
-  @ManyToOne(() => Chatroom, (room) => room.messages, { onDelete: "CASCADE" })
+  @ManyToOne(() => Chatroom, (room: any) => room.messages, { onDelete: "CASCADE" })
   @JoinColumn({ name: "room_id" })
   room?: Chatroom;
 
-  @ManyToOne(() => User, (user) => user.messages, { onDelete: "SET NULL" })
+  @ManyToOne(() => User, (user: any) => user.messages, { onDelete: "SET NULL" })
   @JoinColumn({ name: "sender_id" })
   sender?: User;
 }

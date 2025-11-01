@@ -8,9 +8,9 @@ import {
   PrimaryGeneratedColumn,
   Unique,
 } from "typeorm";
-
 import { User } from "./User.js";
 import { Product } from "./Product.js";
+
 
 @Entity("favorites")
 @Unique("uq_favorites_user_product", ["userId", "productId"])
@@ -29,11 +29,11 @@ export class Favorite {
   @CreateDateColumn({ type: "timestamp", name: "created_at" })
   createdAt!: Date;
 
-  @ManyToOne(() => User, (u) => u.favorites, { onDelete: "CASCADE" })
+  @ManyToOne(() => User, (u: any) => u.favorites, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user?: User;
 
-  @ManyToOne(() => Product, (p) => p.favorites, { onDelete: "CASCADE" })
+  @ManyToOne(() => Product, (p: any) => p.favorites, { onDelete: "CASCADE" })
   @JoinColumn({ name: "product_id" })
   product?: Product;
 }

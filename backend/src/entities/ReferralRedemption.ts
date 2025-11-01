@@ -35,7 +35,7 @@ export class ReferralRedemption {
   @CreateDateColumn({ type: "timestamp", name: "created_at" })
   createdAt!: Date;
 
-  @ManyToOne(() => User, (u) => u.referralRedemptions, { onDelete: "CASCADE" })
+  @ManyToOne(() => User, (u: any) => u.referralRedemptions, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user?: User;
 }

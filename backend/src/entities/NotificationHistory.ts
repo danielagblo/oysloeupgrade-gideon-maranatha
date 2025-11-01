@@ -51,7 +51,7 @@ export class NotificationHistory {
   @CreateDateColumn({ type: "timestamp", name: "created_at" })
   createdAt!: Date;
 
-  @ManyToOne(() => User, (u) => u.notificationHistory, { onDelete: "CASCADE" })
+  @ManyToOne(() => User, (u: any) => u.notificationHistory, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user?: User;
 }

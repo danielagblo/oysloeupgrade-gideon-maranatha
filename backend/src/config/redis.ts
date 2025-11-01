@@ -1,4 +1,4 @@
-import Redis from 'ioredis';
+import Redis, { RedisOptions } from 'ioredis';
 import { logError, logInfo } from '../utils/logger.js';
 import { config } from './env.js';
 
@@ -11,7 +11,7 @@ export const redisClient = new Redis({
     return delay;
   },
   maxRetriesPerRequest: 3,
-});
+} as RedisOptions);
 
 redisClient.on('connect', () => {
   logInfo('Redis connection established');

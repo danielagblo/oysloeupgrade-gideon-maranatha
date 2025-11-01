@@ -11,6 +11,9 @@ import { initDb } from "./setup";
 import bcrypt from "bcrypt";
 import { randomUUID } from "node:crypto";
 
+// Admin entities for testing
+import { AdminUser } from "../src/entities/AdminUser";
+
 process.env.NODE_ENV = "test";
 process.env.LOG_LEVEL = "debug";
 process.env.JWT_SECRET =
@@ -50,6 +53,17 @@ export interface TestProduct {
   description?: string;
   categoryId?: string;
   userId?: string;
+}
+
+export interface TestAdminUser {
+  id: number;
+  username: string;
+  email?: string;
+  password: string;
+  role: "super-admin" | "admin" | "staff" | "support";
+  isActive?: boolean;
+  businessName?: string;
+  token?: string;
 }
 
 export async function initTestDb() {
@@ -387,6 +401,90 @@ export async function expectSuccess(response: Response, status: number) {
   };
   expect(jsonBody.success).toBe(true);
   return jsonBody;
+}
+
+export async function seedAdminUser(
+  adminData: Partial<TestAdminUser> = {}
+): Promise<TestAdminUser> {
+  const db = await initTestDb();
+
+  const defaultAdmin = {
+    username: `admin${randomUUID().slice(0, 8)}`,
+    email: `admin${randomUUID().slice(0, 8)}@example.com`,
+    password: "AdminPass123!",
+    role: "admin" as const,
+    isActive: true,
+    businessName: "Test Business",
+    ...adminData,
+  };
+
+  const hashedPassword = await bcrypt.hash(defaultAdmin.password, 12);
+
+  const admin = new AdminUser();
+  admin.username = defaultAdmin.username;
+  admin.email = defaultAdmin.email;
+  admin.passwordHash = hashedPassword;
+  admin.role = defaultAdmin.role;
+  admin.isActive = defaultAdmin.isActive!;
+  admin.businessName = defaultAdmin.businessName;
+  admin.createdAt = new Date();
+  admin.updatedAt = new Date();
+
+  const savedAdmin = await db.getRepository(AdminUser).save(admin);
+
+  return {
+    id: savedAdmin.id,
+    username: savedAdmin.username,
+    email: savedAdmin.email,
+    password: defaultAdmin.password,
+    role: savedAdmin.role,
+    isActive: savedAdmin.isActive,
+    businessName: savedAdmin.businessName,
+  };
+}
+
+export async function loginAdminUser(
+  username: string,
+  password: string,
+  baseURL: string
+): Promise<string> {
+  const response = await fetch(`${baseURL}/api-v1/admin/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Admin login failed: ${response.status}`);
+  }
+
+  const data = (await response.json()) as { data: { token: string } };
+  return data.data.token;
+}
+
+export async function createAdminAndToken(
+  adminData: Partial<TestAdminUser> = {},
+  baseURL: string
+): Promise<{ admin: TestAdminUser; token: string }> {
+  const admin = await seedAdminUser(adminData);
+  const token = await loginAdminUser(admin.username, admin.password, baseURL);
+
+  return { admin, token };
+}
+
+export async function authenticatedAdminRequest(
+  url: string,
+  token: string,
+  options: RequestInit = {}
+) {
+  return fetch(url, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
 }
 
 export async function cleanupTestDb() {
