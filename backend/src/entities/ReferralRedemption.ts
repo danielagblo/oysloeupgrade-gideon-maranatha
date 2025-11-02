@@ -7,7 +7,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { User } from "./User.js";
+import type { User } from "./User.js";
 
 @Entity("referral_redemptions")
 export class ReferralRedemption {
@@ -35,7 +35,7 @@ export class ReferralRedemption {
   @CreateDateColumn({ type: "timestamp", name: "created_at" })
   createdAt!: Date;
 
-  @ManyToOne(() => User, (u: any) => u.referralRedemptions, { onDelete: "CASCADE" })
+  @ManyToOne("User", (u: any) => u.referralRedemptions, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user?: User;
 }

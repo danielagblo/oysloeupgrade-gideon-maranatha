@@ -26,16 +26,16 @@ export class AdminUser {
     enum: AdminRole,
     default: AdminRole.STAFF
   })
-  role: AdminRole;
+  role!: AdminRole;
 
   @Column({ type: 'varchar', length: 50, nullable: true })
   subRole?: string;
 
   @Column({ type: 'jsonb', default: '[]' })
-  permissions: string[];
+  permissions!: string[];
 
   @Column({ type: 'boolean', default: true })
-  isActive: boolean;
+  isActive!: boolean;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
   profileImageUrl?: string;

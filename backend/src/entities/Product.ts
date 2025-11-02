@@ -1,24 +1,33 @@
 import {
-  Column,
-  CreateDateColumn,
   Entity,
-  Index,
-  JoinColumn,
+  PrimaryGeneratedColumn,
+  Column,
   ManyToOne,
   OneToMany,
-  PrimaryGeneratedColumn,
+  JoinColumn,
+  Index,
+  CreateDateColumn,
   UpdateDateColumn,
 } from "typeorm";
 
-import { AdminUser } from "./AdminUser.js";
-import { Category } from "./Category.js";
-import { Favorite } from "./Favorite.js";
 import { ProductFeature } from "./ProductFeature.js";
+
 import { ProductImage } from "./ProductImage.js";
+
 import { RecentlyViewed } from "./RecentlyViewed.js";
+
 import { Review } from "./Review.js";
+
+
+import { Category } from "./Category.js";
+
 import { Subcategory } from "./Subcategory.js";
-import { User } from "./User.js";
+
+import { Favorite } from "./Favorite.js";
+
+import { AdminUser } from "./AdminUser.js";
+
+import type { User } from "./User.js";
 
 export type ProductStatus = "draft" | "active" | "paused" | "archived" | "sold";
 export type ProductModerationStatus =
@@ -128,23 +137,23 @@ export class Product {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @ManyToOne(() => User, { onDelete: "CASCADE" })
+  @ManyToOne("User", (u: any) => u.products, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
-  user?: any;
+  user?: User;
 
-  @ManyToOne(() => Category, { onDelete: "RESTRICT" })
+  @ManyToOne(() => Category, (c: Category) => c.products, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "category_id" })
-  category?: any;
+  category?: Category;
 
-  @ManyToOne(() => Subcategory, { onDelete: "RESTRICT" })
+  @ManyToOne(() => Subcategory, (s: Subcategory) => s.products, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "subcategory_id" })
-  subcategory?: any;
+  subcategory?: Subcategory;
 
-  @OneToMany(() => ProductImage,  (pi: any) => pi.product)
-  images?: any[];
+  @OneToMany(() => ProductImage, (pi: ProductImage) => pi.product)
+  images?: ProductImage[];
 
-  @OneToMany(() => ProductFeature,  (pf: any) => pf.product)
-  productFeatures?: any[];
+  @OneToMany(() => ProductFeature, (pf: any) => pf.product)
+  productFeatures?: ProductFeature[];
 
   @OneToMany(() => Review,  (r: any) => r.product)
   reviews?: any[];
@@ -152,6 +161,6 @@ export class Product {
   @OneToMany(() => Favorite,  (f: any) => f.product)
   favorites?: any[];
 
-  @OneToMany(() => RecentlyViewed,  (rv: any) => rv.product)
-  recentlyViewed?: any[];
+  @OneToMany(() => RecentlyViewed, (rv: RecentlyViewed) => rv.product)
+  recentlyViewed?: RecentlyViewed[];
 }

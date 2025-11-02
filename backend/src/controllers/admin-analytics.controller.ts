@@ -168,10 +168,12 @@ export const getUserAnalytics = async (
       .orderBy("date", "ASC")
       .getRawMany();
 
-    const registrations = registrationsRaw.map((r: { date: Date; count: string }) => ({
-      date: r.date.toISOString(),
-      count: parseInt(r.count, 10),
-    }));
+    const registrations = registrationsRaw.map(
+      (r: { date: Date; count: string }) => ({
+        date: r.date.toISOString(),
+        count: parseInt(r.count, 10),
+      })
+    );
 
     // Build time series data for verifications
     const verificationsRaw = await userRepository
@@ -186,10 +188,12 @@ export const getUserAnalytics = async (
       .orderBy("date", "ASC")
       .getRawMany();
 
-    const verifications = verificationsRaw.map((r: { date: Date; count: string }) => ({
-      date: r.date.toISOString(),
-      count: parseInt(r.count, 10),
-    }));
+    const verifications = verificationsRaw.map(
+      (r: { date: Date; count: string }) => ({
+        date: r.date.toISOString(),
+        count: parseInt(r.count, 10),
+      })
+    );
 
     // Build time series data for active users (users who logged in)
     const activeUsersRaw = await userRepository
@@ -204,10 +208,12 @@ export const getUserAnalytics = async (
       .orderBy("date", "ASC")
       .getRawMany();
 
-    const activeUsers = activeUsersRaw.map((r: { date: Date; count: string }) => ({
-      date: r.date.toISOString(),
-      count: parseInt(r.count, 10),
-    }));
+    const activeUsers = activeUsersRaw.map(
+      (r: { date: Date; count: string }) => ({
+        date: r.date.toISOString(),
+        count: parseInt(r.count, 10),
+      })
+    );
 
     // Top regions (placeholder - would need location data)
     const topRegions: Array<{ region: string; count: number }> = [];
@@ -293,10 +299,12 @@ export const getAdsAnalytics = async (
       .orderBy("date", "ASC")
       .getRawMany();
 
-    const suspensions = suspensionsRaw.map((r: { date: Date; count: string }) => ({
-      date: r.date.toISOString(),
-      count: parseInt(r.count, 10),
-    }));
+    const suspensions = suspensionsRaw.map(
+      (r: { date: Date; count: string }) => ({
+        date: r.date.toISOString(),
+        count: parseInt(r.count, 10),
+      })
+    );
 
     // Top categories
     const topCategoriesQuery = productRepository
@@ -323,11 +331,13 @@ export const getAdsAnalytics = async (
       .limit(10)
       .getRawMany();
 
-    const topCategories = topCategoriesRaw.map((r: { categoryId: string; categoryName: string; count: string }) => ({
-      categoryId: r.categoryId,
-      categoryName: r.categoryName,
-      count: parseInt(r.count, 10),
-    }));
+    const topCategories = topCategoriesRaw.map(
+      (r: { categoryId: string; categoryName: string; count: string }) => ({
+        categoryId: r.categoryId,
+        categoryName: r.categoryName,
+        count: parseInt(r.count, 10),
+      })
+    );
 
     // Top sellers
     const topSellersRaw = await productRepository
@@ -346,11 +356,13 @@ export const getAdsAnalytics = async (
       .limit(10)
       .getRawMany();
 
-    const topSellers = topSellersRaw.map((r: { sellerId: string; sellerName: string; adCount: string }) => ({
-      sellerId: r.sellerId,
-      sellerName: r.sellerName,
-      adCount: parseInt(r.adCount, 10),
-    }));
+    const topSellers = topSellersRaw.map(
+      (r: { sellerId: string; sellerName: string; adCount: string }) => ({
+        sellerId: r.sellerId,
+        sellerName: r.sellerName,
+        adCount: parseInt(r.adCount, 10),
+      })
+    );
 
     // Performance metrics (views, favorites, etc.)
     const performanceRaw = await productRepository
@@ -366,12 +378,19 @@ export const getAdsAnalytics = async (
       .orderBy("date", "ASC")
       .getRawMany();
 
-    const performance = performanceRaw.map((r: { date: Date; totalViews: string | null; totalFavorites: string | null; avgViews: string | null }) => ({
-      date: r.date.toISOString(),
-      totalViews: parseInt(r.totalViews || "0", 10),
-      totalFavorites: parseInt(r.totalFavorites || "0", 10),
-      avgViews: parseFloat(r.avgViews || "0"),
-    }));
+    const performance = performanceRaw.map(
+      (r: {
+        date: Date;
+        totalViews: string | null;
+        totalFavorites: string | null;
+        avgViews: string | null;
+      }) => ({
+        date: r.date.toISOString(),
+        totalViews: parseInt(r.totalViews || "0", 10),
+        totalFavorites: parseInt(r.totalFavorites || "0", 10),
+        avgViews: parseFloat(r.avgViews || "0"),
+      })
+    );
 
     res.json({
       success: true,
@@ -464,10 +483,12 @@ export const getSupportAnalytics = async (
       .orderBy("count", "DESC")
       .getRawMany();
 
-    const caseCategories = caseCategoriesRaw.map((r: { category: string | null; count: string }) => ({
-      category: r.category || "uncategorized",
-      count: parseInt(r.count, 10),
-    }));
+    const caseCategories = caseCategoriesRaw.map(
+      (r: { category: string | null; count: string }) => ({
+        category: r.category || "uncategorized",
+        count: parseInt(r.count, 10),
+      })
+    );
 
     // Agent performance (based on assignments)
     const agentPerformanceRaw = await supportCaseAssignmentRepository
@@ -485,12 +506,19 @@ export const getSupportAnalytics = async (
       .orderBy("casesAssigned", "DESC")
       .getRawMany();
 
-    const agentPerformance = agentPerformanceRaw.map((r: { adminId: number; adminUsername: string; casesAssigned: string; casesResolved: string | null }) => ({
-      adminId: r.adminId,
-      adminUsername: r.adminUsername,
-      casesAssigned: parseInt(r.casesAssigned, 10),
-      casesResolved: parseInt(r.casesResolved || "0", 10),
-    }));
+    const agentPerformance = agentPerformanceRaw.map(
+      (r: {
+        adminId: number;
+        adminUsername: string;
+        casesAssigned: string;
+        casesResolved: string | null;
+      }) => ({
+        adminId: r.adminId,
+        adminUsername: r.adminUsername,
+        casesAssigned: parseInt(r.casesAssigned, 10),
+        casesResolved: parseInt(r.casesResolved || "0", 10),
+      })
+    );
 
     // Response times (time from case creation to first assignment)
     const responseTimesRaw = await supportCaseAssignmentRepository
@@ -506,10 +534,12 @@ export const getSupportAnalytics = async (
       .orderBy("date", "ASC")
       .getRawMany();
 
-    const responseTimes = responseTimesRaw.map((r: { date: Date; avgHours: string | null }) => ({
-      date: r.date.toISOString(),
-      avgHours: parseFloat(r.avgHours || "0"),
-    }));
+    const responseTimes = responseTimesRaw.map(
+      (r: { date: Date; avgHours: string | null }) => ({
+        date: r.date.toISOString(),
+        avgHours: parseFloat(r.avgHours || "0"),
+      })
+    );
 
     res.json({
       success: true,

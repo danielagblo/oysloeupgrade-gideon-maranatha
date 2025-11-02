@@ -1,15 +1,16 @@
 import {
-  Column,
-  CreateDateColumn,
   Entity,
-  Index,
-  OneToMany,
   PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  Index,
+  CreateDateColumn,
   UpdateDateColumn,
 } from "typeorm";
 
-import { Product } from "./Product.js";
 import { Subcategory } from "./Subcategory.js";
+
+import { Product } from "./Product.js";
 
 @Entity("categories")
 export class Category {
@@ -41,9 +42,9 @@ export class Category {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @OneToMany(() => Subcategory, (s: any) => s.category)
+  @OneToMany(() => Subcategory, (s: Subcategory) => s.category)
   subcategories?: Subcategory[];
 
-  @OneToMany(() => Product, (p: any) => p.category)
+  @OneToMany(() => Product, (p: Product) => p.category)
   products?: Product[];
 }

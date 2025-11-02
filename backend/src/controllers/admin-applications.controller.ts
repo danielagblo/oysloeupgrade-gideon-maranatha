@@ -1,6 +1,10 @@
 import type { Request, Response, NextFunction } from "express";
 import { AdminApplicationsService } from "../services/admin-applications.service.js";
-import { GetApplicationsQuerySchema, DownloadApplicationSchema, UpdateApplicationStatusSchema } from "../schemas/admin.js";
+import {
+  GetApplicationsQuerySchema,
+  DownloadApplicationSchema,
+  UpdateApplicationStatusSchema,
+} from "../schemas/admin.js";
 
 const applicationsService = new AdminApplicationsService();
 
@@ -102,4 +106,3 @@ export const updateStatus = async (
     next(error);
   }
 };
-

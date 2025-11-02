@@ -1,14 +1,7 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from "typeorm";
-import { Chatroom } from "./Chatroom.js";
-import { User } from "./User.js";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, Index } from "typeorm";
+
+import type { Chatroom } from "./Chatroom.js";
+import type { User } from "./User.js";
 
 export type MessageType = "text" | "audio" | "image";
 
@@ -45,11 +38,11 @@ export class Message {
   @CreateDateColumn({ type: "timestamp", name: "created_at" })
   createdAt!: Date;
 
-  @ManyToOne(() => Chatroom, (room: any) => room.messages, { onDelete: "CASCADE" })
+  @ManyToOne("Chatroom", (c: any) => c.messages, { onDelete: "CASCADE" })
   @JoinColumn({ name: "room_id" })
   room?: Chatroom;
 
-  @ManyToOne(() => User, (user: any) => user.messages, { onDelete: "SET NULL" })
+  @ManyToOne("User", (u: any) => u.messages, { onDelete: "SET NULL" })
   @JoinColumn({ name: "sender_id" })
   sender?: User;
 }

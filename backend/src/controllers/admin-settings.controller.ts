@@ -1,6 +1,9 @@
 import type { Request, Response, NextFunction } from "express";
 import { AdminSettingsService } from "../services/admin-settings.service.js";
-import { UpdatePrivacyPolicySchema, UpdateTermsConditionsSchema } from "../schemas/admin.js";
+import {
+  UpdatePrivacyPolicySchema,
+  UpdateTermsConditionsSchema,
+} from "../schemas/admin.js";
 
 const settingsService = new AdminSettingsService();
 
@@ -37,7 +40,10 @@ export const updatePrivacyPolicy = async (
     }
     const adminUserId = req.admin.id;
 
-    const setting = await settingsService.updatePrivacyPolicy(body, adminUserId);
+    const setting = await settingsService.updatePrivacyPolicy(
+      body,
+      adminUserId
+    );
 
     res.json({
       success: true,
@@ -81,7 +87,10 @@ export const updateTermsConditions = async (
     }
     const adminUserId = req.admin.id;
 
-    const setting = await settingsService.updateTermsConditions(body, adminUserId);
+    const setting = await settingsService.updateTermsConditions(
+      body,
+      adminUserId
+    );
 
     res.json({
       success: true,
@@ -91,4 +100,3 @@ export const updateTermsConditions = async (
     next(error);
   }
 };
-

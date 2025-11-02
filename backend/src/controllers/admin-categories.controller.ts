@@ -1,6 +1,11 @@
 import type { Request, Response, NextFunction } from "express";
 import { AdminCategoriesService } from "../services/admin-categories.service.js";
-import { CreateCategorySchema, UpdateCategorySchema, CreateSubcategorySchema, UpdateSubcategorySchema } from "../schemas/admin.js";
+import {
+  CreateCategorySchema,
+  UpdateCategorySchema,
+  CreateSubcategorySchema,
+  UpdateSubcategorySchema,
+} from "../schemas/admin.js";
 
 const categoriesService = new AdminCategoriesService();
 
@@ -75,7 +80,10 @@ export const createSubcategory = async (
   try {
     const categoryId = req.params.id;
     const body = CreateSubcategorySchema.parse(req.body);
-    const subcategory = await categoriesService.createSubcategory(categoryId, body);
+    const subcategory = await categoriesService.createSubcategory(
+      categoryId,
+      body
+    );
 
     res.json({
       success: true,
@@ -109,4 +117,3 @@ export const updateSubcategory = async (
     next(error);
   }
 };
-

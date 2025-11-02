@@ -1,6 +1,10 @@
 import type { Request, Response, NextFunction } from "express";
 import { AdminAlertsService } from "../services/admin-alerts.service.js";
-import { SendAlertSchema, CreateCouponSchema, GetAlertsHistoryQuerySchema } from "../schemas/admin.js";
+import {
+  SendAlertSchema,
+  CreateCouponSchema,
+  GetAlertsHistoryQuerySchema,
+} from "../schemas/admin.js";
 
 const alertsService = new AdminAlertsService();
 
@@ -18,9 +22,9 @@ export const sendAlert = async (
         error: { code: "UNAUTHORIZED" },
       });
     }
-    const createdBy = req.admin.id!;
+    const result = await alertsService.sendAlert({
       ...body,
-      createdBy,
+      createdBy: req.admin.id!,
     });
 
     res.json({
@@ -90,4 +94,3 @@ export const getAlertsHistory = async (
     next(error);
   }
 };
-

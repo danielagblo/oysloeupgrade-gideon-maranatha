@@ -1,6 +1,10 @@
 import type { Request, Response, NextFunction } from "express";
 import { AdminReportsService } from "../services/admin-reports.service.js";
-import { GetReportsQuerySchema, ResolveReportSchema, GetFeedbackQuerySchema } from "../schemas/admin.js";
+import {
+  GetReportsQuerySchema,
+  ResolveReportSchema,
+  GetFeedbackQuerySchema,
+} from "../schemas/admin.js";
 
 const reportsService = new AdminReportsService();
 
@@ -61,7 +65,11 @@ export const resolveReport = async (
     }
     const adminUserId = req.admin.id!;
 
-    const report = await reportsService.resolveReport(reportId, body, adminUserId);
+    const report = await reportsService.resolveReport(
+      reportId,
+      body,
+      adminUserId
+    );
 
     res.json({
       success: true,
@@ -93,4 +101,3 @@ export const getFeedback = async (
     next(error);
   }
 };
-

@@ -1,28 +1,41 @@
 import {
-  Column,
-  CreateDateColumn,
   Entity,
-  Index,
+  PrimaryGeneratedColumn,
+  Column,
   OneToMany,
   OneToOne,
-  PrimaryGeneratedColumn,
+  Index,
+  CreateDateColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { Review } from "./Review.js";
+
+import { Favorite } from "./Favorite.js";
+
+import { Product } from "./Product.js";
+
+import { RecentlyViewed } from "./RecentlyViewed.js";
+
+import { Referral } from "./Referral.js";
+
+import { CouponRedemption } from "./CouponRedemption.js";
+
+import { FCMDevice } from "./FCMDevice.js";
 
 import { ChatroomMember } from "./ChatroomMember.js";
-import { CouponRedemption } from "./CouponRedemption.js";
-import { Favorite } from "./Favorite.js";
-import { FCMDevice } from "./FCMDevice.js";
+
 import { Message } from "./Message.js";
-import { NotificationHistory } from "./NotificationHistory.js";
-import { Product } from "./Product.js";
-import { RecentlyViewed } from "./RecentlyViewed.js";
-import { Referral } from "./Referral.js";
+
 import { ReferralRedemption } from "./ReferralRedemption.js";
-import { SearchHistory } from "./SearchHistory.js";
+
+import { NotificationHistory } from "./NotificationHistory.js";
+
 import { UserAnalytics } from "./UserAnalytics.js";
+
+import { SearchHistory } from "./SearchHistory.js";
+
 import { Wallet } from "./Wallet.js";
+
+import { Review } from "./Review.js";
 
 @Entity("users")
 export class User {
@@ -142,44 +155,44 @@ export class User {
   @OneToMany(() => Review,  (r: any) => r.product)
   reviews?: Review[];
 
-  @OneToMany(() => ChatroomMember,  (cm: any) => cm.user)
-  chatroomMembers?: any[];
+  @OneToMany(() => ChatroomMember, (cm: ChatroomMember) => cm.user)
+  chatroomMembers?: ChatroomMember[];
 
-  @OneToMany(() => Message,  (m: any) => m.sender)
-  messages?: any[];
+  @OneToMany(() => Message, (m: Message) => m.sender)
+  messages?: Message[];
 
-  @OneToMany(() => Referral,  (r: any) => r.referrer)
-  referralsGiven?: any[];
+  @OneToMany(() => Referral, (r: Referral) => r.referrer)
+  referralsGiven?: Referral[];
 
-  @OneToMany(() => Referral,  (r: any) => r.referredUser)
-  referralsReceived?: any[];
+  @OneToMany(() => Referral, (r: Referral) => r.referredUser)
+  referralsReceived?: Referral[];
 
-  @OneToMany(() => ReferralRedemption,  (rr: any) => rr.user)
-  referralRedemptions?: any[];
+  @OneToMany(() => ReferralRedemption, (rr: ReferralRedemption) => rr.user)
+  referralRedemptions?: ReferralRedemption[];
 
-  @OneToMany(() => FCMDevice,  (fd: any) => fd.user)
-  fcmDevices?: any[];
+  @OneToMany(() => FCMDevice, (fd: FCMDevice) => fd.user)
+  fcmDevices?: FCMDevice[];
 
-  @OneToMany(() => CouponRedemption,  (cr: any) => cr.user)
-  couponRedemptions?: any[];
+  @OneToMany(() => CouponRedemption, (cr: CouponRedemption) => cr.user)
+  couponRedemptions?: CouponRedemption[];
 
-  @OneToOne(() => Wallet, (w: any) => w.user)
-  wallet?: any;
+  @OneToOne(() => Wallet, (w: Wallet) => w.user)
+  wallet?: Wallet;
 
-  @OneToMany(() => Favorite,  (f: any) => f.user)
-  favorites?: any[];
+  @OneToMany(() => Favorite, (f: Favorite) => f.user)
+  favorites?: Favorite[];
 
-  @OneToMany(() => NotificationHistory,  (nh: any) => nh.user)
-  notificationHistory?: any[];
+  @OneToMany(() => NotificationHistory, (nh: NotificationHistory) => nh.user)
+  notificationHistory?: NotificationHistory[];
 
-  @OneToMany(() => UserAnalytics,  (ua: any) => ua.user)
-  analytics?: any[];
+  @OneToMany(() => UserAnalytics, (ua: UserAnalytics) => ua.user)
+  analytics?: UserAnalytics[];
 
-  @OneToMany(() => SearchHistory,  (sh: any) => sh.user)
-  searchHistory?: any[];
+  @OneToMany(() => SearchHistory, (sh: SearchHistory) => sh.user)
+  searchHistory?: SearchHistory[];
 
-  @OneToMany(() => RecentlyViewed,  (rv: any) => rv.user)
-  recentlyViewed?: any[];
+  @OneToMany(() => RecentlyViewed, (rv: RecentlyViewed) => rv.user)
+  recentlyViewed?: RecentlyViewed[];
 
   // Admin extension fields
   @Column({

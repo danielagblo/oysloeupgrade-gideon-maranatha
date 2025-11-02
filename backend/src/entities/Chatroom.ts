@@ -1,14 +1,8 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  Index,
-  OneToMany,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from "typeorm";
-import { ChatroomMember } from "./ChatroomMember.js";
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, Index, CreateDateColumn, UpdateDateColumn } from "typeorm";
+
 import { Message } from "./Message.js";
+
+import { ChatroomMember } from "./ChatroomMember.js";
 
 @Entity("chatrooms")
 export class Chatroom {
@@ -31,9 +25,9 @@ export class Chatroom {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @OneToMany(() => ChatroomMember,  (cm: any) => cm.chatroom)
-  members?: ChatroomMember[];
-
-  @OneToMany(() => Message,  (m: any) => m.room)
+  @OneToMany(() => Message, (m: Message) => m.room)
   messages?: Message[];
+
+  @OneToMany(() => ChatroomMember, (cm: ChatroomMember) => cm.chatroom)
+  members?: ChatroomMember[];
 }

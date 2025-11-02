@@ -15,7 +15,7 @@ export class FCMController {
 
   async registerDevice(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user?.id;
+      const userId = req.user?.id!;
       if (!userId) {
         res.status(401).json({ success: false, message: "Unauthorized" });
         return;
@@ -62,9 +62,9 @@ export class FCMController {
     }
   }
 
-  async removeDevice(req: Request, res: Response): Promise<void> {
+  async unregisterDevice(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user?.id;
+      const userId = req.user?.id!;
       if (!userId) {
         res.status(401).json({ success: false, message: "Unauthorized" });
         return;
@@ -98,9 +98,9 @@ export class FCMController {
     }
   }
 
-  async getUserDevices(req: Request, res: Response): Promise<void> {
+  async getDevices(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user?.id;
+      const userId = req.user?.id!;
       if (!userId) {
         res.status(401).json({ success: false, message: "Unauthorized" });
         return;
@@ -130,7 +130,7 @@ export class FCMController {
 
   async testNotification(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user?.id;
+      const userId = req.user?.id!;
       if (!userId) {
         res.status(401).json({ success: false, message: "Unauthorized" });
         return;

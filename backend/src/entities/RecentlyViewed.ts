@@ -1,15 +1,15 @@
 import {
-  Column,
-  CreateDateColumn,
   Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
   PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  Index,
+  CreateDateColumn,
 } from "typeorm";
-import { User } from "./User.js";
-import { Product } from "./Product.js";
 
+import type { User } from "./User.js";
+import type { Product } from "./Product.js";
 
 @Entity("recently_viewed")
 export class RecentlyViewed {
@@ -27,11 +27,11 @@ export class RecentlyViewed {
   @CreateDateColumn({ type: "timestamp", name: "viewed_at" })
   viewedAt!: Date;
 
-  @ManyToOne(() => User, (u: any) => u.recentlyViewed, { onDelete: "CASCADE" })
+  @ManyToOne("User", (u: any) => u.recentlyViewed, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user?: User;
 
-  @ManyToOne(() => Product, (p: any) => p.recentlyViewed, { onDelete: "CASCADE" })
+  @ManyToOne("Product", (p: any) => p.recentlyViewed, { onDelete: "CASCADE" })
   @JoinColumn({ name: "product_id" })
   product?: Product;
 }

@@ -1,15 +1,7 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  Unique,
-} from "typeorm";
-import { Coupon } from "./Coupon.js";
-import { User } from "./User.js";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, Unique, Index } from "typeorm";
+
+import type { Coupon } from "./Coupon.js";
+import type { User } from "./User.js";
 
 @Entity("coupon_redemptions")
 @Unique(["userId", "couponId"])
@@ -34,11 +26,11 @@ export class CouponRedemption {
   @CreateDateColumn({ type: "timestamp", name: "redeemed_at" })
   redeemedAt!: Date;
 
-  @ManyToOne(() => Coupon, (c: any) => c.redemptions, { onDelete: "CASCADE" })
+  @ManyToOne("Coupon", (c: any) => c.redemptions, { onDelete: "CASCADE" })
   @JoinColumn({ name: "coupon_id" })
   coupon?: Coupon;
 
-  @ManyToOne(() => User, (u: any) => u.couponRedemptions, { onDelete: "CASCADE" })
+  @ManyToOne("User", (u: any) => u.couponRedemptions, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user?: User;
 }

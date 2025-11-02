@@ -1,16 +1,16 @@
 import {
-  Column,
-  CreateDateColumn,
   Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
   PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  Index,
+  CreateDateColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { Product } from "./Product.js";
-import { Feature } from "./Feature.js";
 
+import type { Product } from "./Product.js";
+import { Feature } from "./Feature.js";
 
 @Entity("product_features")
 export class ProductFeature {
@@ -34,11 +34,13 @@ export class ProductFeature {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @ManyToOne(() => Product, (p: any) => p.productFeatures, { onDelete: "CASCADE" })
+  @ManyToOne("Product", (p: any) => p.productFeatures, { onDelete: "CASCADE" })
   @JoinColumn({ name: "product_id" })
   product?: Product;
 
-  @ManyToOne(() => Feature, (f: any) => f.productFeatures, { onDelete: "CASCADE" })
+  @ManyToOne(() => Feature, (f: Feature) => f.productFeatures, {
+    onDelete: "CASCADE",
+  })
   @JoinColumn({ name: "feature_id" })
   feature?: Feature;
 }

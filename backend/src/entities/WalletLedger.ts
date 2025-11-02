@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
 } from "typeorm";
 
-import { Wallet } from "./Wallet.js";
+import type { Wallet } from "./Wallet.js";
 
 @Entity("wallet_ledger")
 @Index(["userId", "createdAt"])
@@ -43,7 +43,7 @@ export class WalletLedger {
   @CreateDateColumn({ type: "timestamp", name: "created_at" })
   createdAt!: Date;
 
-  @ManyToOne(() => Wallet, (w: any) => w.ledger)
+  @ManyToOne("Wallet", (w: any) => w.ledger)
   @JoinColumn({ name: "wallet_id" })
-  wallet?: any;
+  wallet?: Wallet;
 }

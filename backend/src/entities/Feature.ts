@@ -1,17 +1,18 @@
 import {
-  Column,
-  CreateDateColumn,
   Entity,
-  Index,
-  JoinColumn,
+  PrimaryGeneratedColumn,
+  Column,
   ManyToOne,
   OneToMany,
-  PrimaryGeneratedColumn,
+  JoinColumn,
+  Index,
+  CreateDateColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { Subcategory } from "./Subcategory.js";
-import { ProductFeature } from "./ProductFeature.js";
 
+import { Subcategory } from "./Subcategory.js";
+
+import { ProductFeature } from "./ProductFeature.js";
 
 @Entity("features")
 export class Feature {
@@ -37,10 +38,10 @@ export class Feature {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @ManyToOne(() => Subcategory, (s: any) => s.features, { onDelete: "CASCADE" })
+  @ManyToOne(() => Subcategory, (s: Subcategory) => s.features, { onDelete: "CASCADE" })
   @JoinColumn({ name: "subcategory_id" })
   subcategory?: Subcategory;
 
-  @OneToMany(() => ProductFeature,  (pf: any) => pf.product)
+  @OneToMany(() => ProductFeature, (pf: ProductFeature) => pf.feature)
   productFeatures?: ProductFeature[];
 }

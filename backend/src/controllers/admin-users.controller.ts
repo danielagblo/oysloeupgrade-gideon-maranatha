@@ -1,9 +1,12 @@
 import type { Request, Response, NextFunction } from "express";
+import { z } from "zod";
 import { AppDataSource } from "../config/database.js";
 import { User } from "../entities/User.js";
 import { AdminAuditLog } from "../entities/AdminAuditLog.js";
 import { AdminExportService } from "../services/admin-export.service.js";
 import { ExportUsersSchema } from "../schemas/admin.js";
+
+type ExportUsersRequest = z.infer<typeof ExportUsersSchema>;
 
 const adminExportService = new AdminExportService();
 
@@ -90,15 +93,15 @@ export const getUsers = async (
           hasPrev: Number(page) > 1,
         },
         filters: {
-          status: statusFilters.map((f) => ({
+          status: statusFilters.map((f: { status: string; count: string }) => ({
             value: f.status,
             count: parseInt(f.count, 10),
           })),
-          level: levelFilters.map((f) => ({
+          level: levelFilters.map((f: { level: string; count: string }) => ({
             value: f.level,
             count: parseInt(f.count, 10),
           })),
-          role: levelFilters.map((f) => ({
+          role: levelFilters.map((f: { level: string; count: string }) => ({
             value: f.level,
             count: parseInt(f.count, 10),
           })), // Same as level for now
@@ -120,7 +123,7 @@ export const getUser = async (
     const userRepository = AppDataSource.getRepository(User);
 
     const user = await userRepository.findOne({
-      where: { id, deleted: false },
+      where: { id: id!, deleted: false },
       relations: ["wallet", "products", "reviews"],
     });
 
@@ -138,7 +141,7 @@ export const getUser = async (
     ).find({
       where: {
         resourceType: "user",
-        resourceId: id ? parseInt(id, 10) : 0,
+        resourceId: id ? parseInt(id!, 10) : undefined,
         action: "verify_user",
       },
       relations: ["adminUser"],
@@ -194,11 +197,11 @@ export const verifyUser = async (
         error: { code: "UNAUTHORIZED" },
       });
     }
-    const adminId = req.admin.id;
+    const adminId = req.admin.id!;
 
     const userRepository = AppDataSource.getRepository(User);
     const user = await userRepository.findOne({
-      where: { id, deleted: false },
+      where: { id: id!, deleted: false },
     });
 
     if (!user) {
@@ -259,7 +262,7 @@ export const updateUserLevel = async (
 
     const userRepository = AppDataSource.getRepository(User);
     const user = await userRepository.findOne({
-      where: { id, deleted: false },
+      where: { id: id!, deleted: false },
     });
 
     if (!user) {
@@ -314,11 +317,11 @@ export const muteUser = async (
         error: { code: "UNAUTHORIZED" },
       });
     }
-    const adminId = req.admin.id;
+    const adminId = req.admin.id!;
 
     const userRepository = AppDataSource.getRepository(User);
     const user = await userRepository.findOne({
-      where: { id, deleted: false },
+      where: { id: id!, deleted: false },
     });
 
     if (!user) {
@@ -349,9 +352,9 @@ export const muteUser = async (
       }
     } else if (action === "unmute") {
       user.isMuted = false;
-      user.mutedBy = undefined;
-      user.mutedAt = undefined;
-      user.muteReason = undefined;
+      user.mutedBy = null;
+      user.mutedAt = null;
+      user.muteReason = null;
     }
 
     await userRepository.save(user);
@@ -401,7 +404,7 @@ export const deleteUser = async (
 
     const userRepository = AppDataSource.getRepository(User);
     const user = await userRepository.findOne({
-      where: { id, deleted: false },
+      where: { id: id!, deleted: false },
     });
 
     if (!user) {
@@ -500,10 +503,13 @@ export const getUserStats = async (
       .groupBy("u.level")
       .getRawMany();
 
-    const levelStats = byLevel.reduce((acc, curr) => {
-      acc[curr.level] = parseInt(curr.count, 10);
-      return acc;
-    }, {} as Record<string, number>);
+    const levelStats = byLevel.reduce(
+      (acc, curr: { level: string; count: string }) => {
+        acc[curr.level] = parseInt(curr.count, 10);
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
     // By role (using level as role for now)
     const byRole = { ...levelStats };
@@ -537,7 +543,7 @@ export const exportUsers = async (
   next: NextFunction
 ) => {
   try {
-    const parsed = ExportUsersSchema.parse(req.body);
+    const parsed: ExportUsersRequest = ExportUsersSchema.parse(req.body);
     const { format, filters, fields } = parsed;
 
     // Map format from schema to service format

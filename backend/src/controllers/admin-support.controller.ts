@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
+import { z } from "zod";
 import { AdminSupportService } from "../services/admin-support.service.js";
 import {
   GetSupportCasesQuerySchema,
@@ -7,10 +8,10 @@ import {
   AssignCaseSchema,
 } from "../schemas/admin.js";
 
-type GetSupportCasesQuery = Zod.infer<typeof GetSupportCasesQuerySchema>;
-type SendSupportMessageRequest = Zod.infer<typeof SendSupportMessageSchema>;
-type UpdateCaseStatusRequest = Zod.infer<typeof UpdateCaseStatusSchema>;
-type AssignCaseRequest = Zod.infer<typeof AssignCaseSchema>;
+type GetSupportCasesQuery = z.infer<typeof GetSupportCasesQuerySchema>;
+type SendSupportMessageRequest = z.infer<typeof SendSupportMessageSchema>;
+type UpdateCaseStatusRequest = z.infer<typeof UpdateCaseStatusSchema>;
+type AssignCaseRequest = z.infer<typeof AssignCaseSchema>;
 
 const supportService = new AdminSupportService();
 
@@ -20,7 +21,9 @@ export const getCases = async (
   next: NextFunction
 ) => {
   try {
-    const query: GetSupportCasesQuery = GetSupportCasesQuerySchema.parse(req.query);
+    const query: GetSupportCasesQuery = GetSupportCasesQuerySchema.parse(
+      req.query
+    );
     const result = await supportService.getCases(query);
 
     res.json({
@@ -41,7 +44,7 @@ export const getCase = async (
   next: NextFunction
 ) => {
   try {
-    const caseId = parseInt(req.params.id, 10);
+    const caseId = parseInt(req.params.id!, 10);
     const result = await supportService.getCase(caseId);
 
     res.json({
@@ -59,8 +62,10 @@ export const sendMessage = async (
   next: NextFunction
 ) => {
   try {
-    const caseId = parseInt(req.params.id, 10);
-    const body = SendSupportMessageSchema.parse(req.body);
+    const caseId = parseInt(req.params.id!, 10);
+    const body: SendSupportMessageRequest = SendSupportMessageSchema.parse(
+      req.body
+    );
     if (!req.admin?.id) {
       return res.status(401).json({
         success: false,
@@ -68,7 +73,7 @@ export const sendMessage = async (
         error: { code: "UNAUTHORIZED" },
       });
     }
-    const adminUserId = req.admin.id;
+    const adminUserId = req.admin.id!;
 
     const message = await supportService.sendMessage({
       caseId,
@@ -100,8 +105,10 @@ export const updateStatus = async (
   next: NextFunction
 ) => {
   try {
-    const caseId = parseInt(req.params.id, 10);
-    const body = UpdateCaseStatusSchema.parse(req.body);
+    const caseId = parseInt(req.params.id!, 10);
+    const body: UpdateCaseStatusRequest = UpdateCaseStatusSchema.parse(
+      req.body
+    );
 
     const supportCase = await supportService.updateStatus(
       caseId,
@@ -126,8 +133,8 @@ export const assignCase = async (
   next: NextFunction
 ) => {
   try {
-    const caseId = parseInt(req.params.id, 10);
-    const body = AssignCaseSchema.parse(req.body);
+    const caseId = parseInt(req.params.id!, 10);
+    const body: AssignCaseRequest = AssignCaseSchema.parse(req.body);
     const adminUserId = body.adminUserId || null;
 
     const supportCase = await supportService.assignCase(

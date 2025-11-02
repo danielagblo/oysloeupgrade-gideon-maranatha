@@ -1,6 +1,10 @@
 import type { Request, Response, NextFunction } from "express";
 import { AdminLocationsService } from "../services/admin-locations.service.js";
-import { CreateRegionSchema, AddTownSchema, UpdateTownSchema } from "../schemas/admin.js";
+import {
+  CreateRegionSchema,
+  AddTownSchema,
+  UpdateTownSchema,
+} from "../schemas/admin.js";
 
 type CreateRegionRequest = Zod.infer<typeof CreateRegionSchema>;
 type AddTownRequest = Zod.infer<typeof AddTownSchema>;
@@ -81,4 +85,3 @@ export const updateTown = async (
     next(error);
   }
 };
-

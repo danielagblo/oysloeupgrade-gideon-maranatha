@@ -1,15 +1,15 @@
 import {
-  Column,
-  CreateDateColumn,
   Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
   PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  Index,
+  CreateDateColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { Product } from "./Product.js";
 
+import type { Product } from "./Product.js";
 
 @Entity("product_images")
 export class ProductImage {
@@ -47,7 +47,7 @@ export class ProductImage {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @ManyToOne(() => Product, (p: any) => p.images, { onDelete: "CASCADE" })
+  @ManyToOne("Product", (p: any) => p.images, { onDelete: "CASCADE" })
   @JoinColumn({ name: "product_id" })
   product?: Product;
 }

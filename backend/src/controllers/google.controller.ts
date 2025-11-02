@@ -52,7 +52,7 @@ export async function handleGoogleCallback(req: Request, res: Response): Promise
           id: user.id,
           email: user.email,
           name: user.name,
-          avatar: user.avatar,
+          avatar: user.avatarUrl,
           referralCode: user.referralCode,
           referralPoints: user.referralPoints,
           level: user.level,

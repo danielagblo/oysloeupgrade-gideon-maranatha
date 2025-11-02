@@ -1,16 +1,19 @@
 import {
-  Column,
-  CreateDateColumn,
   Entity,
-  Index,
-  JoinColumn,
+  PrimaryGeneratedColumn,
+  Column,
   ManyToOne,
   OneToMany,
-  PrimaryGeneratedColumn,
+  JoinColumn,
+  Index,
+  CreateDateColumn,
   UpdateDateColumn,
 } from "typeorm";
+
 import { Category } from "./Category.js";
+
 import { Feature } from "./Feature.js";
+
 import { Product } from "./Product.js";
 
 @Entity("subcategories")
@@ -43,13 +46,13 @@ export class Subcategory {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @ManyToOne(() => Category, (c: any) => c.subcategories, { onDelete: "RESTRICT" })
+  @ManyToOne(() => Category, (c: Category) => c.subcategories, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "category_id" })
   category?: Category;
 
-  @OneToMany(() => Feature, (f: any) => f.subcategory)
+  @OneToMany(() => Feature, (f: Feature) => f.subcategory)
   features?: Feature[];
 
-  @OneToMany(() => Product, (p: any) => p.subcategory)
+  @OneToMany(() => Product, (p: Product) => p.subcategory)
   products?: Product[];
 }
