@@ -1,8 +1,8 @@
-import { Router } from "express";
-import { z } from "zod";
-import { UserController } from "../controllers/user.controller.js";
-import { authenticate } from "../middlewares/auth.middleware.js";
-import { validateRequest } from "../middlewares/validation.middleware.js";
+import { Router } from 'express';
+import { z } from 'zod';
+import { UserController } from '../controllers/user.controller.js';
+import { authenticate } from '../middlewares/auth.middleware.js';
+import { validateRequest } from '../middlewares/validation.middleware.js';
 
 const router = Router();
 const userController = new UserController();
@@ -36,9 +36,7 @@ const getUserProductsSchema = z.object({
   query: z.object({
     page: z.string().optional(),
     limit: z.string().optional(),
-    status: z
-      .enum(["draft", "active", "paused", "archived", "sold"])
-      .optional(),
+    status: z.enum(['draft', 'active', 'paused', 'archived', 'sold']).optional(),
   }),
 });
 
@@ -60,9 +58,7 @@ const getWalletTransactionsSchema = z.object({
   query: z.object({
     page: z.string().optional(),
     limit: z.string().optional(),
-    type: z
-      .enum(["credit", "debit", "referral", "coupon", "purchase", "refund"])
-      .optional(),
+    type: z.enum(['credit', 'debit', 'referral', 'coupon', 'purchase', 'refund']).optional(),
   }),
 });
 
@@ -85,91 +81,79 @@ const userPreferencesSchema = z.object({
   }),
 });
 
-router.get(
-  "/profile",
-  authenticate,
-  userController.getProfile.bind(userController)
-);
+router.get('/profile', authenticate, userController.getProfile.bind(userController));
 
 router.put(
-  "/profile",
+  '/profile',
   authenticate,
   validateRequest(updateProfileSchema),
   userController.updateProfile.bind(userController)
 );
 
-router.get("/me", authenticate, userController.getProfile.bind(userController));
+router.get('/me', authenticate, userController.getProfile.bind(userController));
 
 router.put(
-  "/me",
+  '/me',
   authenticate,
   validateRequest(updateProfileSchema),
   userController.updateProfile.bind(userController)
 );
 
 router.put(
-  "/password",
+  '/password',
   authenticate,
   validateRequest(changePasswordSchema),
   userController.changePassword.bind(userController)
 );
 
 router.get(
-  "/products",
+  '/products',
   authenticate,
   validateRequest(getUserProductsSchema),
   userController.getUserProducts.bind(userController)
 );
 
 router.get(
-  "/reviews",
+  '/reviews',
   authenticate,
   validateRequest(getUserReviewsSchema),
   userController.getUserReviews.bind(userController)
 );
 
 router.get(
-  "/favorites",
+  '/favorites',
   authenticate,
   validateRequest(getUserFavoritesSchema),
   userController.getUserFavorites.bind(userController)
 );
 
 router.get(
-  "/wallet/transactions",
+  '/wallet/transactions',
   authenticate,
   validateRequest(getWalletTransactionsSchema),
   userController.getWalletTransactions.bind(userController)
 );
 
-router.get(
-  "/preferences",
-  authenticate,
-  userController.getPreferences.bind(userController)
-);
+router.get('/preferences', authenticate, userController.getPreferences.bind(userController));
 
 router.put(
-  "/preferences",
+  '/preferences',
   authenticate,
   validateRequest(userPreferencesSchema),
   userController.updatePreferences.bind(userController)
 );
 
 router.delete(
-  "/account",
+  '/account',
   authenticate,
   validateRequest(deleteAccountSchema),
   userController.deleteAccount.bind(userController)
 );
 
-router.get(
-  "/preferences",
-  authenticate,
-  userController.getPreferences.bind(userController)
-);
+router.get('/preferences', authenticate, userController.getPreferences.bind(userController));
 
 router.put(
-  "/preferences",
+  '/preferences',
   authenticate,
   validateRequest(updatePreferencesSchema),
   userController.updatePreferences.bind(userController)

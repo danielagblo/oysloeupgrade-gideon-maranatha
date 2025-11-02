@@ -1,8 +1,8 @@
-import { Router } from "express";
-import { z } from "zod";
-import { CouponController } from "../controllers/coupon.controller.js";
-import { authenticate } from "../middlewares/auth.middleware.js";
-import { validateRequest } from "../middlewares/validation.middleware.js";
+import { Router } from 'express';
+import { z } from 'zod';
+import { CouponController } from '../controllers/coupon.controller.js';
+import { authenticate } from '../middlewares/auth.middleware.js';
+import { validateRequest } from '../middlewares/validation.middleware.js';
 
 const router = Router();
 const couponController = new CouponController();
@@ -11,7 +11,7 @@ const createCouponSchema = z.object({
   body: z.object({
     code: z.string().min(3).max(50),
     description: z.string().min(1).max(500),
-    discountType: z.enum(["percent", "fixed"]),
+    discountType: z.enum(['percent', 'fixed']),
     discountValue: z.number().positive(),
     minOrderAmount: z.number().positive().optional(),
     maxDiscountAmount: z.number().positive().optional(),
@@ -26,7 +26,7 @@ const updateCouponSchema = z.object({
   body: z.object({
     code: z.string().min(3).max(50).optional(),
     description: z.string().min(1).max(500).optional(),
-    discountType: z.enum(["percent", "fixed"]).optional(),
+    discountType: z.enum(['percent', 'fixed']).optional(),
     discountValue: z.number().positive().optional(),
     minOrderAmount: z.number().positive().optional(),
     maxDiscountAmount: z.number().positive().optional(),
@@ -99,42 +99,42 @@ const getCouponStatsParamsSchema = z.object({
 });
 
 router.post(
-  "/",
+  '/',
   authenticate,
   validateRequest(createCouponSchema),
   couponController.createCoupon.bind(couponController)
 );
 
 router.get(
-  "/",
+  '/',
   authenticate,
   validateRequest(getCouponsSchema),
   couponController.getCoupons.bind(couponController)
 );
 
 router.get(
-  "/validate",
+  '/validate',
   authenticate,
   validateRequest(validateCouponSchema),
   couponController.validateCoupon.bind(couponController)
 );
 
 router.get(
-  "/user/redemptions",
+  '/user/redemptions',
   authenticate,
   validateRequest(getUserRedemptionsSchema),
   couponController.getUserRedemptions.bind(couponController)
 );
 
 router.get(
-  "/:id",
+  '/:id',
   authenticate,
   validateRequest(getCouponSchema),
   couponController.getCoupon.bind(couponController)
 );
 
 router.put(
-  "/:id",
+  '/:id',
   authenticate,
   validateRequest(updateCouponSchema),
   validateRequest(updateCouponParamsSchema),
@@ -142,28 +142,28 @@ router.put(
 );
 
 router.delete(
-  "/:id",
+  '/:id',
   authenticate,
   validateRequest(deleteCouponParamsSchema),
   couponController.deleteCoupon.bind(couponController)
 );
 
 router.post(
-  "/:id/expire",
+  '/:id/expire',
   authenticate,
   validateRequest(expireCouponParamsSchema),
   couponController.expireCoupon.bind(couponController)
 );
 
 router.post(
-  "/redeem",
+  '/redeem',
   authenticate,
   validateRequest(redeemCouponSchema),
   couponController.redeemCoupon.bind(couponController)
 );
 
 router.get(
-  "/:id/stats",
+  '/:id/stats',
   authenticate,
   validateRequest(getCouponStatsParamsSchema),
   couponController.getCouponStats.bind(couponController)

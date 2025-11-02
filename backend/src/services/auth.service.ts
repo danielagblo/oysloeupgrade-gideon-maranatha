@@ -1,28 +1,28 @@
-import type { EntityManager } from "typeorm";
-import { AppDataSource } from "../config/database.js";
-import { checkRateLimit } from "../config/redis.js";
-import { OTPCode } from "../entities/OTPCode.js";
-import { Referral } from "../entities/Referral.js";
-import { User } from "../entities/User.js";
-import { Wallet } from "../entities/Wallet.js";
+import type { EntityManager } from 'typeorm';
+import { AppDataSource } from '../config/database.js';
+import { checkRateLimit } from '../config/redis.js';
+import { OTPCode } from '../entities/OTPCode.js';
+import { Referral } from '../entities/Referral.js';
+import { User } from '../entities/User.js';
+import { Wallet } from '../entities/Wallet.js';
 import {
   BadRequestError,
   ConflictError,
   TooManyRequestsError,
   UnauthorizedError,
-} from "../utils/errors.js";
-import { generateToken } from "../utils/jwt.js";
-import { logInfo } from "../utils/logger.js";
-import { notificationHelper } from "../utils/notification-helper.js";
-import { generateReferralCode } from "../utils/otp.js";
-import { comparePassword, hashPassword } from "../utils/password.js";
+} from '../utils/errors.js';
+import { generateToken } from '../utils/jwt.js';
+import { logInfo } from '../utils/logger.js';
+import { notificationHelper } from '../utils/notification-helper.js';
+import { generateReferralCode } from '../utils/otp.js';
+import { comparePassword, hashPassword } from '../utils/password.js';
 import type {
   LoginInput,
   OTPSendInput,
   OTPVerifyInput,
   RegisterInput,
-} from "../validators/auth.validator.js";
-import type { INotification } from "./notification.port.js";
+} from '../validators/auth.validator.js';
+import type { INotification } from './notification.port.js';
 
 export interface AuthServiceDependencies {
   notification: INotification;
@@ -45,29 +45,16 @@ export class AuthService {
     return await AppDataSource.transaction(async (manager) => {
       const passwordHash = await hashPassword(input.password);
       const referralCode = await this.generateUniqueReferralCode(manager);
-      const user = await this.createUser(
-        manager,
-        input,
-        passwordHash,
-        referralCode
-      );
+      const user = await this.createUser(manager, input, passwordHash, referralCode);
       const wallet = await this.createUserWallet(manager, user.id);
 
-      await this.processReferralIfProvided(
-        manager,
-        input.referralCode,
-        user.id
-      );
+      await this.processReferralIfProvided(manager, input.referralCode, user.id);
 
       const token = this.generateUserToken(user);
       logInfo(`User registered: ${user.email}`);
 
       try {
-        await notificationHelper.notifyWelcome(
-          user.id,
-          user.name,
-          referralCode
-        );
+        await notificationHelper.notifyWelcome(user.id, user.name, referralCode);
       } catch (error) {
         logInfo(`Failed to send welcome notification: ${error}`);
       }
@@ -104,7 +91,7 @@ export class AuthService {
     await this.sendOTPCode(input.phone, code);
 
     return {
-      message: "OTP sent successfully",
+      message: 'OTP sent successfully',
     };
   }
 
@@ -117,16 +104,16 @@ export class AuthService {
     });
 
     if (!otpRecord) {
-      throw new BadRequestError("Invalid or expired OTP");
+      throw new BadRequestError('Invalid or expired OTP');
     }
 
     if (new Date() > otpRecord.expiresAt) {
-      throw new BadRequestError("OTP has expired");
+      throw new BadRequestError('OTP has expired');
     }
 
     let user = await this.userRepository.findOne({
       where: { phone: input.phone },
-      relations: ["wallet"],
+      relations: ['wallet'],
     });
 
     if (!user) {
@@ -166,16 +153,13 @@ export class AuthService {
         });
 
         try {
-          await notificationHelper.notifyAccountCreated(
-            user.id,
-            user.phone || ""
-          );
+          await notificationHelper.notifyAccountCreated(user.id, user.phone || '');
         } catch (error) {
           logInfo(`Failed to send account created notification: ${error}`);
         }
 
         return {
-          message: "OTP verified successfully",
+          message: 'OTP verified successfully',
           user: this.sanitizeUser(user),
           wallet: { balance: user.wallet?.balance || 0 },
           token,
@@ -184,11 +168,11 @@ export class AuthService {
     }
 
     if (user.deleted) {
-      throw new UnauthorizedError("Account has been deleted");
+      throw new UnauthorizedError('Account has been deleted');
     }
 
     if (!user.isActive) {
-      throw new UnauthorizedError("Account is inactive");
+      throw new UnauthorizedError('Account is inactive');
     }
 
     if (!user.phoneVerified) {
@@ -207,7 +191,7 @@ export class AuthService {
     logInfo(`User logged in via OTP: ${user.phone}`);
 
     return {
-      message: "OTP verified successfully",
+      message: 'OTP verified successfully',
       user: this.sanitizeUser(user),
       wallet: { balance: user.wallet?.balance || 0 },
       token,
@@ -216,7 +200,7 @@ export class AuthService {
 
   async resetPassword(user: User, newPassword: string) {
     if (!user.phoneVerified) {
-      throw new BadRequestError("Phone not verified");
+      throw new BadRequestError('Phone not verified');
     }
 
     const passwordHash = await hashPassword(newPassword);
@@ -226,31 +210,26 @@ export class AuthService {
     logInfo(`Password reset for user: ${user.email}`);
 
     return {
-      message: "Password reset successfully",
+      message: 'Password reset successfully',
     };
   }
 
-  private async validateUserUniqueness(
-    email: string,
-    phone: string
-  ): Promise<void> {
+  private async validateUserUniqueness(email: string, phone: string): Promise<void> {
     const [existingEmail, existingPhone] = await Promise.all([
       this.userRepository.findOne({ where: { email, deleted: false } }),
       this.userRepository.findOne({ where: { phone, deleted: false } }),
     ]);
 
     if (existingEmail) {
-      throw new ConflictError("Email already exists");
+      throw new ConflictError('Email already exists');
     }
     if (existingPhone) {
-      throw new ConflictError("Phone number already exists");
+      throw new ConflictError('Phone number already exists');
     }
   }
 
-  private async generateUniqueReferralCode(
-    manager: EntityManager
-  ): Promise<string> {
-    let referralCode: string = "";
+  private async generateUniqueReferralCode(manager: EntityManager): Promise<string> {
+    let referralCode: string = '';
     let isUnique = false;
 
     while (!isUnique) {
@@ -283,10 +262,7 @@ export class AuthService {
     return await manager.save(user);
   }
 
-  private async createUserWallet(
-    manager: EntityManager,
-    userId: string
-  ): Promise<Wallet> {
+  private async createUserWallet(manager: EntityManager, userId: string): Promise<Wallet> {
     const wallet = manager.create(Wallet, {
       userId,
       balance: 0,
@@ -320,11 +296,11 @@ export class AuthService {
   private async findUserByEmail(email: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { email },
-      relations: ["wallet"],
+      relations: ['wallet'],
     });
 
     if (!user) {
-      throw new UnauthorizedError("Invalid credentials");
+      throw new UnauthorizedError('Invalid credentials');
     }
 
     return user;
@@ -332,24 +308,21 @@ export class AuthService {
 
   private validateUserStatus(user: User): void {
     if (user.deleted) {
-      throw new UnauthorizedError("Account has been deleted");
+      throw new UnauthorizedError('Account has been deleted');
     }
     if (!user.isActive) {
-      throw new UnauthorizedError("Account is inactive");
+      throw new UnauthorizedError('Account is inactive');
     }
   }
 
-  private async verifyPassword(
-    password: string,
-    passwordHash: string | undefined
-  ): Promise<void> {
+  private async verifyPassword(password: string, passwordHash: string | undefined): Promise<void> {
     if (!passwordHash) {
-      throw new UnauthorizedError("Invalid credentials");
+      throw new UnauthorizedError('Invalid credentials');
     }
 
     const isValid = await comparePassword(password, passwordHash);
     if (!isValid) {
-      throw new UnauthorizedError("Invalid credentials");
+      throw new UnauthorizedError('Invalid credentials');
     }
   }
 
@@ -360,11 +333,7 @@ export class AuthService {
 
   private async checkOTPRateLimit(phone: string): Promise<void> {
     const rateLimitKey = `otp_rate_limit:${phone}`;
-    const { allowed, remaining } = await checkRateLimit(
-      rateLimitKey,
-      3,
-      60 * 60 * 1000
-    );
+    const { allowed, remaining } = await checkRateLimit(rateLimitKey, 3, 60 * 60 * 1000);
 
     if (!allowed) {
       throw new TooManyRequestsError(
@@ -394,16 +363,14 @@ export class AuthService {
   private async sendOTPCode(phone: string, code: string): Promise<void> {
     try {
       await this.deps.notification.send(phone, {
-        type: "otp",
+        type: 'otp',
         code: code,
         message: `Welcome to Oysloe Marketplace.\n\nYour OTP is ${code}\n\nRegards,\nOysloe Team`,
       });
 
       logInfo(`OTP notification sent successfully to ${phone}`);
     } catch (error) {
-      logInfo(
-        `OTP notification failed for ${phone}, falling back to console log: ${error}`
-      );
+      logInfo(`OTP notification failed for ${phone}, falling back to console log: ${error}`);
       console.log(`\nOTP CODE: ${code}\n`);
     }
   }

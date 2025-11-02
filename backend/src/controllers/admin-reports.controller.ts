@@ -1,18 +1,15 @@
-import type { Request, Response, NextFunction } from "express";
-import { AdminReportsService } from "../services/admin-reports.service.js";
+import type { NextFunction, Request, Response } from 'express';
 import {
+  GetFeedbackQuerySchema,
   GetReportsQuerySchema,
   ResolveReportSchema,
-  GetFeedbackQuerySchema,
-} from "../schemas/admin.js";
+} from '../schemas/admin.js';
+import { AdminReportsService } from '../services/admin-reports.service.js';
+import { requireAdminId } from '../utils/guards.js';
 
 const reportsService = new AdminReportsService();
 
-export const getReports = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const getReports = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const query = GetReportsQuerySchema.parse(req.query);
     const result = await reportsService.getReports(query);
@@ -30,11 +27,7 @@ export const getReports = async (
   }
 };
 
-export const getReport = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const getReport = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const reportId = parseInt(req.params.id, 10);
     const report = await reportsService.getReport(reportId);
@@ -48,28 +41,20 @@ export const getReport = async (
   }
 };
 
-export const resolveReport = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const resolveReport = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const reportId = parseInt(req.params.id, 10);
     const body = ResolveReportSchema.parse(req.body);
     if (!req.admin?.id) {
       return res.status(401).json({
         success: false,
-        message: "Unauthorized",
-        error: { code: "UNAUTHORIZED" },
+        message: 'Unauthorized',
+        error: { code: 'UNAUTHORIZED' },
       });
     }
-    const adminUserId = req.admin.id!;
+    const adminUserId = requireAdminId(req);
 
-    const report = await reportsService.resolveReport(
-      reportId,
-      body,
-      adminUserId
-    );
+    const report = await reportsService.resolveReport(reportId, body, adminUserId);
 
     res.json({
       success: true,
@@ -80,11 +65,7 @@ export const resolveReport = async (
   }
 };
 
-export const getFeedback = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const getFeedback = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const query = GetFeedbackQuerySchema.parse(req.query);
     const result = await reportsService.getFeedback(query);

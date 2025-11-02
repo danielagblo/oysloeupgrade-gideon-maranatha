@@ -1,8 +1,8 @@
-import type { NextFunction, Request, Response } from "express";
-import { type AdminUser, AdminRole } from "../entities/AdminUser.js";
-import { AdminAuthService } from "../services/admin-auth.service.js";
-import { ForbiddenError, UnauthorizedError } from "../utils/errors.js";
-import { extractTokenFromHeader } from "../utils/jwt.js";
+import type { NextFunction, Request, Response } from 'express';
+import { AdminRole, type AdminUser } from '../entities/AdminUser.js';
+import { AdminAuthService } from '../services/admin-auth.service.js';
+import { ForbiddenError, UnauthorizedError } from '../utils/errors.js';
+import { extractTokenFromHeader } from '../utils/jwt.js';
 
 declare global {
   namespace Express {
@@ -17,15 +17,11 @@ declare global {
 
 const adminAuthService = new AdminAuthService();
 
-export const authenticateAdmin = async (
-  req: Request,
-  _res: Response,
-  next: NextFunction
-) => {
+export const authenticateAdmin = async (req: Request, _res: Response, next: NextFunction) => {
   try {
     const token = extractTokenFromHeader(req.headers.authorization);
     if (!token) {
-      throw new UnauthorizedError("No token provided");
+      throw new UnauthorizedError('No token provided');
     }
 
     const session = await adminAuthService.getSession(token);
@@ -41,21 +37,21 @@ export const authenticateAdmin = async (
 export const requireAdminPermissions = (...requiredPermissions: string[]) => {
   return (req: Request, _res: Response, next: NextFunction) => {
     if (!req.admin) {
-      return next(new UnauthorizedError("Admin authentication required"));
+      return next(new UnauthorizedError('Admin authentication required'));
     }
 
     if (!req.adminPermissions) {
-      return next(new ForbiddenError("No permissions found"));
+      return next(new ForbiddenError('No permissions found'));
     }
 
-    const hasPermission = requiredPermissions.every(
-      permission => req.adminPermissions!.includes(permission)
+    const hasPermission = requiredPermissions.every((permission) =>
+      req.adminPermissions!.includes(permission)
     );
 
     if (!hasPermission) {
-      return next(new ForbiddenError(
-        `Insufficient permissions. Required: ${requiredPermissions.join(', ')}`
-      ));
+      return next(
+        new ForbiddenError(`Insufficient permissions. Required: ${requiredPermissions.join(', ')}`)
+      );
     }
 
     next();
@@ -65,13 +61,15 @@ export const requireAdminPermissions = (...requiredPermissions: string[]) => {
 export const requireAdminRole = (...roles: AdminRole[]) => {
   return (req: Request, _res: Response, next: NextFunction) => {
     if (!req.admin) {
-      return next(new UnauthorizedError("Admin authentication required"));
+      return next(new UnauthorizedError('Admin authentication required'));
     }
 
     if (!roles.includes(req.admin.role)) {
-      return next(new ForbiddenError(
-        `Insufficient role. Required: ${roles.join(', ')}, Current: ${req.admin.role}`
-      ));
+      return next(
+        new ForbiddenError(
+          `Insufficient role. Required: ${roles.join(', ')}, Current: ${req.admin.role}`
+        )
+      );
     }
 
     next();
@@ -88,7 +86,7 @@ export const auditLog = (action: string, resourceType: string) => {
     const originalSend = res.send;
     const startTime = Date.now();
 
-    res.send = function(data) {
+    res.send = function (data) {
       const duration = Date.now() - startTime;
 
       // Log admin action asynchronously (don't wait for it)
@@ -102,7 +100,7 @@ export const auditLog = (action: string, resourceType: string) => {
           newValues: (req as any).newValues,
           ipAddress: req.ip,
           userAgent: req.get('User-Agent'),
-        }).catch(err => {
+        }).catch((err) => {
           console.error('Failed to log audit action:', err);
         });
       }

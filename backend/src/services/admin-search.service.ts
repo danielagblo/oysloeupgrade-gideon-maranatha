@@ -1,29 +1,19 @@
-import { AppDataSource } from "../config/database.js";
-import { User } from "../entities/User.js";
-import { Product } from "../entities/Product.js";
-import { SupportCase } from "../entities/SupportCase.js";
-import { JobApplication } from "../entities/JobApplication.js";
+import { AppDataSource } from '../config/database.js';
+import { JobApplication } from '../entities/JobApplication.js';
+import { Product } from '../entities/Product.js';
+import { SupportCase } from '../entities/SupportCase.js';
+import { User } from '../entities/User.js';
 
 export interface GlobalSearchOptions {
   query: string;
-  types?: ("users" | "ads" | "support" | "applications")[];
+  types?: ('users' | 'ads' | 'support' | 'applications')[];
   limit?: number;
   page?: number;
 }
 
 export interface AdvancedFilter {
   field: string;
-  operator:
-    | "eq"
-    | "ne"
-    | "gt"
-    | "gte"
-    | "lt"
-    | "lte"
-    | "in"
-    | "nin"
-    | "contains"
-    | "regex";
+  operator: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'nin' | 'contains' | 'regex';
   value: any;
 }
 
@@ -47,7 +37,7 @@ export class AdminSearchService {
   async globalSearch(options: GlobalSearchOptions) {
     const {
       query,
-      types = ["users", "ads", "support", "applications"],
+      types = ['users', 'ads', 'support', 'applications'],
       limit = 20,
       page = 1,
     } = options;
@@ -67,51 +57,49 @@ export class AdminSearchService {
 
     let total = 0;
 
-    if (types.includes("users")) {
+    if (types.includes('users')) {
       const users = await this.userRepository
-        .createQueryBuilder("user")
-        .where(
-          "(user.name ILIKE :query OR user.email ILIKE :query OR user.phone ILIKE :query)",
-          { query: searchTerm }
-        )
-        .andWhere("user.deleted = :deleted", { deleted: false })
+        .createQueryBuilder('user')
+        .where('(user.name ILIKE :query OR user.email ILIKE :query OR user.phone ILIKE :query)', {
+          query: searchTerm,
+        })
+        .andWhere('user.deleted = :deleted', { deleted: false })
         .take(limit)
         .getMany();
       results.users = users;
       total += users.length;
     }
 
-    if (types.includes("ads")) {
+    if (types.includes('ads')) {
       const ads = await this.productRepository
-        .createQueryBuilder("product")
-        .leftJoinAndSelect("product.user", "user")
-        .where(
-          "(product.name ILIKE :query OR product.description ILIKE :query)",
-          { query: searchTerm }
-        )
-        .andWhere("product.deleted = :deleted", { deleted: false })
+        .createQueryBuilder('product')
+        .leftJoinAndSelect('product.user', 'user')
+        .where('(product.name ILIKE :query OR product.description ILIKE :query)', {
+          query: searchTerm,
+        })
+        .andWhere('product.deleted = :deleted', { deleted: false })
         .take(limit)
         .getMany();
       results.ads = ads;
       total += ads.length;
     }
 
-    if (types.includes("support")) {
+    if (types.includes('support')) {
       const cases = await this.supportCaseRepository
-        .createQueryBuilder("case")
-        .leftJoinAndSelect("case.user", "user")
-        .where("case.subject ILIKE :query", { query: searchTerm })
+        .createQueryBuilder('case')
+        .leftJoinAndSelect('case.user', 'user')
+        .where('case.subject ILIKE :query', { query: searchTerm })
         .take(limit)
         .getMany();
       results.supportCases = cases;
       total += cases.length;
     }
 
-    if (types.includes("applications")) {
+    if (types.includes('applications')) {
       const applications = await this.applicationRepository
-        .createQueryBuilder("app")
-        .leftJoinAndSelect("app.user", "user")
-        .where("app.position ILIKE :query", { query: searchTerm })
+        .createQueryBuilder('app')
+        .leftJoinAndSelect('app.user', 'user')
+        .where('app.position ILIKE :query', { query: searchTerm })
         .take(limit)
         .getMany();
       results.applications = applications;
@@ -127,7 +115,7 @@ export class AdminSearchService {
 
   async advancedFilter(
     filters: AdvancedFilter[],
-    sort?: { field: string; order: "asc" | "desc" }[],
+    sort?: { field: string; order: 'asc' | 'desc' }[],
     page: number = 1,
     limit: number = 10
   ) {
@@ -135,48 +123,48 @@ export class AdminSearchService {
     // A full implementation would need to handle different entity types
     // and apply filters dynamically based on field names
 
-    const queryBuilder = this.userRepository.createQueryBuilder("user");
+    const queryBuilder = this.userRepository.createQueryBuilder('user');
 
     filters.forEach((filter) => {
       const { field, operator, value } = filter;
 
       switch (operator) {
-        case "eq":
+        case 'eq':
           queryBuilder.andWhere(`user.${field} = :${field}`, {
             [field]: value,
           });
           break;
-        case "ne":
+        case 'ne':
           queryBuilder.andWhere(`user.${field} != :${field}`, {
             [field]: value,
           });
           break;
-        case "gt":
+        case 'gt':
           queryBuilder.andWhere(`user.${field} > :${field}`, {
             [field]: value,
           });
           break;
-        case "gte":
+        case 'gte':
           queryBuilder.andWhere(`user.${field} >= :${field}`, {
             [field]: value,
           });
           break;
-        case "lt":
+        case 'lt':
           queryBuilder.andWhere(`user.${field} < :${field}`, {
             [field]: value,
           });
           break;
-        case "lte":
+        case 'lte':
           queryBuilder.andWhere(`user.${field} <= :${field}`, {
             [field]: value,
           });
           break;
-        case "in":
+        case 'in':
           queryBuilder.andWhere(`user.${field} IN (:...${field})`, {
             [field]: Array.isArray(value) ? value : [value],
           });
           break;
-        case "contains":
+        case 'contains':
           queryBuilder.andWhere(`user.${field} ILIKE :${field}`, {
             [field]: `%${value}%`,
           });
@@ -187,9 +175,9 @@ export class AdminSearchService {
     if (sort && sort.length > 0) {
       sort.forEach((s, index) => {
         if (index === 0) {
-          queryBuilder.orderBy(`user.${s.field}`, s.order.toUpperCase() as "ASC" | "DESC");
+          queryBuilder.orderBy(`user.${s.field}`, s.order.toUpperCase() as 'ASC' | 'DESC');
         } else {
-          queryBuilder.addOrderBy(`user.${s.field}`, s.order.toUpperCase() as "ASC" | "DESC");
+          queryBuilder.addOrderBy(`user.${s.field}`, s.order.toUpperCase() as 'ASC' | 'DESC');
         }
       });
     }
@@ -207,5 +195,3 @@ export class AdminSearchService {
     };
   }
 }
-
-

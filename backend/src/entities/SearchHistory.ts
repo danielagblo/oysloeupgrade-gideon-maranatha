@@ -6,30 +6,30 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
-} from "typeorm";
-import type { User } from "./User.js";
+} from 'typeorm';
+import type { User } from './User.js';
 
-@Entity("search_history")
-@Index(["userId", "createdAt"])
-@Index(["query"])
+@Entity('search_history')
+@Index(['userId', 'createdAt'])
+@Index(['query'])
 export class SearchHistory {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ type: "uuid", name: "user_id", nullable: true })
+  @Column({ type: 'uuid', name: 'user_id', nullable: true })
   @Index()
   userId?: string;
 
-  @Column({ type: "varchar", length: 255 })
+  @Column({ type: 'varchar', length: 255 })
   query!: string;
 
-  @Column({ type: "integer", default: 0, name: "results_count" })
+  @Column({ type: 'integer', default: 0, name: 'results_count' })
   resultsCount!: number;
 
-  @CreateDateColumn({ type: "timestamp", name: "created_at" })
+  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt!: Date;
 
-  @ManyToOne("User", (u: any) => u.searchHistory, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "user_id" })
+  @ManyToOne('User', (u: any) => u.searchHistory, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
   user?: User;
 }

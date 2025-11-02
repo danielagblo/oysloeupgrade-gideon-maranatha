@@ -1,12 +1,8 @@
-import { AppDataSource } from "@config/database.js";
-import {
-  UserAnalytics,
-  type EventType,
-  type EntityType,
-} from "@entities/UserAnalytics.js";
-import { Product } from "@entities/Product.js";
-import { logError, logInfo } from "@utils/logger.js";
-import { MoreThanOrEqual, In } from "typeorm";
+import { AppDataSource } from '@config/database.js';
+import { Product } from '@entities/Product.js';
+import { type EntityType, type EventType, UserAnalytics } from '@entities/UserAnalytics.js';
+import { logError, logInfo } from '@utils/logger.js';
+import { In, MoreThanOrEqual } from 'typeorm';
 
 export class AnalyticsService {
   private get userAnalyticsRepository() {
@@ -34,11 +30,9 @@ export class AnalyticsService {
       });
 
       await this.userAnalyticsRepository.save(analyticsRecord);
-      logInfo(
-        `Analytics event tracked: ${eventType} on ${entityType}:${entityId}`
-      );
+      logInfo(`Analytics event tracked: ${eventType} on ${entityType}:${entityId}`);
     } catch (error) {
-      logError("Failed to track analytics event", error as Error);
+      logError('Failed to track analytics event', error as Error);
     }
   }
 
@@ -47,13 +41,7 @@ export class AnalyticsService {
     productId: string,
     metadata?: Record<string, unknown>
   ): Promise<void> {
-    await this.trackEvent(
-      "product_view",
-      "product",
-      productId,
-      userId,
-      metadata
-    );
+    await this.trackEvent('product_view', 'product', productId, userId, metadata);
   }
 
   async trackProductClick(
@@ -61,13 +49,7 @@ export class AnalyticsService {
     productId: string,
     metadata?: Record<string, unknown>
   ): Promise<void> {
-    await this.trackEvent(
-      "product_click",
-      "product",
-      productId,
-      userId,
-      metadata
-    );
+    await this.trackEvent('product_click', 'product', productId, userId, metadata);
   }
 
   async trackSearch(
@@ -75,36 +57,32 @@ export class AnalyticsService {
     query: string,
     resultsCount: number
   ): Promise<void> {
-    await this.trackEvent("search", "search", undefined, userId, {
+    await this.trackEvent('search', 'search', undefined, userId, {
       query,
       resultsCount,
     });
   }
 
   async trackFavoriteAdd(userId: string, productId: string): Promise<void> {
-    await this.trackEvent("favorite_add", "product", productId, userId);
+    await this.trackEvent('favorite_add', 'product', productId, userId);
   }
 
   async trackFavoriteRemove(userId: string, productId: string): Promise<void> {
-    await this.trackEvent("favorite_remove", "product", productId, userId);
+    await this.trackEvent('favorite_remove', 'product', productId, userId);
   }
 
-  async trackReviewCreate(
-    userId: string,
-    productId: string,
-    rating: number
-  ): Promise<void> {
-    await this.trackEvent("review_create", "product", productId, userId, {
+  async trackReviewCreate(userId: string, productId: string, rating: number): Promise<void> {
+    await this.trackEvent('review_create', 'product', productId, userId, {
       rating,
     });
   }
 
   async trackChatStart(userId: string, chatRoomId: string): Promise<void> {
-    await this.trackEvent("chat_start", "chat", chatRoomId, userId);
+    await this.trackEvent('chat_start', 'chat', chatRoomId, userId);
   }
 
   async trackCouponRedeem(userId: string, couponId: string): Promise<void> {
-    await this.trackEvent("coupon_redeem", "coupon", couponId, userId);
+    await this.trackEvent('coupon_redeem', 'coupon', couponId, userId);
   }
 
   async getUserEngagementStats(
@@ -128,27 +106,23 @@ export class AnalyticsService {
           userId,
           createdAt: MoreThanOrEqual(startDate),
         },
-        order: { createdAt: "DESC" },
+        order: { createdAt: 'DESC' },
         take: 100,
       });
 
       const stats = {
         totalEvents: analytics.length,
-        productViews: analytics.filter((a) => a.eventType === "product_view")
-          .length,
-        productClicks: analytics.filter((a) => a.eventType === "product_click")
-          .length,
-        searches: analytics.filter((a) => a.eventType === "search").length,
-        favoritesAdded: analytics.filter((a) => a.eventType === "favorite_add")
-          .length,
-        reviewsCreated: analytics.filter((a) => a.eventType === "review_create")
-          .length,
+        productViews: analytics.filter((a) => a.eventType === 'product_view').length,
+        productClicks: analytics.filter((a) => a.eventType === 'product_click').length,
+        searches: analytics.filter((a) => a.eventType === 'search').length,
+        favoritesAdded: analytics.filter((a) => a.eventType === 'favorite_add').length,
+        reviewsCreated: analytics.filter((a) => a.eventType === 'review_create').length,
         recentActivity: analytics.slice(0, 20),
       };
 
       return stats;
     } catch (error) {
-      logError("Failed to get user engagement stats", error as Error);
+      logError('Failed to get user engagement stats', error as Error);
       return {
         totalEvents: 0,
         productViews: 0,
@@ -178,18 +152,16 @@ export class AnalyticsService {
       const analytics = await this.userAnalyticsRepository.find({
         where: {
           entityId: productId,
-          entityType: "product",
+          entityType: 'product',
           createdAt: MoreThanOrEqual(startDate),
         },
-        order: { createdAt: "DESC" },
+        order: { createdAt: 'DESC' },
       });
 
-      const views = analytics.filter((a) => a.eventType === "product_view");
-      const clicks = analytics.filter((a) => a.eventType === "product_click");
-      const uniqueViewers = new Set(views.map((v) => v.userId).filter(Boolean))
-        .size;
-      const conversionRate =
-        views.length > 0 ? (clicks.length / views.length) * 100 : 0;
+      const views = analytics.filter((a) => a.eventType === 'product_view');
+      const clicks = analytics.filter((a) => a.eventType === 'product_click');
+      const uniqueViewers = new Set(views.map((v) => v.userId).filter(Boolean)).size;
+      const conversionRate = views.length > 0 ? (clicks.length / views.length) * 100 : 0;
 
       return {
         totalViews: views.length,
@@ -199,7 +171,7 @@ export class AnalyticsService {
         recentActivity: analytics.slice(0, 50),
       };
     } catch (error) {
-      logError("Failed to get product analytics", error as Error);
+      logError('Failed to get product analytics', error as Error);
       return {
         totalViews: 0,
         totalClicks: 0,
@@ -227,26 +199,20 @@ export class AnalyticsService {
       startDate.setDate(startDate.getDate() - days);
 
       const topProducts = await this.userAnalyticsRepository
-        .createQueryBuilder("analytics")
-        .select("analytics.entity_id", "productId")
-        .addSelect(
-          "COUNT(CASE WHEN analytics.event_type = 'product_view' THEN 1 END)",
-          "views"
-        )
-        .addSelect(
-          "COUNT(CASE WHEN analytics.event_type = 'product_click' THEN 1 END)",
-          "clicks"
-        )
+        .createQueryBuilder('analytics')
+        .select('analytics.entity_id', 'productId')
+        .addSelect("COUNT(CASE WHEN analytics.event_type = 'product_view' THEN 1 END)", 'views')
+        .addSelect("COUNT(CASE WHEN analytics.event_type = 'product_click' THEN 1 END)", 'clicks')
         .addSelect(
           "COUNT(DISTINCT CASE WHEN analytics.event_type = 'product_view' THEN analytics.user_id END)",
-          "uniqueViewers"
+          'uniqueViewers'
         )
-        .where("analytics.entity_type = :entityType", { entityType: "product" })
-        .andWhere("analytics.created_at >= :startDate", { startDate })
-        .andWhere("analytics.entity_id IS NOT NULL")
-        .groupBy("analytics.entity_id")
-        .orderBy("views", "DESC")
-        .addOrderBy("clicks", "DESC")
+        .where('analytics.entity_type = :entityType', { entityType: 'product' })
+        .andWhere('analytics.created_at >= :startDate', { startDate })
+        .andWhere('analytics.entity_id IS NOT NULL')
+        .groupBy('analytics.entity_id')
+        .orderBy('views', 'DESC')
+        .addOrderBy('clicks', 'DESC')
         .limit(limit)
         .getRawMany();
 
@@ -264,7 +230,7 @@ export class AnalyticsService {
         uniqueViewers: parseInt(tp.uniqueViewers, 10),
       }));
     } catch (error) {
-      logError("Failed to get top products", error as Error);
+      logError('Failed to get top products', error as Error);
       return [];
     }
   }
@@ -284,18 +250,15 @@ export class AnalyticsService {
       startDate.setDate(startDate.getDate() - days);
 
       const trendingSearches = await this.userAnalyticsRepository
-        .createQueryBuilder("analytics")
-        .select("analytics.metadata->>'query'", "query")
-        .addSelect("COUNT(*)", "searchCount")
-        .addSelect(
-          "AVG(CAST(analytics.metadata->>'resultsCount' AS INTEGER))",
-          "avgResults"
-        )
-        .where("analytics.event_type = :eventType", { eventType: "search" })
-        .andWhere("analytics.created_at >= :startDate", { startDate })
+        .createQueryBuilder('analytics')
+        .select("analytics.metadata->>'query'", 'query')
+        .addSelect('COUNT(*)', 'searchCount')
+        .addSelect("AVG(CAST(analytics.metadata->>'resultsCount' AS INTEGER))", 'avgResults')
+        .where('analytics.event_type = :eventType', { eventType: 'search' })
+        .andWhere('analytics.created_at >= :startDate', { startDate })
         .andWhere("analytics.metadata->>'query' IS NOT NULL")
         .groupBy("analytics.metadata->>'query'")
-        .orderBy("searchCount", "DESC")
+        .orderBy('searchCount', 'DESC')
         .limit(limit)
         .getRawMany();
 
@@ -305,7 +268,7 @@ export class AnalyticsService {
         avgResults: Math.round(parseFloat(ts.avgResults) || 0),
       }));
     } catch (error) {
-      logError("Failed to get trending search terms", error as Error);
+      logError('Failed to get trending search terms', error as Error);
       return [];
     }
   }

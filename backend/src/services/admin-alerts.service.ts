@@ -1,13 +1,13 @@
-import { AppDataSource } from "../config/database.js";
-import { Alert } from "../entities/Alert.js";
-import { Coupon } from "../entities/Coupon.js";
-import { NotFoundError } from "../utils/errors.js";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from 'uuid';
+import { AppDataSource } from '../config/database.js';
+import { Alert } from '../entities/Alert.js';
+import { Coupon } from '../entities/Coupon.js';
+import { NotFoundError } from '../utils/errors.js';
 
 export interface SendAlertInput {
   title: string;
   message: string;
-  type: "info" | "warning" | "success" | "error";
+  type: 'info' | 'warning' | 'success' | 'error';
   recipientIds: string[];
   linkedAdIds?: string[];
   couponData?: {
@@ -51,11 +51,9 @@ export class AdminAlertsService {
 
       coupon = this.couponRepository.create({
         code: couponCode,
-        discountType: "fixed",
+        discountType: 'fixed',
         discountValue: input.couponData.amount,
-        validUntil: input.couponData.expiresAt
-          ? new Date(input.couponData.expiresAt)
-          : undefined,
+        validUntil: input.couponData.expiresAt ? new Date(input.couponData.expiresAt) : undefined,
         isActive: true,
         createdBy: input.createdBy.toString(),
       });
@@ -73,10 +71,8 @@ export class AdminAlertsService {
       couponId: coupon?.id,
       createdBy: input.createdBy,
       sendImmediately: input.sendImmediately ?? true,
-      scheduledFor: input.scheduledFor
-        ? new Date(input.scheduledFor)
-        : undefined,
-      status: "active",
+      scheduledFor: input.scheduledFor ? new Date(input.scheduledFor) : undefined,
+      status: 'active',
     });
 
     const savedAlert = await this.alertRepository.save(alert);
@@ -90,12 +86,11 @@ export class AdminAlertsService {
 
   async createCoupon(input: CreateCouponInput) {
     const couponCode =
-      input.code ||
-      `ADMIN-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
+      input.code || `ADMIN-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
 
     const coupon = this.couponRepository.create({
       code: couponCode,
-      discountType: "fixed",
+      discountType: 'fixed',
       discountValue: input.amount,
       validUntil: input.expiresAt ? new Date(input.expiresAt) : undefined,
       usageLimit: input.usageLimit,
@@ -107,15 +102,15 @@ export class AdminAlertsService {
 
     // Create alert for coupon
     const alert = this.alertRepository.create({
-      title: "Special Offer",
+      title: 'Special Offer',
       message: input.message || `You have received a coupon: ${couponCode}`,
-      type: "success",
+      type: 'success',
       recipientIds: input.recipientIds,
       linkedAdIds: input.linkedAdIds,
       couponId: savedCoupon.id,
       createdBy: input.createdBy,
       sendImmediately: true,
-      status: "active",
+      status: 'active',
     });
 
     const savedAlert = await this.alertRepository.save(alert);
@@ -126,43 +121,38 @@ export class AdminAlertsService {
     };
   }
 
-  async getAlertsHistory(options: {
-    page?: number;
-    limit?: number;
-    type?: string;
-    status?: string;
-    dateFrom?: string;
-    dateTo?: string;
-  } = {}) {
-    const {
-      page = 1,
-      limit = 10,
-      type,
-      status,
-      dateFrom,
-      dateTo,
-    } = options;
+  async getAlertsHistory(
+    options: {
+      page?: number;
+      limit?: number;
+      type?: string;
+      status?: string;
+      dateFrom?: string;
+      dateTo?: string;
+    } = {}
+  ) {
+    const { page = 1, limit = 10, type, status, dateFrom, dateTo } = options;
 
     const queryBuilder = this.alertRepository
-      .createQueryBuilder("alert")
-      .leftJoinAndSelect("alert.creator", "creator")
-      .leftJoinAndSelect("alert.coupon", "coupon")
-      .orderBy("alert.createdAt", "DESC");
+      .createQueryBuilder('alert')
+      .leftJoinAndSelect('alert.creator', 'creator')
+      .leftJoinAndSelect('alert.coupon', 'coupon')
+      .orderBy('alert.createdAt', 'DESC');
 
     if (type) {
-      queryBuilder.andWhere("alert.type = :type", { type });
+      queryBuilder.andWhere('alert.type = :type', { type });
     }
 
     if (status) {
-      queryBuilder.andWhere("alert.status = :status", { status });
+      queryBuilder.andWhere('alert.status = :status', { status });
     }
 
     if (dateFrom) {
-      queryBuilder.andWhere("alert.createdAt >= :dateFrom", { dateFrom });
+      queryBuilder.andWhere('alert.createdAt >= :dateFrom', { dateFrom });
     }
 
     if (dateTo) {
-      queryBuilder.andWhere("alert.createdAt <= :dateTo", { dateTo });
+      queryBuilder.andWhere('alert.createdAt <= :dateTo', { dateTo });
     }
 
     const [alerts, total] = await queryBuilder
@@ -174,7 +164,7 @@ export class AdminAlertsService {
     const allAlerts = await this.alertRepository.find();
     const stats = {
       total: allAlerts.length,
-      active: allAlerts.filter((a) => a.status === "active").length,
+      active: allAlerts.filter((a) => a.status === 'active').length,
       delivered: allAlerts.reduce((sum, a) => sum + a.deliveredCount, 0),
       clicked: allAlerts.reduce((sum, a) => sum + a.clickedCount, 0),
     };
@@ -191,5 +181,3 @@ export class AdminAlertsService {
     };
   }
 }
-
-

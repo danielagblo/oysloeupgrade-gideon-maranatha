@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export const userEngagementAnalyticsSchema = z.object({
   totalEvents: z.number().int().min(0),
@@ -36,41 +36,41 @@ export const productAnalyticsSchema = z.object({
 
 export const trackProductViewSchema = z.object({
   params: z.object({
-    id: z.string().uuid().describe("Product ID"),
+    id: z.string().uuid().describe('Product ID'),
   }),
-  body: z.record(z.unknown()).optional().describe("Additional metadata"),
+  body: z.record(z.unknown()).optional().describe('Additional metadata'),
 });
 
 export const trackProductClickSchema = z.object({
   params: z.object({
-    id: z.string().uuid().describe("Product ID"),
+    id: z.string().uuid().describe('Product ID'),
   }),
-  body: z.record(z.unknown()).optional().describe("Additional metadata"),
+  body: z.record(z.unknown()).optional().describe('Additional metadata'),
 });
 
 export const getUserEngagementSchema = z.object({
   query: z.object({
-    days: z.string().optional().describe("Number of days to analyze"),
+    days: z.string().optional().describe('Number of days to analyze'),
   }),
 });
 
 export const getProductAnalyticsSchema = z.object({
   query: z.object({
-    productId: z.string().uuid().describe("Product ID"),
-    days: z.string().optional().describe("Number of days to analyze"),
+    productId: z.string().uuid().describe('Product ID'),
+    days: z.string().optional().describe('Number of days to analyze'),
   }),
 });
 
 export const getTopProductsSchema = z.object({
   query: z.object({
-    limit: z.string().optional().describe("Number of products to return"),
-    days: z.string().optional().describe("Number of days to analyze"),
+    limit: z.string().optional().describe('Number of products to return'),
+    days: z.string().optional().describe('Number of days to analyze'),
   }),
 });
 
 export const getTrendingSearchesSchema = z.object({
   query: z.object({
-    limit: z.string().optional().describe("Number of search terms to return"),
-    days: z.string().optional().describe("Number of days to analyze"),
+    limit: z.string().optional().describe('Number of search terms to return'),
+    days: z.string().optional().describe('Number of days to analyze'),
   }),
 });

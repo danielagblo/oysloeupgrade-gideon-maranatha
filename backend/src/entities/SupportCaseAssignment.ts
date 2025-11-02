@@ -1,41 +1,46 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
-  ManyToOne,
-  JoinColumn,
   CreateDateColumn,
-} from "typeorm";
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
-import { AdminUser } from "./AdminUser.js";
-import { SupportCase } from "./SupportCase.js";
+import { AdminUser } from './AdminUser.js';
+import { SupportCase } from './SupportCase.js';
 
-@Entity("support_case_assignments")
+@Entity('support_case_assignments')
 export class SupportCaseAssignment {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ name: "case_id" })
+  @Column({ name: 'case_id' })
   caseId!: number;
 
-  @ManyToOne(() => SupportCase, (sc: any) => sc.assignments)
-  @JoinColumn({ name: "case_id" })
+  @ManyToOne(
+    () => SupportCase,
+    (sc: any) => sc.assignments
+  )
+  @JoinColumn({ name: 'case_id' })
   supportCase?: any;
 
-  @Column({ name: "admin_user_id" })
+  @Column({ name: 'admin_user_id' })
   adminUserId!: number;
 
-  @ManyToOne(() => AdminUser, (admin: any) => admin.caseAssignments)
-  @JoinColumn({ name: "admin_user_id" })
+  @ManyToOne(
+    () => AdminUser,
+    (admin: any) => admin.caseAssignments
+  )
+  @JoinColumn({ name: 'admin_user_id' })
   adminUser?: any;
 
-  @CreateDateColumn({ name: "assigned_at" })
+  @CreateDateColumn({ name: 'assigned_at' })
   assignedAt!: Date;
 
-  @Column({ type: "timestamp", nullable: true, name: "unassigned_at" })
+  @Column({ type: 'timestamp', nullable: true, name: 'unassigned_at' })
   unassignedAt?: Date;
 
-  @Column({ type: "text", nullable: true })
+  @Column({ type: 'text', nullable: true })
   notes?: string;
 }
-

@@ -15,7 +15,6 @@ router.get('/ping', (_req, res) => {
 
 router.get('/token', async (_req, res) => {
   try {
-
     if (process.env.NODE_ENV === 'production') {
       return res.status(403).json({
         success: false,

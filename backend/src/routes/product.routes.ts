@@ -1,8 +1,8 @@
-import { Router } from "express";
-import { z } from "zod";
-import { ProductController } from "../controllers/product.controller.js";
-import { authenticate, optionalAuth } from "../middlewares/auth.middleware.js";
-import { validateRequest } from "../middlewares/validation.middleware.js";
+import { Router } from 'express';
+import { z } from 'zod';
+import { ProductController } from '../controllers/product.controller.js';
+import { authenticate, optionalAuth } from '../middlewares/auth.middleware.js';
+import { validateRequest } from '../middlewares/validation.middleware.js';
 
 const router = Router();
 const productController = new ProductController();
@@ -25,9 +25,7 @@ const updateProductSchema = z.object({
     price: z.number().positive().optional(),
     categoryId: z.string().uuid().optional(),
     subcategoryId: z.string().uuid().optional(),
-    status: z
-      .enum(["draft", "active", "paused", "archived", "sold"])
-      .optional(),
+    status: z.enum(['draft', 'active', 'paused', 'archived', 'sold']).optional(),
     features: z.array(z.string().uuid()).optional(),
   }),
 });
@@ -39,13 +37,11 @@ const getProductsSchema = z.object({
     search: z.string().optional(),
     categoryId: z.string().uuid().optional(),
     subcategoryId: z.string().uuid().optional(),
-    status: z
-      .enum(["draft", "active", "paused", "archived", "sold"])
-      .optional(),
+    status: z.enum(['draft', 'active', 'paused', 'archived', 'sold']).optional(),
     minPrice: z.string().optional(),
     maxPrice: z.string().optional(),
-    sortBy: z.enum(["createdAt", "price", "name", "viewsCount"]).optional(),
-    sortOrder: z.enum(["ASC", "DESC"]).optional(),
+    sortBy: z.enum(['createdAt', 'price', 'name', 'viewsCount']).optional(),
+    sortOrder: z.enum(['ASC', 'DESC']).optional(),
   }),
 });
 
@@ -93,39 +89,36 @@ const getRelatedProductsSchema = z.object({
 });
 
 router.post(
-  "/",
+  '/',
   authenticate,
   validateRequest(createProductSchema),
   productController.createProduct.bind(productController)
 );
 
 router.get(
-  "/",
+  '/',
   optionalAuth,
   validateRequest(getProductsSchema),
   productController.getProducts.bind(productController)
 );
 
-router.get(
-  "/categories",
-  productController.getCategories.bind(productController)
-);
+router.get('/categories', productController.getCategories.bind(productController));
 
 router.get(
-  "/features/:subcategoryId",
+  '/features/:subcategoryId',
   validateRequest(getFeaturesParamsSchema),
   productController.getFeatures.bind(productController)
 );
 
 router.get(
-  "/related",
+  '/related',
   optionalAuth,
   validateRequest(getRelatedProductsSchema),
   productController.getRelatedProducts.bind(productController)
 );
 
 router.get(
-  "/:id",
+  '/:id',
   optionalAuth,
   validateRequest(getProductSchema),
   productController.getProduct.bind(productController)
@@ -145,28 +138,28 @@ const paginationQuerySchema = z.object({
 });
 
 router.post(
-  "/:id/mark-as-sold",
+  '/:id/mark-as-sold',
   authenticate,
   validateRequest(productIdParamsSchema),
   productController.markAsSold.bind(productController)
 );
 
 router.post(
-  "/:id/pause",
+  '/:id/pause',
   authenticate,
   validateRequest(productIdParamsSchema),
   productController.pauseProduct.bind(productController)
 );
 
 router.post(
-  "/:id/activate",
+  '/:id/activate',
   authenticate,
   validateRequest(productIdParamsSchema),
   productController.activateProduct.bind(productController)
 );
 
 router.get(
-  "/:id/reviews",
+  '/:id/reviews',
   authenticate,
   validateRequest(productIdParamsSchema),
   validateRequest(paginationQuerySchema),
@@ -174,7 +167,7 @@ router.get(
 );
 
 router.put(
-  "/:id",
+  '/:id',
   authenticate,
   validateRequest(updateProductSchema),
   validateRequest(updateProductParamsSchema),
@@ -182,7 +175,7 @@ router.put(
 );
 
 router.delete(
-  "/:id",
+  '/:id',
   authenticate,
   validateRequest(deleteProductParamsSchema),
   productController.deleteProduct.bind(productController)
@@ -195,21 +188,21 @@ const favoriteParamsSchema = z.object({
 });
 
 router.post(
-  "/:id/favorite",
+  '/:id/favorite',
   authenticate,
   validateRequest(favoriteParamsSchema),
   productController.addToFavorites.bind(productController)
 );
 
 router.delete(
-  "/:id/favorite",
+  '/:id/favorite',
   authenticate,
   validateRequest(favoriteParamsSchema),
   productController.removeFromFavorites.bind(productController)
 );
 
 router.get(
-  "/:id/is-favorite",
+  '/:id/is-favorite',
   authenticate,
   validateRequest(favoriteParamsSchema),
   productController.checkFavoriteStatus.bind(productController)

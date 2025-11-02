@@ -1,10 +1,16 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 export enum AdminRole {
   SUPER_ADMIN = 'super-admin',
   ADMIN = 'admin',
   STAFF = 'staff',
-  SUPPORT = 'support'
+  SUPPORT = 'support',
 }
 
 @Entity('admin_users')
@@ -24,7 +30,7 @@ export class AdminUser {
   @Column({
     type: 'enum',
     enum: AdminRole,
-    default: AdminRole.STAFF
+    default: AdminRole.STAFF,
   })
   role!: AdminRole;
 

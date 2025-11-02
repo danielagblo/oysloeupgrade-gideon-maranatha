@@ -1,9 +1,9 @@
-import { Router } from "express";
-import { z } from "zod";
-import { ReferralController } from "../controllers/referral.controller.js";
-import { authenticate, requireAdmin } from "../middlewares/auth.middleware.js";
-import { validateRequest } from "../middlewares/validation.middleware.js";
-import { asyncHandler } from "../middlewares/error.middleware.js";
+import { Router } from 'express';
+import { z } from 'zod';
+import { ReferralController } from '../controllers/referral.controller.js';
+import { authenticate, requireAdmin } from '../middlewares/auth.middleware.js';
+import { asyncHandler } from '../middlewares/error.middleware.js';
+import { validateRequest } from '../middlewares/validation.middleware.js';
 
 const router = Router();
 const referralController = new ReferralController();
@@ -47,7 +47,7 @@ const getAllReferralsSchema = z.object({
   query: z.object({
     page: z.string().optional(),
     limit: z.string().optional(),
-    status: z.enum(["pending", "confirmed", "cancelled"]).optional(),
+    status: z.enum(['pending', 'confirmed', 'cancelled']).optional(),
   }),
 });
 
@@ -60,53 +60,49 @@ const cancelReferralParamsSchema = z.object({
 const getLeaderboardSchema = z.object({
   query: z.object({
     limit: z.string().optional(),
-    period: z.enum(["week", "month", "year", "all"]).optional(),
+    period: z.enum(['week', 'month', 'year', 'all']).optional(),
   }),
 });
 
 router.post(
-  "/",
+  '/',
   authenticate,
   validateRequest(createReferralSchema),
   referralController.createReferral.bind(referralController)
 );
 
 router.post(
-  "/confirm/:userId",
+  '/confirm/:userId',
   authenticate,
   validateRequest(confirmReferralParamsSchema),
   referralController.confirmReferral.bind(referralController)
 );
 
 router.post(
-  "/redeem",
+  '/redeem',
   authenticate,
   validateRequest(redeemPointsSchema),
   asyncHandler(referralController.redeemPoints.bind(referralController))
 );
 
-router.get(
-  "/stats",
-  authenticate,
-  referralController.getUserStats.bind(referralController)
-);
+router.get('/stats', authenticate, referralController.getUserStats.bind(referralController));
 
 router.get(
-  "/history",
+  '/history',
   authenticate,
   validateRequest(getUserReferralHistorySchema),
   referralController.getUserReferralHistory.bind(referralController)
 );
 
 router.get(
-  "/redemptions",
+  '/redemptions',
   authenticate,
   validateRequest(getUserRedemptionHistorySchema),
   referralController.getUserRedemptionHistory.bind(referralController)
 );
 
 router.get(
-  "/all",
+  '/all',
   authenticate,
   requireAdmin,
   validateRequest(getAllReferralsSchema),
@@ -114,20 +110,20 @@ router.get(
 );
 
 router.delete(
-  "/:id",
+  '/:id',
   authenticate,
   validateRequest(cancelReferralParamsSchema),
   referralController.cancelReferral.bind(referralController)
 );
 
 router.get(
-  "/leaderboard",
+  '/leaderboard',
   validateRequest(getLeaderboardSchema),
   referralController.getLeaderboard.bind(referralController)
 );
 
 router.post(
-  "/generate-code",
+  '/generate-code',
   authenticate,
   referralController.generateReferralCode.bind(referralController)
 );

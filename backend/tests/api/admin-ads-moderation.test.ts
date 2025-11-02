@@ -1,23 +1,16 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-  beforeEach,
-} from "bun:test";
-import {
-  createTestServer,
-  closeTestServer,
-  resetDb,
-  seedProduct,
-  createAdminAndToken,
   authenticatedAdminRequest,
+  closeTestServer,
+  createAdminAndToken,
+  createTestServer,
   expectError,
   expectSuccess,
-} from "../test-helpers";
+  resetDb,
+  seedProduct,
+} from '../test-helpers';
 
-describe("Admin Ads Moderation API", () => {
+describe('Admin Ads Moderation API', () => {
   let server: unknown;
   let baseURL: string;
 
@@ -35,14 +28,14 @@ describe("Admin Ads Moderation API", () => {
     await closeTestServer(server);
   });
 
-  describe("GET /api-v1/admin/ads", () => {
-    it("returns paginated ads list", async () => {
+  describe('GET /api-v1/admin/ads', () => {
+    it('returns paginated ads list', async () => {
       const { token } = await createAdminAndToken();
 
       // Create some test products/ads
-      await seedProduct({ name: "Test Ad 1", status: "active" });
-      await seedProduct({ name: "Test Ad 2", status: "pending" });
-      await seedProduct({ name: "Test Ad 3", status: "suspended" });
+      await seedProduct({ name: 'Test Ad 1', status: 'active' });
+      await seedProduct({ name: 'Test Ad 2', status: 'pending' });
+      await seedProduct({ name: 'Test Ad 3', status: 'suspended' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/ads?page=1&limit=10`,
@@ -61,12 +54,12 @@ describe("Admin Ads Moderation API", () => {
       expect(body.data.filters.categories).toBeInstanceOf(Array);
     });
 
-    it("filters ads by status", async () => {
+    it('filters ads by status', async () => {
       const { token } = await createAdminAndToken();
 
-      await seedProduct({ name: "Active Ad", status: "active" });
-      await seedProduct({ name: "Pending Ad", status: "pending" });
-      await seedProduct({ name: "Suspended Ad", status: "suspended" });
+      await seedProduct({ name: 'Active Ad', status: 'active' });
+      await seedProduct({ name: 'Pending Ad', status: 'pending' });
+      await seedProduct({ name: 'Suspended Ad', status: 'suspended' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/ads?status=pending`,
@@ -76,11 +69,11 @@ describe("Admin Ads Moderation API", () => {
       const body = await expectSuccess(response, 200);
       expect(body.data.ads).toBeInstanceOf(Array);
       expect(body.data.ads.length).toBe(1);
-      expect(body.data.ads[0].status).toBe("pending");
-      expect(body.data.ads[0].name).toBe("Pending Ad");
+      expect(body.data.ads[0].status).toBe('pending');
+      expect(body.data.ads[0].name).toBe('Pending Ad');
     });
 
-    it("filters ads by date range", async () => {
+    it('filters ads by date range', async () => {
       const { token } = await createAdminAndToken();
 
       const pastDate = new Date();
@@ -88,7 +81,7 @@ describe("Admin Ads Moderation API", () => {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 1);
 
-      await seedProduct({ name: "Recent Ad" });
+      await seedProduct({ name: 'Recent Ad' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/ads?dateFrom=${pastDate.toISOString()}&dateTo=${futureDate.toISOString()}`,
@@ -100,11 +93,11 @@ describe("Admin Ads Moderation API", () => {
       expect(body.data.ads.length).toBeGreaterThanOrEqual(1);
     });
 
-    it("searches ads by seller", async () => {
+    it('searches ads by seller', async () => {
       const { token } = await createAdminAndToken();
 
-      await seedProduct({ name: "Seller Ad 1", userId: undefined }); // Will create default user
-      await seedProduct({ name: "Seller Ad 2", userId: undefined }); // Will create another user
+      await seedProduct({ name: 'Seller Ad 1', userId: undefined }); // Will create default user
+      await seedProduct({ name: 'Seller Ad 2', userId: undefined }); // Will create another user
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/ads?sellerId=1`, // First user ID
@@ -115,114 +108,114 @@ describe("Admin Ads Moderation API", () => {
       expect(body.data.ads).toBeInstanceOf(Array);
     });
 
-    it("rejects unauthenticated requests", async () => {
+    it('rejects unauthenticated requests', async () => {
       const response = await fetch(`${baseURL}/api-v1/admin/ads`);
 
       await expectError(response, 401);
     });
   });
 
-  describe("PUT /api-v1/admin/ads/:id/status", () => {
-    it("approves pending ad successfully", async () => {
+  describe('PUT /api-v1/admin/ads/:id/status', () => {
+    it('approves pending ad successfully', async () => {
       const { token } = await createAdminAndToken();
-      const product = await seedProduct({ status: "pending" });
+      const product = await seedProduct({ status: 'pending' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/ads/${product.id}/status`,
         token,
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify({
-            status: "active",
-            reason: "Ad meets all requirements",
-            notes: "Approved after review"
-          })
+            status: 'active',
+            reason: 'Ad meets all requirements',
+            notes: 'Approved after review',
+          }),
         }
       );
 
       const body = await expectSuccess(response, 200);
       expect(body.data.ad).toBeDefined();
-      expect(body.data.ad.status).toBe("active");
+      expect(body.data.ad.status).toBe('active');
       expect(body.data.moderationHistory).toBeDefined();
-      expect(body.data.moderationHistory.action).toBe("approve");
+      expect(body.data.moderationHistory.action).toBe('approve');
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("suspends ad with reason", async () => {
+    it('suspends ad with reason', async () => {
       const { token } = await createAdminAndToken();
-      const product = await seedProduct({ status: "active" });
+      const product = await seedProduct({ status: 'active' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/ads/${product.id}/status`,
         token,
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify({
-            status: "suspended",
-            reason: "Violation of community guidelines",
-            notes: "Contains prohibited content"
-          })
+            status: 'suspended',
+            reason: 'Violation of community guidelines',
+            notes: 'Contains prohibited content',
+          }),
         }
       );
 
       const body = await expectSuccess(response, 200);
-      expect(body.data.ad.status).toBe("suspended");
-      expect(body.data.moderationHistory.action).toBe("suspend");
+      expect(body.data.ad.status).toBe('suspended');
+      expect(body.data.moderationHistory.action).toBe('suspend');
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("rejects ad with feedback", async () => {
+    it('rejects ad with feedback', async () => {
       const { token } = await createAdminAndToken();
-      const product = await seedProduct({ status: "pending" });
+      const product = await seedProduct({ status: 'pending' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/ads/${product.id}/status`,
         token,
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify({
-            status: "rejected",
-            reason: "Incomplete product information",
-            notes: "Please add more product details and better photos"
-          })
+            status: 'rejected',
+            reason: 'Incomplete product information',
+            notes: 'Please add more product details and better photos',
+          }),
         }
       );
 
       const body = await expectSuccess(response, 200);
-      expect(body.data.ad.status).toBe("rejected");
-      expect(body.data.moderationHistory.action).toBe("reject");
+      expect(body.data.ad.status).toBe('rejected');
+      expect(body.data.moderationHistory.action).toBe('reject');
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("validates status transitions", async () => {
+    it('validates status transitions', async () => {
       const { token } = await createAdminAndToken();
-      const product = await seedProduct({ status: "sold" });
+      const product = await seedProduct({ status: 'sold' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/ads/${product.id}/status`,
         token,
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify({
-            status: "invalid-transition"
-          })
+            status: 'invalid-transition',
+          }),
         }
       );
 
       await expectError(response, 400);
     });
 
-    it("returns 404 for non-existent ad", async () => {
+    it('returns 404 for non-existent ad', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/ads/99999/status`,
         token,
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify({
-            status: "active"
-          })
+            status: 'active',
+          }),
         }
       );
 
@@ -230,22 +223,22 @@ describe("Admin Ads Moderation API", () => {
     });
   });
 
-  describe("DELETE /api-v1/admin/ads/:id/images/:imageId", () => {
-    it("removes ad image successfully", async () => {
+  describe('DELETE /api-v1/admin/ads/:id/images/:imageId', () => {
+    it('removes ad image successfully', async () => {
       const { token } = await createAdminAndToken();
       const product = await seedProduct();
 
       // Mock image ID (in real implementation this would be a UUID)
-      const imageId = "mock-image-id";
+      const imageId = 'mock-image-id';
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/ads/${product.id}/images/${imageId}`,
         token,
         {
-          method: "DELETE",
+          method: 'DELETE',
           body: JSON.stringify({
-            reason: "Image contains prohibited content"
-          })
+            reason: 'Image contains prohibited content',
+          }),
         }
       );
 
@@ -255,17 +248,17 @@ describe("Admin Ads Moderation API", () => {
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("validates required reason", async () => {
+    it('validates required reason', async () => {
       const { token } = await createAdminAndToken();
       const product = await seedProduct();
-      const imageId = "mock-image-id";
+      const imageId = 'mock-image-id';
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/ads/${product.id}/images/${imageId}`,
         token,
         {
-          method: "DELETE",
-          body: JSON.stringify({})
+          method: 'DELETE',
+          body: JSON.stringify({}),
         }
       );
 
@@ -273,25 +266,25 @@ describe("Admin Ads Moderation API", () => {
     });
   });
 
-  describe("POST /api-v1/admin/ads/bulk/status", () => {
-    it("updates multiple ads status successfully", async () => {
+  describe('POST /api-v1/admin/ads/bulk/status', () => {
+    it('updates multiple ads status successfully', async () => {
       const { token } = await createAdminAndToken();
 
-      const ad1 = await seedProduct({ status: "pending" });
-      const ad2 = await seedProduct({ status: "pending" });
-      const ad3 = await seedProduct({ status: "active" });
+      const ad1 = await seedProduct({ status: 'pending' });
+      const ad2 = await seedProduct({ status: 'pending' });
+      const ad3 = await seedProduct({ status: 'active' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/ads/bulk/status`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
             adIds: [ad1.id, ad2.id, ad3.id],
-            status: "active",
-            reason: "Bulk approval of quality ads",
-            notes: "Approved by senior moderator"
-          })
+            status: 'active',
+            reason: 'Bulk approval of quality ads',
+            notes: 'Approved by senior moderator',
+          }),
         }
       );
 
@@ -304,22 +297,22 @@ describe("Admin Ads Moderation API", () => {
       expect(body.data.auditLogIds.length).toBe(3);
     });
 
-    it("handles partial failures in bulk update", async () => {
+    it('handles partial failures in bulk update', async () => {
       const { token } = await createAdminAndToken();
 
-      const validAd = await seedProduct({ status: "pending" });
-      const invalidAdId = "invalid-uuid";
+      const validAd = await seedProduct({ status: 'pending' });
+      const invalidAdId = 'invalid-uuid';
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/ads/bulk/status`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
             adIds: [validAd.id, invalidAdId],
-            status: "active",
-            reason: "Bulk approval"
-          })
+            status: 'active',
+            reason: 'Bulk approval',
+          }),
         }
       );
 
@@ -337,36 +330,36 @@ describe("Admin Ads Moderation API", () => {
       expect(invalidResult.error).toBeDefined();
     });
 
-    it("validates required fields", async () => {
+    it('validates required fields', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/ads/bulk/status`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
             // Missing adIds and status
-            reason: "Test"
-          })
+            reason: 'Test',
+          }),
         }
       );
 
       await expectError(response, 400);
     });
 
-    it("validates adIds array", async () => {
+    it('validates adIds array', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/ads/bulk/status`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
             adIds: [], // Empty array
-            status: "active"
-          })
+            status: 'active',
+          }),
         }
       );
 
@@ -374,22 +367,19 @@ describe("Admin Ads Moderation API", () => {
     });
   });
 
-  describe("GET /api-v1/admin/ads/stats", () => {
-    it("returns comprehensive ads statistics", async () => {
+  describe('GET /api-v1/admin/ads/stats', () => {
+    it('returns comprehensive ads statistics', async () => {
       const { token } = await createAdminAndToken();
 
       // Create ads with different statuses
-      await seedProduct({ status: "active" });
-      await seedProduct({ status: "active" });
-      await seedProduct({ status: "pending" });
-      await seedProduct({ status: "pending" });
-      await seedProduct({ status: "suspended" });
-      await seedProduct({ status: "rejected" });
+      await seedProduct({ status: 'active' });
+      await seedProduct({ status: 'active' });
+      await seedProduct({ status: 'pending' });
+      await seedProduct({ status: 'pending' });
+      await seedProduct({ status: 'suspended' });
+      await seedProduct({ status: 'rejected' });
 
-      const response = await authenticatedAdminRequest(
-        `${baseURL}/api-v1/admin/ads/stats`,
-        token
-      );
+      const response = await authenticatedAdminRequest(`${baseURL}/api-v1/admin/ads/stats`, token);
 
       const body = await expectSuccess(response, 200);
       expect(body.data.stats).toBeDefined();
@@ -409,18 +399,15 @@ describe("Admin Ads Moderation API", () => {
       expect(body.data.stats.moderation.resolvedToday).toBeDefined();
     });
 
-    it("includes top sellers statistics", async () => {
+    it('includes top sellers statistics', async () => {
       const { token } = await createAdminAndToken();
 
       // Create multiple ads for same seller
-      await seedProduct({ status: "active", userId: undefined }); // User 1
-      await seedProduct({ status: "active", userId: undefined }); // User 2 gets different user
-      await seedProduct({ status: "active", userId: undefined }); // User 3
+      await seedProduct({ status: 'active', userId: undefined }); // User 1
+      await seedProduct({ status: 'active', userId: undefined }); // User 2 gets different user
+      await seedProduct({ status: 'active', userId: undefined }); // User 3
 
-      const response = await authenticatedAdminRequest(
-        `${baseURL}/api-v1/admin/ads/stats`,
-        token
-      );
+      const response = await authenticatedAdminRequest(`${baseURL}/api-v1/admin/ads/stats`, token);
 
       const body = await expectSuccess(response, 200);
       expect(body.data.stats.topSellers).toBeInstanceOf(Array);
@@ -433,8 +420,8 @@ describe("Admin Ads Moderation API", () => {
     });
   });
 
-  describe("Additional Moderation Endpoints", () => {
-    it("GET /api-v1/admin/ads/:id returns detailed ad information", async () => {
+  describe('Additional Moderation Endpoints', () => {
+    it('GET /api-v1/admin/ads/:id returns detailed ad information', async () => {
       const { token } = await createAdminAndToken();
       const product = await seedProduct();
 
@@ -450,20 +437,20 @@ describe("Admin Ads Moderation API", () => {
       expect(body.data.ad.approvalHistory).toBeInstanceOf(Array);
     });
 
-    it("POST /api-v1/admin/ads/:id/feature adds featured status", async () => {
+    it('POST /api-v1/admin/ads/:id/feature adds featured status', async () => {
       const { token } = await createAdminAndToken();
-      const product = await seedProduct({ status: "active" });
+      const product = await seedProduct({ status: 'active' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/ads/${product.id}/feature`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
             featured: true,
             duration: 7, // days
-            reason: "High quality product"
-          })
+            reason: 'High quality product',
+          }),
         }
       );
 
@@ -472,18 +459,18 @@ describe("Admin Ads Moderation API", () => {
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("DELETE /api-v1/admin/ads/:id/feature removes featured status", async () => {
+    it('DELETE /api-v1/admin/ads/:id/feature removes featured status', async () => {
       const { token } = await createAdminAndToken();
-      const product = await seedProduct({ status: "active" });
+      const product = await seedProduct({ status: 'active' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/ads/${product.id}/feature`,
         token,
         {
-          method: "DELETE",
+          method: 'DELETE',
           body: JSON.stringify({
-            reason: "Featured period ended"
-          })
+            reason: 'Featured period ended',
+          }),
         }
       );
 
@@ -492,19 +479,19 @@ describe("Admin Ads Moderation API", () => {
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("POST /api-v1/admin/ads/:id/priority sets priority level", async () => {
+    it('POST /api-v1/admin/ads/:id/priority sets priority level', async () => {
       const { token } = await createAdminAndToken();
-      const product = await seedProduct({ status: "active" });
+      const product = await seedProduct({ status: 'active' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/ads/${product.id}/priority`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            priority: "high",
-            reason: "Urgent business listing"
-          })
+            priority: 'high',
+            reason: 'Urgent business listing',
+          }),
         }
       );
 
@@ -513,12 +500,12 @@ describe("Admin Ads Moderation API", () => {
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("GET /api-v1/admin/ads/moderation-queue returns pending ads", async () => {
+    it('GET /api-v1/admin/ads/moderation-queue returns pending ads', async () => {
       const { token } = await createAdminAndToken();
 
-      await seedProduct({ status: "pending" });
-      await seedProduct({ status: "pending" });
-      await seedProduct({ status: "active" });
+      await seedProduct({ status: 'pending' });
+      await seedProduct({ status: 'pending' });
+      await seedProduct({ status: 'active' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/ads/moderation-queue`,
@@ -528,15 +515,15 @@ describe("Admin Ads Moderation API", () => {
       const body = await expectSuccess(response, 200);
       expect(body.data.ads).toBeInstanceOf(Array);
       expect(body.data.ads.length).toBe(2); // Only pending ads
-      expect(body.data.ads.every((ad: any) => ad.status === "pending")).toBe(true);
+      expect(body.data.ads.every((ad: any) => ad.status === 'pending')).toBe(true);
     });
 
-    it("GET /api-v1/admin/ads/reported returns reported ads", async () => {
+    it('GET /api-v1/admin/ads/reported returns reported ads', async () => {
       const { token } = await createAdminAndToken();
 
       // Create reported ads
-      await seedProduct({ status: "active" });
-      await seedProduct({ status: "suspended" });
+      await seedProduct({ status: 'active' });
+      await seedProduct({ status: 'suspended' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/ads/reported`,
@@ -549,4 +536,3 @@ describe("Admin Ads Moderation API", () => {
     });
   });
 });
-

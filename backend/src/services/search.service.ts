@@ -1,8 +1,8 @@
-import { AppDataSource } from "@config/database.js";
-import { Product } from "@entities/Product.js";
-import { RecentlyViewed } from "@entities/RecentlyViewed.js";
-import { SearchHistory } from "@entities/SearchHistory.js";
-import { logError, logInfo } from "@utils/logger.js";
+import { AppDataSource } from '@config/database.js';
+import { Product } from '@entities/Product.js';
+import { RecentlyViewed } from '@entities/RecentlyViewed.js';
+import { SearchHistory } from '@entities/SearchHistory.js';
+import { logError, logInfo } from '@utils/logger.js';
 
 export class SearchService {
   private get searchHistoryRepository() {
@@ -34,7 +34,7 @@ export class SearchService {
       await this.searchHistoryRepository.save(searchRecord);
       logInfo(`Search query saved: ${query} (${resultsCount} results)`);
     } catch (error) {
-      logError("Failed to save search query", error as Error);
+      logError('Failed to save search query', error as Error);
     }
   }
 
@@ -43,20 +43,20 @@ export class SearchService {
       if (!query) return [];
 
       const productSuggestions = await this.productRepository
-        .createQueryBuilder("product")
-        .select("DISTINCT product.name", "name")
-        .where("product.name ILIKE :q", { q: `${query}%` })
-        .orderBy("product.createdAt", "DESC")
+        .createQueryBuilder('product')
+        .select('DISTINCT product.name', 'name')
+        .where('product.name ILIKE :q', { q: `${query}%` })
+        .orderBy('product.createdAt', 'DESC')
         .limit(limit)
         .getRawMany();
 
       const history = await this.searchHistoryRepository
-        .createQueryBuilder("search")
-        .select("search.query", "name")
-        .addSelect("COUNT(*) as count")
-        .where("search.query ILIKE :q", { q: `${query}%` })
-        .groupBy("search.query")
-        .orderBy("count", "DESC")
+        .createQueryBuilder('search')
+        .select('search.query', 'name')
+        .addSelect('COUNT(*) as count')
+        .where('search.query ILIKE :q', { q: `${query}%` })
+        .groupBy('search.query')
+        .orderBy('count', 'DESC')
         .limit(limit)
         .getRawMany();
 
@@ -77,7 +77,7 @@ export class SearchService {
 
       return deduped;
     } catch (error) {
-      logError("Error getting search suggestions:", error as Error);
+      logError('Error getting search suggestions:', error as Error);
       return [];
     }
   }
@@ -86,11 +86,11 @@ export class SearchService {
     try {
       return await this.searchHistoryRepository.find({
         where: { userId },
-        order: { createdAt: "DESC" },
+        order: { createdAt: 'DESC' },
         take: limit,
       });
     } catch (error) {
-      logError("Failed to get search history", error as Error);
+      logError('Failed to get search history', error as Error);
       return [];
     }
   }
@@ -101,14 +101,14 @@ export class SearchService {
         .createQueryBuilder()
         .insert()
         .into(RecentlyViewed)
-        .values({ userId, productId, viewedAt: () => "CURRENT_TIMESTAMP" })
-        .orUpdate(["viewedAt"], ["userId", "productId"])
+        .values({ userId, productId, viewedAt: () => 'CURRENT_TIMESTAMP' })
+        .orUpdate(['viewedAt'], ['userId', 'productId'])
         .execute();
 
       await this.recentlyViewedRepository
         .createQueryBuilder()
         .delete()
-        .where("userId = :userId", { userId })
+        .where('userId = :userId', { userId })
         .andWhere(
           `id NOT IN (
           SELECT id FROM recently_viewed
@@ -121,7 +121,7 @@ export class SearchService {
 
       logInfo(`Recently viewed tracked: ${productId} for user ${userId}`);
     } catch (error) {
-      logError("Failed to track recently viewed", error as Error);
+      logError('Failed to track recently viewed', error as Error);
     }
   }
 
@@ -129,16 +129,14 @@ export class SearchService {
     try {
       const recentlyViewed = await this.recentlyViewedRepository.find({
         where: { userId },
-        relations: ["product"],
-        order: { viewedAt: "DESC" },
+        relations: ['product'],
+        order: { viewedAt: 'DESC' },
         take: limit,
       });
 
-      return recentlyViewed
-        .map((rv) => rv.product)
-        .filter(Boolean) as Product[];
+      return recentlyViewed.map((rv) => rv.product).filter(Boolean) as Product[];
     } catch (error) {
-      logError("Failed to get recently viewed", error as Error);
+      logError('Failed to get recently viewed', error as Error);
       return [];
     }
   }
@@ -146,21 +144,21 @@ export class SearchService {
   async getTrendingProducts(limit = 10): Promise<Product[]> {
     try {
       const trending = await this.productRepository
-        .createQueryBuilder("product")
-        .innerJoin("product.recentlyViewed", "rv")
-        .where("rv.viewedAt > :date", {
+        .createQueryBuilder('product')
+        .innerJoin('product.recentlyViewed', 'rv')
+        .where('rv.viewedAt > :date', {
           date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
         })
-        .addSelect("COUNT(rv.id) as view_count")
-        .groupBy("product.id")
-        .orderBy("view_count", "DESC")
-        .addOrderBy("product.favoritesCount", "DESC")
+        .addSelect('COUNT(rv.id) as view_count')
+        .groupBy('product.id')
+        .orderBy('view_count', 'DESC')
+        .addOrderBy('product.favoritesCount', 'DESC')
         .limit(limit)
         .getMany();
 
       return trending;
     } catch (error) {
-      logError("Failed to get trending products", error as Error);
+      logError('Failed to get trending products', error as Error);
       return [];
     }
   }
@@ -186,38 +184,38 @@ export class SearchService {
       const offset = (page - 1) * limit;
 
       let queryBuilder = this.productRepository
-        .createQueryBuilder("product")
-        .leftJoinAndSelect("product.images", "images")
-        .leftJoinAndSelect("product.category", "category")
-        .leftJoinAndSelect("product.subcategory", "subcategory");
+        .createQueryBuilder('product')
+        .leftJoinAndSelect('product.images', 'images')
+        .leftJoinAndSelect('product.category', 'category')
+        .leftJoinAndSelect('product.subcategory', 'subcategory');
 
       if (query) {
         queryBuilder = queryBuilder.where(
-          "(product.name ILIKE :query OR product.description ILIKE :query)",
+          '(product.name ILIKE :query OR product.description ILIKE :query)',
           { query: `%${query}%` }
         );
       }
 
       if (options.category) {
-        queryBuilder = queryBuilder.andWhere("category.name ILIKE :category", {
+        queryBuilder = queryBuilder.andWhere('category.name ILIKE :category', {
           category: `%${options.category}%`,
         });
       }
 
       if (options.minPrice) {
-        queryBuilder = queryBuilder.andWhere("product.price >= :minPrice", {
+        queryBuilder = queryBuilder.andWhere('product.price >= :minPrice', {
           minPrice: options.minPrice,
         });
       }
 
       if (options.maxPrice) {
-        queryBuilder = queryBuilder.andWhere("product.price <= :maxPrice", {
+        queryBuilder = queryBuilder.andWhere('product.price <= :maxPrice', {
           maxPrice: options.maxPrice,
         });
       }
 
       if (options.condition) {
-        queryBuilder = queryBuilder.andWhere("product.condition = :condition", {
+        queryBuilder = queryBuilder.andWhere('product.condition = :condition', {
           condition: options.condition,
         });
       }
@@ -225,7 +223,7 @@ export class SearchService {
       const total = await queryBuilder.getCount();
 
       const products = await queryBuilder
-        .orderBy("product.createdAt", "DESC")
+        .orderBy('product.createdAt', 'DESC')
         .skip(offset)
         .take(limit)
         .getMany();
@@ -236,7 +234,7 @@ export class SearchService {
 
       return { products, total, suggestions };
     } catch (error) {
-      logError("Enhanced search failed", error as Error);
+      logError('Enhanced search failed', error as Error);
       return { products: [], total: 0, suggestions: [] };
     }
   }
@@ -246,7 +244,7 @@ export class SearchService {
       await this.searchHistoryRepository.delete({ userId });
       logInfo(`Search history cleared for user ${userId}`);
     } catch (error) {
-      logError("Failed to clear search history", error as Error);
+      logError('Failed to clear search history', error as Error);
     }
   }
 
@@ -255,7 +253,7 @@ export class SearchService {
       await this.recentlyViewedRepository.delete({ userId });
       logInfo(`Recently viewed cleared for user ${userId}`);
     } catch (error) {
-      logError("Failed to clear recently viewed", error as Error);
+      logError('Failed to clear recently viewed', error as Error);
     }
   }
 }

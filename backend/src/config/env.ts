@@ -1,31 +1,29 @@
-import dotenv from "dotenv";
-import { z } from "zod";
+import dotenv from 'dotenv';
+import { z } from 'zod';
 
 dotenv.config();
 
 const envSchema = z.object({
-  NODE_ENV: z
-    .enum(["development", "production", "test"])
-    .default("development"),
-  PORT: z.string().default("3000"),
-  API_VERSION: z.string().default("v1"),
+  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  PORT: z.string().default('3000'),
+  API_VERSION: z.string().default('v1'),
 
-  DB_HOST: z.string().default("localhost"),
-  DB_PORT: z.string().default("5433"),
-  DB_NAME: z.string().default("oysloe"),
-  DB_USER: z.string().default("postgres"),
-  DB_PASSWORD: z.string().default("postgres"),
-  DB_LOGGING: z.string().default("false"),
+  DB_HOST: z.string().default('localhost'),
+  DB_PORT: z.string().default('5433'),
+  DB_NAME: z.string().default('oysloe'),
+  DB_USER: z.string().default('postgres'),
+  DB_PASSWORD: z.string().default('postgres'),
+  DB_LOGGING: z.string().default('false'),
 
-  REDIS_HOST: z.string().default("localhost"),
-  REDIS_PORT: z.string().default("6379"),
+  REDIS_HOST: z.string().default('localhost'),
+  REDIS_PORT: z.string().default('6379'),
   REDIS_PASSWORD: z.string().optional(),
 
   JWT_SECRET: z.string().min(32),
-  JWT_EXPIRY: z.string().default("30d"),
+  JWT_EXPIRY: z.string().default('30d'),
 
-  STORAGE_TYPE: z.enum(["local"]).default("local"),
-  UPLOAD_DIR: z.string().default("./uploads"),
+  STORAGE_TYPE: z.enum(['local']).default('local'),
+  UPLOAD_DIR: z.string().default('./uploads'),
 
   FIREBASE_PROJECT_ID: z.string().optional(),
   FIREBASE_PRIVATE_KEY: z.string().optional(),
@@ -34,16 +32,16 @@ const envSchema = z.object({
   ARKESEL_API_KEY: z.string().min(1),
   SMS_SENDER_ID: z.string().max(11).optional(),
 
-  RATE_LIMIT_WINDOW_MS: z.string().default("900000"),
-  RATE_LIMIT_MAX_REQUESTS: z.string().default("100"),
-  OTP_RATE_LIMIT_MAX: z.string().default("3"),
+  RATE_LIMIT_WINDOW_MS: z.string().default('900000'),
+  RATE_LIMIT_MAX_REQUESTS: z.string().default('100'),
+  OTP_RATE_LIMIT_MAX: z.string().default('3'),
 
-  LOG_LEVEL: z.string().default("info"),
-  LOG_FILE_PATH: z.string().default("./logs/app.log"),
+  LOG_LEVEL: z.string().default('info'),
+  LOG_FILE_PATH: z.string().default('./logs/app.log'),
 
-  CORS_ORIGIN: z.string().default("http://localhost:3000"),
+  CORS_ORIGIN: z.string().default('http://localhost:3000'),
 
-  UUID_NAMESPACE: z.string().default("6ba7b810-9dad-11d1-80b4-00c04fd430c8"),
+  UUID_NAMESPACE: z.string().default('6ba7b810-9dad-11d1-80b4-00c04fd430c8'),
 
   GOOGLE_CLIENT_ID: z.string().min(1),
   GOOGLE_CLIENT_SECRET: z.string().min(1),
@@ -56,9 +54,9 @@ const parseEnv = () => {
     return envSchema.parse(process.env);
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
-      console.error("Invalid environment variables:");
+      console.error('Invalid environment variables:');
       error.issues.forEach((issue) => {
-        console.error(`  - ${issue.path.join(".")}: ${issue.message}`);
+        console.error(`  - ${issue.path.join('.')}: ${issue.message}`);
       });
       process.exit(1);
     }
@@ -73,9 +71,9 @@ export const config = {
     env: env.NODE_ENV,
     port: parseInt(env.PORT, 10),
     apiVersion: env.API_VERSION,
-    isDevelopment: env.NODE_ENV === "development",
-    isProduction: env.NODE_ENV === "production",
-    isTest: env.NODE_ENV === "test",
+    isDevelopment: env.NODE_ENV === 'development',
+    isProduction: env.NODE_ENV === 'production',
+    isTest: env.NODE_ENV === 'test',
   },
   database: {
     host: env.DB_HOST,
@@ -83,7 +81,7 @@ export const config = {
     name: env.DB_NAME,
     user: env.DB_USER,
     password: env.DB_PASSWORD,
-    logging: env.DB_LOGGING === "true",
+    logging: env.DB_LOGGING === 'true',
   },
   redis: {
     host: env.REDIS_HOST,
@@ -117,10 +115,7 @@ export const config = {
     filePath: env.LOG_FILE_PATH,
   },
   cors: {
-    origin:
-      env.CORS_ORIGIN === "*"
-        ? "*"
-        : env.CORS_ORIGIN.split(",").map((o) => o.trim()),
+    origin: env.CORS_ORIGIN === '*' ? '*' : env.CORS_ORIGIN.split(',').map((o) => o.trim()),
   },
   uuid: {
     namespace: env.UUID_NAMESPACE,

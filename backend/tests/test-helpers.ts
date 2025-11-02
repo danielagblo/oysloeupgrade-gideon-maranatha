@@ -1,33 +1,30 @@
-import { expect } from "bun:test";
-import { AppDataSource } from "../src/config/database";
-import { User } from "../src/entities/User";
-import { Product } from "../src/entities/Product";
-import { Category } from "../src/entities/Category";
-import { Coupon } from "../src/entities/Coupon";
-import { Wallet } from "../src/entities/Wallet";
-import { NotificationHistory } from "../src/entities/NotificationHistory";
-import { createApp } from "../src/app";
-import { initDb } from "./setup";
-import bcrypt from "bcrypt";
-import { randomUUID } from "node:crypto";
-
+import { expect } from 'bun:test';
+import { randomUUID } from 'node:crypto';
+import bcrypt from 'bcrypt';
+import { createApp } from '../src/app';
+import { AppDataSource } from '../src/config/database';
 // Admin entities for testing
-import { AdminUser } from "../src/entities/AdminUser";
+import { AdminUser } from '../src/entities/AdminUser';
+import { Category } from '../src/entities/Category';
+import { Coupon } from '../src/entities/Coupon';
+import { NotificationHistory } from '../src/entities/NotificationHistory';
+import { Product } from '../src/entities/Product';
+import { User } from '../src/entities/User';
+import { Wallet } from '../src/entities/Wallet';
+import { initDb } from './setup';
 
-process.env.NODE_ENV = "test";
-process.env.LOG_LEVEL = "debug";
-process.env.JWT_SECRET =
-  "test-jwt-secret-key-that-is-at-least-32-characters-long";
-process.env.SESSION_SECRET =
-  "test-session-secret-key-that-is-at-least-32-characters-long";
-process.env.ARKESEL_API_KEY = "test-arkesel-key";
-process.env.GOOGLE_CLIENT_ID = "test-google-client-id";
-process.env.GOOGLE_CLIENT_SECRET = "test-google-client-secret";
-process.env.GOOGLE_CALLBACK_URL = "http://localhost:3000/auth/google/callback";
-process.env.DB_PASSWORD = "postgres";
+process.env.NODE_ENV = 'test';
+process.env.LOG_LEVEL = 'debug';
+process.env.JWT_SECRET = 'test-jwt-secret-key-that-is-at-least-32-characters-long';
+process.env.SESSION_SECRET = 'test-session-secret-key-that-is-at-least-32-characters-long';
+process.env.ARKESEL_API_KEY = 'test-arkesel-key';
+process.env.GOOGLE_CLIENT_ID = 'test-google-client-id';
+process.env.GOOGLE_CLIENT_SECRET = 'test-google-client-secret';
+process.env.GOOGLE_CALLBACK_URL = 'http://localhost:3000/auth/google/callback';
+process.env.DB_PASSWORD = 'postgres';
 
-import type { Application } from "express";
-import type { Server } from "node:http";
+import type { Server } from 'node:http';
+import type { Application } from 'express';
 
 export interface TestServer {
   app: Application;
@@ -60,7 +57,7 @@ export interface TestAdminUser {
   username: string;
   email?: string;
   password: string;
-  role: "super-admin" | "admin" | "staff" | "support";
+  role: 'super-admin' | 'admin' | 'staff' | 'support';
   isActive?: boolean;
   businessName?: string;
   token?: string;
@@ -76,19 +73,17 @@ export async function resetDb() {
 
   const entities = db.entityMetadatas;
 
-  await db.query("SET session_replication_role = replica;");
+  await db.query('SET session_replication_role = replica;');
 
   for (const entity of entities) {
     try {
-      await db.query(
-        `TRUNCATE TABLE "${entity.tableName}" RESTART IDENTITY CASCADE;`
-      );
+      await db.query(`TRUNCATE TABLE "${entity.tableName}" RESTART IDENTITY CASCADE;`);
     } catch (error) {
       console.warn(`Could not truncate table ${entity.tableName}:`, error);
     }
   }
 
-  await db.query("SET session_replication_role = DEFAULT;");
+  await db.query('SET session_replication_role = DEFAULT;');
 }
 
 export async function createTestServer(): Promise<TestServer> {
@@ -97,8 +92,8 @@ export async function createTestServer(): Promise<TestServer> {
   const app = createApp();
   const server = app.listen(0);
   const address = server.address();
-  if (!address || typeof address === "string") {
-    throw new Error("Failed to get server port");
+  if (!address || typeof address === 'string') {
+    throw new Error('Failed to get server port');
   }
   const { port } = address;
   const baseURL = `http://127.0.0.1:${port}`;
@@ -107,35 +102,30 @@ export async function createTestServer(): Promise<TestServer> {
 }
 
 export async function closeTestServer(server: Server) {
-  if (server && typeof server.close === "function") {
+  if (server && typeof server.close === 'function') {
     await new Promise<void>((resolve) => {
       server.close(() => resolve());
     });
   }
 }
 
-export async function seedUser(
-  userData: Partial<TestUser> = {}
-): Promise<TestUser> {
+export async function seedUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
   const db = await initTestDb();
 
   const defaultUser = {
     id: randomUUID(),
     email: `test${randomUUID().slice(0, 8)}@example.com`,
-    password: "TestPassword123!",
+    password: 'TestPassword123!',
     ...userData,
   };
 
   const hashedPassword = await bcrypt.hash(defaultUser.password, 12);
 
-  let name = "Test User";
-  if (
-    defaultUser.firstName !== undefined ||
-    defaultUser.lastName !== undefined
-  ) {
-    const first = defaultUser.firstName || "";
-    const last = defaultUser.lastName || "";
-    name = `${first} ${last}`.trim() || "Test User";
+  let name = 'Test User';
+  if (defaultUser.firstName !== undefined || defaultUser.lastName !== undefined) {
+    const first = defaultUser.firstName || '';
+    const last = defaultUser.lastName || '';
+    name = `${first} ${last}`.trim() || 'Test User';
   } else if (defaultUser.name !== undefined) {
     name = defaultUser.name;
   }
@@ -155,15 +145,13 @@ export async function seedUser(
     id: user.id,
     email: user.email,
     password: defaultUser.password,
-    firstName: user.name.split(" ")[0] || "",
-    lastName: user.name.split(" ").slice(1).join(" ") || "",
+    firstName: user.name.split(' ')[0] || '',
+    lastName: user.name.split(' ').slice(1).join(' ') || '',
     name: user.name,
   };
 }
 
-export async function seedProduct(
-  productData: Partial<TestProduct> = {}
-): Promise<TestProduct> {
+export async function seedProduct(productData: Partial<TestProduct> = {}): Promise<TestProduct> {
   const db = await initTestDb();
 
   let userId = productData.userId;
@@ -175,15 +163,15 @@ export async function seedProduct(
   let categoryId = productData.categoryId;
   if (!categoryId) {
     let category = await db.getRepository(Category).findOne({
-      where: { name: "Electronics" },
+      where: { name: 'Electronics' },
     });
 
     if (!category) {
       category = new Category();
       category.id = randomUUID();
-      category.name = "Electronics";
-      category.description = "Electronic products";
-      category.slug = "electronics";
+      category.name = 'Electronics';
+      category.description = 'Electronic products';
+      category.slug = 'electronics';
       await db.getRepository(Category).save(category);
     }
 
@@ -192,9 +180,9 @@ export async function seedProduct(
 
   const defaultProduct = {
     id: randomUUID(),
-    name: "Test Product",
+    name: 'Test Product',
     price: 29.99,
-    description: "A test product for testing",
+    description: 'A test product for testing',
     categoryId: categoryId,
     userId: userId,
     ...productData,
@@ -207,7 +195,7 @@ export async function seedProduct(
   product.description = defaultProduct.description;
   product.categoryId = defaultProduct.categoryId;
   product.userId = defaultProduct.userId;
-  product.status = "active";
+  product.status = 'active';
   product.createdAt = new Date();
   product.updatedAt = new Date();
 
@@ -228,8 +216,8 @@ export async function seedCoupon(couponData: Partial<Coupon> = {}) {
 
   const defaultCoupon = {
     id: randomUUID(),
-    code: "TEST10",
-    discountType: "percentage",
+    code: 'TEST10',
+    discountType: 'percentage',
     discountValue: 10,
     minOrderAmount: 50,
     maxDiscountAmount: 100,
@@ -262,7 +250,7 @@ export async function seedWallet(walletData: Partial<Wallet> = {}) {
     id: randomUUID(),
     userId: userId,
     balance: 1000,
-    currency: "USD",
+    currency: 'USD',
     ...walletData,
   };
 
@@ -276,7 +264,7 @@ export async function seedWallet(walletData: Partial<Wallet> = {}) {
   return wallet;
 }
 
-import type { NotificationType } from "../src/entities/NotificationHistory";
+import type { NotificationType } from '../src/entities/NotificationHistory';
 
 export async function seedNotification(
   data: Partial<NotificationHistory> & {
@@ -288,9 +276,9 @@ export async function seedNotification(
 
   const notification = new NotificationHistory();
   notification.userId = data.userId;
-  notification.type = data.type ?? "welcome";
-  notification.title = data.title || "Test Notification";
-  notification.body = data.body || "This is a test notification";
+  notification.type = data.type ?? 'welcome';
+  notification.title = data.title || 'Test Notification';
+  notification.body = data.body || 'This is a test notification';
   notification.data = data.data;
   notification.isRead = data.isRead ?? false;
   notification.readAt = data.readAt;
@@ -299,14 +287,10 @@ export async function seedNotification(
   return saved;
 }
 
-export async function loginUser(
-  email: string,
-  password: string,
-  baseURL: string
-): Promise<string> {
+export async function loginUser(email: string, password: string, baseURL: string): Promise<string> {
   const response = await fetch(`${baseURL}/api-v1/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
 
@@ -328,16 +312,12 @@ export async function createUserAndToken(
   return { user, token };
 }
 
-export async function authenticatedRequest(
-  url: string,
-  token: string,
-  options: RequestInit = {}
-) {
+export async function authenticatedRequest(url: string, token: string, options: RequestInit = {}) {
   return fetch(url, {
     ...options,
     headers: {
       Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       ...options.headers,
     },
   });
@@ -351,21 +331,14 @@ export async function truncateTable(tableName: string) {
 export function createAuthHeaders(token: string) {
   return {
     Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   };
 }
 
-export async function expectError(
-  response: Response,
-  status: number,
-  codeOrPattern?: string
-) {
+export async function expectError(response: Response, status: number, codeOrPattern?: string) {
   const body = await response.text();
   if (response.status !== status) {
-    console.error(
-      `Expected status ${status}, got ${response.status}. Response body:`,
-      body
-    );
+    console.error(`Expected status ${status}, got ${response.status}. Response body:`, body);
   }
   expect(response.status).toBe(status);
   const jsonBody = JSON.parse(body) as {
@@ -383,14 +356,11 @@ export async function expectError(
 export async function expectSuccess(response: Response, status: number) {
   const body = await response.text();
   if (response.status !== status) {
-    console.error(
-      `Expected status ${status}, got ${response.status}. Response body:`,
-      body
-    );
+    console.error(`Expected status ${status}, got ${response.status}. Response body:`, body);
     try {
       const parsedBody = JSON.parse(body) as { error?: unknown };
       if (parsedBody.error) {
-        console.error("Error details:", parsedBody.error);
+        console.error('Error details:', parsedBody.error);
       }
     } catch {}
   }
@@ -411,10 +381,10 @@ export async function seedAdminUser(
   const defaultAdmin = {
     username: `admin${randomUUID().slice(0, 8)}`,
     email: `admin${randomUUID().slice(0, 8)}@example.com`,
-    password: "AdminPass123!",
-    role: "admin" as const,
+    password: 'AdminPass123!',
+    role: 'admin' as const,
     isActive: true,
-    businessName: "Test Business",
+    businessName: 'Test Business',
     ...adminData,
   };
 
@@ -449,8 +419,8 @@ export async function loginAdminUser(
   baseURL: string
 ): Promise<string> {
   const response = await fetch(`${baseURL}/api-v1/admin/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password }),
   });
 
@@ -481,7 +451,7 @@ export async function authenticatedAdminRequest(
     ...options,
     headers: {
       Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       ...options.headers,
     },
   });

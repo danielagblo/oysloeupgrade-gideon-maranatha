@@ -6,36 +6,36 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
-} from "typeorm";
-import type { User } from "./User.js";
+} from 'typeorm';
+import type { User } from './User.js';
 
-@Entity("referral_redemptions")
+@Entity('referral_redemptions')
 export class ReferralRedemption {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ type: "uuid", name: "user_id" })
+  @Column({ type: 'uuid', name: 'user_id' })
   @Index()
   userId!: string;
 
-  @Column({ type: "integer", name: "redeemed_points" })
+  @Column({ type: 'integer', name: 'redeemed_points' })
   redeemedPoints!: number;
 
-  @Column({ type: "decimal", precision: 10, scale: 2, name: "cash_amount" })
+  @Column({ type: 'decimal', precision: 10, scale: 2, name: 'cash_amount' })
   cashAmount!: number;
 
   @Column({
-    type: "decimal",
+    type: 'decimal',
     precision: 10,
     scale: 2,
-    name: "wallet_balance_after",
+    name: 'wallet_balance_after',
   })
   walletBalanceAfter!: number;
 
-  @CreateDateColumn({ type: "timestamp", name: "created_at" })
+  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt!: Date;
 
-  @ManyToOne("User", (u: any) => u.referralRedemptions, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "user_id" })
+  @ManyToOne('User', (u: any) => u.referralRedemptions, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
   user?: User;
 }

@@ -1,17 +1,10 @@
-import type { Request, Response, NextFunction } from "express";
-import { AdminSettingsService } from "../services/admin-settings.service.js";
-import {
-  UpdatePrivacyPolicySchema,
-  UpdateTermsConditionsSchema,
-} from "../schemas/admin.js";
+import type { NextFunction, Request, Response } from 'express';
+import { UpdatePrivacyPolicySchema, UpdateTermsConditionsSchema } from '../schemas/admin.js';
+import { AdminSettingsService } from '../services/admin-settings.service.js';
 
 const settingsService = new AdminSettingsService();
 
-export const getPrivacyPolicy = async (
-  _req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const getPrivacyPolicy = async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const content = await settingsService.getPrivacyPolicy();
 
@@ -24,26 +17,19 @@ export const getPrivacyPolicy = async (
   }
 };
 
-export const updatePrivacyPolicy = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const updatePrivacyPolicy = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body = UpdatePrivacyPolicySchema.parse(req.body);
     if (!req.admin?.id) {
       return res.status(401).json({
         success: false,
-        message: "Unauthorized",
-        error: { code: "UNAUTHORIZED" },
+        message: 'Unauthorized',
+        error: { code: 'UNAUTHORIZED' },
       });
     }
     const adminUserId = req.admin.id;
 
-    const setting = await settingsService.updatePrivacyPolicy(
-      body,
-      adminUserId
-    );
+    const setting = await settingsService.updatePrivacyPolicy(body, adminUserId);
 
     res.json({
       success: true,
@@ -54,11 +40,7 @@ export const updatePrivacyPolicy = async (
   }
 };
 
-export const getTermsConditions = async (
-  _req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const getTermsConditions = async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const content = await settingsService.getTermsConditions();
 
@@ -71,26 +53,19 @@ export const getTermsConditions = async (
   }
 };
 
-export const updateTermsConditions = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const updateTermsConditions = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body = UpdateTermsConditionsSchema.parse(req.body);
     if (!req.admin?.id) {
       return res.status(401).json({
         success: false,
-        message: "Unauthorized",
-        error: { code: "UNAUTHORIZED" },
+        message: 'Unauthorized',
+        error: { code: 'UNAUTHORIZED' },
       });
     }
     const adminUserId = req.admin.id;
 
-    const setting = await settingsService.updateTermsConditions(
-      body,
-      adminUserId
-    );
+    const setting = await settingsService.updateTermsConditions(body, adminUserId);
 
     res.json({
       success: true,

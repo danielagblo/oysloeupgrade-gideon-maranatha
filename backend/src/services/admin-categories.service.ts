@@ -1,7 +1,7 @@
-import { AppDataSource } from "../config/database.js";
-import { Category } from "../entities/Category.js";
-import { Subcategory } from "../entities/Subcategory.js";
-import { NotFoundError, ConflictError } from "../utils/errors.js";
+import { AppDataSource } from '../config/database.js';
+import { Category } from '../entities/Category.js';
+import { Subcategory } from '../entities/Subcategory.js';
+import { ConflictError, NotFoundError } from '../utils/errors.js';
 
 export interface CreateCategoryInput {
   name: string;
@@ -39,8 +39,8 @@ export class AdminCategoriesService {
 
   async getCategories() {
     const categories = await this.categoryRepository.find({
-      relations: ["subcategories"],
-      order: { displayOrder: "ASC", name: "ASC" },
+      relations: ['subcategories'],
+      order: { displayOrder: 'ASC', name: 'ASC' },
     });
 
     // Build hierarchy
@@ -68,7 +68,7 @@ export class AdminCategoriesService {
     });
 
     if (existing) {
-      throw new ConflictError("Category with this name already exists");
+      throw new ConflictError('Category with this name already exists');
     }
 
     // Generate slug if not provided
@@ -76,8 +76,8 @@ export class AdminCategoriesService {
       input.slug ||
       input.name
         .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
 
     // Check for duplicate slug
     const existingSlug = await this.categoryRepository.findOne({
@@ -85,7 +85,7 @@ export class AdminCategoriesService {
     });
 
     if (existingSlug) {
-      throw new ConflictError("Category with this slug already exists");
+      throw new ConflictError('Category with this slug already exists');
     }
 
     const category = this.categoryRepository.create({
@@ -105,7 +105,7 @@ export class AdminCategoriesService {
     });
 
     if (!category) {
-      throw new NotFoundError("Category not found");
+      throw new NotFoundError('Category not found');
     }
 
     if (input.name && input.name !== category.name) {
@@ -113,7 +113,7 @@ export class AdminCategoriesService {
         where: { name: input.name },
       });
       if (existing && existing.id !== categoryId) {
-        throw new ConflictError("Category with this name already exists");
+        throw new ConflictError('Category with this name already exists');
       }
       category.name = input.name;
     }
@@ -123,7 +123,7 @@ export class AdminCategoriesService {
         where: { slug: input.slug },
       });
       if (existing && existing.id !== categoryId) {
-        throw new ConflictError("Category with this slug already exists");
+        throw new ConflictError('Category with this slug already exists');
       }
       category.slug = input.slug;
     }
@@ -143,16 +143,13 @@ export class AdminCategoriesService {
     return await this.categoryRepository.save(category);
   }
 
-  async createSubcategory(
-    categoryId: string,
-    input: CreateSubcategoryInput
-  ) {
+  async createSubcategory(categoryId: string, input: CreateSubcategoryInput) {
     const category = await this.categoryRepository.findOne({
       where: { id: categoryId },
     });
 
     if (!category) {
-      throw new NotFoundError("Category not found");
+      throw new NotFoundError('Category not found');
     }
 
     // Check for duplicate name in this category
@@ -161,9 +158,7 @@ export class AdminCategoriesService {
     });
 
     if (existing) {
-      throw new ConflictError(
-        "Subcategory with this name already exists in this category"
-      );
+      throw new ConflictError('Subcategory with this name already exists in this category');
     }
 
     // Generate slug if not provided
@@ -171,8 +166,8 @@ export class AdminCategoriesService {
       input.slug ||
       input.name
         .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
 
     const subcategory = this.subcategoryRepository.create({
       categoryId,
@@ -195,7 +190,7 @@ export class AdminCategoriesService {
     });
 
     if (!subcategory) {
-      throw new NotFoundError("Subcategory not found");
+      throw new NotFoundError('Subcategory not found');
     }
 
     if (input.name && input.name !== subcategory.name) {
@@ -203,9 +198,7 @@ export class AdminCategoriesService {
         where: { categoryId, name: input.name },
       });
       if (existing && existing.id !== subcategoryId) {
-        throw new ConflictError(
-          "Subcategory with this name already exists in this category"
-        );
+        throw new ConflictError('Subcategory with this name already exists in this category');
       }
       subcategory.name = input.name;
     }
@@ -225,5 +218,3 @@ export class AdminCategoriesService {
     return await this.subcategoryRepository.save(subcategory);
   }
 }
-
-

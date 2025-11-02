@@ -1,17 +1,13 @@
-import type { Request, Response, NextFunction } from "express";
-import { AdminSearchService } from "../services/admin-search.service.js";
-import { GlobalSearchQuerySchema, FilterRequestSchema } from "../schemas/admin.js";
+import type { NextFunction, Request, Response } from 'express';
+import { FilterRequestSchema, GlobalSearchQuerySchema } from '../schemas/admin.js';
+import { AdminSearchService } from '../services/admin-search.service.js';
 
 type GlobalSearchQuery = Zod.infer<typeof GlobalSearchQuerySchema>;
 type FilterRequest = Zod.infer<typeof FilterRequestSchema>;
 
 const searchService = new AdminSearchService();
 
-export const globalSearch = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const globalSearch = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const query: GlobalSearchQuery = GlobalSearchQuerySchema.parse(req.query);
     const result = await searchService.globalSearch(query);
@@ -29,11 +25,7 @@ export const globalSearch = async (
   }
 };
 
-export const advancedFilter = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const advancedFilter = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body: FilterRequest = FilterRequestSchema.parse(req.body);
     const result = await searchService.advancedFilter(
@@ -56,5 +48,3 @@ export const advancedFilter = async (
     next(error);
   }
 };
-
-

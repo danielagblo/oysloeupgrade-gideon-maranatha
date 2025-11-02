@@ -1,7 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
-import { AdminUser } from "./AdminUser.js";
-import type { User } from "./User.js";
+import { AdminUser } from './AdminUser.js';
+import type { User } from './User.js';
 
 @Entity('user_reports')
 export class UserReport {
@@ -11,14 +19,14 @@ export class UserReport {
   @Column({ name: 'reporter_user_id' })
   reporterUserId!: string;
 
-  @ManyToOne("User")
+  @ManyToOne('User')
   @JoinColumn({ name: 'reporter_user_id' })
   reporterUser?: User;
 
   @Column({ name: 'reported_user_id' })
   reportedUserId!: string;
 
-  @ManyToOne("User")
+  @ManyToOne('User')
   @JoinColumn({ name: 'reported_user_id' })
   reportedUser?: User;
 

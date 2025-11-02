@@ -1,18 +1,18 @@
-import { Router } from "express";
+import { Router } from 'express';
 import {
+  createAdmin,
+  getSession,
   login,
   logout,
-  getSession,
   refreshToken,
   verifyRole,
-  createAdmin
-} from "../../controllers/admin-auth.controller.js";
+} from '../../controllers/admin-auth.controller.js';
 import {
-  authenticateAdmin,
   auditLog,
+  authenticateAdmin,
   requireAdminPermissions,
-  requireSuperAdmin
-} from "../../middlewares/admin.middleware.js";
+  requireSuperAdmin,
+} from '../../middlewares/admin.middleware.js';
 
 const router = Router();
 
@@ -35,7 +35,8 @@ router.post('/refresh-token', refreshToken);
 router.post('/verify-role', verifyRole);
 
 // POST /api-v1/admin/auth/create-admin
-router.post('/create-admin',
+router.post(
+  '/create-admin',
   requireSuperAdmin,
   auditLog('create_admin', 'admin_user'),
   createAdmin

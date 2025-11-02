@@ -6,7 +6,6 @@ import { generateToken } from '../utils/jwt.js';
 
 export async function initiateGoogleAuth(_req: Request, res: Response): Promise<void> {
   try {
-
     res.json({
       success: true,
       message: 'Redirect to Google OAuth',

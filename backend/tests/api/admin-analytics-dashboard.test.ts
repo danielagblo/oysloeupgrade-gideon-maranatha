@@ -1,24 +1,17 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-  beforeEach,
-} from "bun:test";
-import {
-  createTestServer,
-  closeTestServer,
-  resetDb,
-  seedUser,
-  seedProduct,
-  createAdminAndToken,
   authenticatedAdminRequest,
+  closeTestServer,
+  createAdminAndToken,
+  createTestServer,
   expectError,
   expectSuccess,
-} from "../test-helpers";
+  resetDb,
+  seedProduct,
+  seedUser,
+} from '../test-helpers';
 
-describe("Admin Analytics & Dashboard API", () => {
+describe('Admin Analytics & Dashboard API', () => {
   let server: unknown;
   let baseURL: string;
 
@@ -36,16 +29,16 @@ describe("Admin Analytics & Dashboard API", () => {
     await closeTestServer(server);
   });
 
-  describe("GET /api-v1/admin/analytics/overview", () => {
-    it("returns comprehensive dashboard overview", async () => {
+  describe('GET /api-v1/admin/analytics/overview', () => {
+    it('returns comprehensive dashboard overview', async () => {
       const { token } = await createAdminAndToken();
 
       // Create some test data
-      await seedUser({ name: "Test User 1" });
-      await seedUser({ name: "Test User 2" });
-      await seedProduct({ name: "Test Product 1", status: "active" });
-      await seedProduct({ name: "Test Product 2", status: "active" });
-      await seedProduct({ name: "Test Product 3", status: "pending" });
+      await seedUser({ name: 'Test User 1' });
+      await seedUser({ name: 'Test User 2' });
+      await seedProduct({ name: 'Test Product 1', status: 'active' });
+      await seedProduct({ name: 'Test Product 2', status: 'active' });
+      await seedProduct({ name: 'Test Product 3', status: 'pending' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/analytics/overview`,
@@ -85,11 +78,11 @@ describe("Admin Analytics & Dashboard API", () => {
       expect(body.data.data.support.avgResponseTime).toBeDefined();
     });
 
-    it("calculates growth metrics correctly", async () => {
+    it('calculates growth metrics correctly', async () => {
       const { token } = await createAdminAndToken();
 
       // Create users with different creation dates
-      await seedUser({ name: "Recent User" });
+      await seedUser({ name: 'Recent User' });
       // In a real implementation, we would manipulate timestamps
 
       const response = await authenticatedAdminRequest(
@@ -99,14 +92,14 @@ describe("Admin Analytics & Dashboard API", () => {
 
       const body = await expectSuccess(response, 200);
       expect(body.data.data.users.growth).toBeDefined();
-      expect(typeof body.data.data.users.growth.today).toBe("number");
-      expect(typeof body.data.data.users.growth.week).toBe("number");
-      expect(typeof body.data.data.users.growth.month).toBe("number");
+      expect(typeof body.data.data.users.growth.today).toBe('number');
+      expect(typeof body.data.data.users.growth.week).toBe('number');
+      expect(typeof body.data.data.users.growth.month).toBe('number');
     });
   });
 
-  describe("GET /api-v1/admin/analytics/users", () => {
-    it("returns user analytics with date filtering", async () => {
+  describe('GET /api-v1/admin/analytics/users', () => {
+    it('returns user analytics with date filtering', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -123,7 +116,7 @@ describe("Admin Analytics & Dashboard API", () => {
       expect(body.data.data.deviceTypes).toBeInstanceOf(Array);
     });
 
-    it("validates date range parameters", async () => {
+    it('validates date range parameters', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -134,7 +127,7 @@ describe("Admin Analytics & Dashboard API", () => {
       await expectError(response, 400);
     });
 
-    it("supports different grouping options", async () => {
+    it('supports different grouping options', async () => {
       const { token } = await createAdminAndToken();
 
       const groupings = ['day', 'week', 'month'];
@@ -150,7 +143,7 @@ describe("Admin Analytics & Dashboard API", () => {
       }
     });
 
-    it("includes device type breakdown", async () => {
+    it('includes device type breakdown', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -165,13 +158,13 @@ describe("Admin Analytics & Dashboard API", () => {
       body.data.data.deviceTypes.forEach((device: any) => {
         expect(device.name).toBeDefined();
         expect(device.count).toBeDefined();
-        expect(typeof device.count).toBe("number");
+        expect(typeof device.count).toBe('number');
       });
     });
   });
 
-  describe("GET /api-v1/admin/analytics/ads", () => {
-    it("returns ads analytics with category filtering", async () => {
+  describe('GET /api-v1/admin/analytics/ads', () => {
+    it('returns ads analytics with category filtering', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -189,7 +182,7 @@ describe("Admin Analytics & Dashboard API", () => {
       expect(body.data.data.performance).toBeInstanceOf(Array);
     });
 
-    it("includes moderation metrics", async () => {
+    it('includes moderation metrics', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -200,14 +193,15 @@ describe("Admin Analytics & Dashboard API", () => {
       const body = await expectSuccess(response, 200);
 
       // Check that moderation data is included
-      const hasModerationData = body.data.data.postings.length > 0 ||
-                               body.data.data.approvals.length > 0 ||
-                               body.data.data.suspensions.length > 0;
+      const hasModerationData =
+        body.data.data.postings.length > 0 ||
+        body.data.data.approvals.length > 0 ||
+        body.data.data.suspensions.length > 0;
 
       expect(hasModerationData).toBeDefined();
     });
 
-    it("returns top performing categories", async () => {
+    it('returns top performing categories', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -222,13 +216,13 @@ describe("Admin Analytics & Dashboard API", () => {
       body.data.data.topCategories.forEach((category: any) => {
         expect(category.name).toBeDefined();
         expect(category.adCount).toBeDefined();
-        expect(typeof category.adCount).toBe("number");
+        expect(typeof category.adCount).toBe('number');
       });
     });
   });
 
-  describe("GET /api-v1/admin/analytics/revenue", () => {
-    it("returns revenue analytics by type", async () => {
+  describe('GET /api-v1/admin/analytics/revenue', () => {
+    it('returns revenue analytics by type', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -238,13 +232,13 @@ describe("Admin Analytics & Dashboard API", () => {
 
       const body = await expectSuccess(response, 200);
       expect(body.data.data).toBeDefined();
-      expect(typeof body.data.data.total).toBe("number");
+      expect(typeof body.data.data.total).toBe('number');
       expect(body.data.data.breakdown).toBeInstanceOf(Array);
       expect(body.data.data.trends).toBeInstanceOf(Array);
       expect(body.data.data.projections).toBeInstanceOf(Array);
     });
 
-    it("supports different revenue types", async () => {
+    it('supports different revenue types', async () => {
       const { token } = await createAdminAndToken();
 
       const revenueTypes = ['subscription', 'commission', 'ads'];
@@ -256,11 +250,11 @@ describe("Admin Analytics & Dashboard API", () => {
         );
 
         const body = await expectSuccess(response, 200);
-        expect(typeof body.data.data.total).toBe("number");
+        expect(typeof body.data.data.total).toBe('number');
       }
     });
 
-    it("includes revenue projections", async () => {
+    it('includes revenue projections', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -275,14 +269,14 @@ describe("Admin Analytics & Dashboard API", () => {
       if (body.data.data.projections.length > 0) {
         const projection = body.data.data.projections[0];
         expect(projection.period).toBeDefined();
-        expect(typeof projection.amount).toBe("number");
-        expect(typeof projection.confidence).toBe("number");
+        expect(typeof projection.amount).toBe('number');
+        expect(typeof projection.confidence).toBe('number');
       }
     });
   });
 
-  describe("GET /api-v1/admin/analytics/support", () => {
-    it("returns comprehensive support analytics", async () => {
+  describe('GET /api-v1/admin/analytics/support', () => {
+    it('returns comprehensive support analytics', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -292,16 +286,16 @@ describe("Admin Analytics & Dashboard API", () => {
 
       const body = await expectSuccess(response, 200);
       expect(body.data.data).toBeDefined();
-      expect(typeof body.data.data.totalCases).toBe("number");
-      expect(typeof body.data.data.openCases).toBe("number");
-      expect(typeof body.data.data.resolvedCases).toBe("number");
-      expect(typeof body.data.data.avgResolutionTime).toBe("number");
+      expect(typeof body.data.data.totalCases).toBe('number');
+      expect(typeof body.data.data.openCases).toBe('number');
+      expect(typeof body.data.data.resolvedCases).toBe('number');
+      expect(typeof body.data.data.avgResolutionTime).toBe('number');
       expect(body.data.data.caseCategories).toBeInstanceOf(Array);
       expect(body.data.data.agentPerformance).toBeInstanceOf(Array);
       expect(body.data.data.responseTimes).toBeInstanceOf(Array);
     });
 
-    it("includes agent performance metrics", async () => {
+    it('includes agent performance metrics', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -316,13 +310,13 @@ describe("Admin Analytics & Dashboard API", () => {
       body.data.data.agentPerformance.forEach((agent: any) => {
         expect(agent.agentId).toBeDefined();
         expect(agent.agentName).toBeDefined();
-        expect(typeof agent.casesResolved).toBe("number");
-        expect(typeof agent.avgResolutionTime).toBe("number");
-        expect(typeof agent.customerSatisfaction).toBe("number");
+        expect(typeof agent.casesResolved).toBe('number');
+        expect(typeof agent.avgResolutionTime).toBe('number');
+        expect(typeof agent.customerSatisfaction).toBe('number');
       });
     });
 
-    it("includes response time statistics", async () => {
+    it('includes response time statistics', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -336,14 +330,14 @@ describe("Admin Analytics & Dashboard API", () => {
       // Response times should be categorized
       body.data.data.responseTimes.forEach((timeStats: any) => {
         expect(timeStats.category).toBeDefined();
-        expect(typeof timeStats.averageTime).toBe("number");
-        expect(typeof timeStats.count).toBe("number");
+        expect(typeof timeStats.averageTime).toBe('number');
+        expect(typeof timeStats.count).toBe('number');
       });
     });
   });
 
-  describe("GET /api-v1/admin/analytics/real-time", () => {
-    it("returns real-time metrics", async () => {
+  describe('GET /api-v1/admin/analytics/real-time', () => {
+    it('returns real-time metrics', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -354,13 +348,13 @@ describe("Admin Analytics & Dashboard API", () => {
       const body = await expectSuccess(response, 200);
       expect(body.data.data).toBeDefined();
       expect(body.data.data.activeUsers).toBeDefined();
-      expect(typeof body.data.data.activeUsers.lastHour).toBe("number");
-      expect(typeof body.data.data.activeUsers.last24Hours).toBe("number");
+      expect(typeof body.data.data.activeUsers.lastHour).toBe('number');
+      expect(typeof body.data.data.activeUsers.last24Hours).toBe('number');
       expect(body.data.data.serverMetrics).toBeDefined();
       expect(body.data.data.liveUpdates).toBeInstanceOf(Array);
     });
 
-    it("includes server performance metrics", async () => {
+    it('includes server performance metrics', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -370,14 +364,14 @@ describe("Admin Analytics & Dashboard API", () => {
 
       const body = await expectSuccess(response, 200);
       expect(body.data.data.serverMetrics).toBeDefined();
-      expect(typeof body.data.data.serverMetrics.cpuUsage).toBe("number");
-      expect(typeof body.data.data.serverMetrics.memoryUsage).toBe("number");
-      expect(typeof body.data.data.serverMetrics.responseTime).toBe("number");
+      expect(typeof body.data.data.serverMetrics.cpuUsage).toBe('number');
+      expect(typeof body.data.data.serverMetrics.memoryUsage).toBe('number');
+      expect(typeof body.data.data.serverMetrics.responseTime).toBe('number');
     });
   });
 
-  describe("GET /api-v1/admin/analytics/export", () => {
-    it("exports analytics data", async () => {
+  describe('GET /api-v1/admin/analytics/export', () => {
+    it('exports analytics data', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -388,11 +382,11 @@ describe("Admin Analytics & Dashboard API", () => {
       const body = await expectSuccess(response, 200);
       expect(body.data.downloadUrl).toBeDefined();
       expect(body.data.expiresAt).toBeDefined();
-      expect(typeof body.data.fileSize).toBe("number");
-      expect(body.data.format).toBe("json");
+      expect(typeof body.data.fileSize).toBe('number');
+      expect(body.data.format).toBe('json');
     });
 
-    it("supports different export formats", async () => {
+    it('supports different export formats', async () => {
       const { token } = await createAdminAndToken();
 
       const formats = ['json', 'csv', 'xlsx'];
@@ -410,50 +404,50 @@ describe("Admin Analytics & Dashboard API", () => {
     });
   });
 
-  describe("POST /api-v1/admin/analytics/custom", () => {
-    it("creates custom analytics query", async () => {
+  describe('POST /api-v1/admin/analytics/custom', () => {
+    it('creates custom analytics query', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/analytics/custom`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Custom User Growth Analysis",
-            metrics: ["userRegistrations", "userVerifications"],
-            dimensions: ["date", "region"],
+            name: 'Custom User Growth Analysis',
+            metrics: ['userRegistrations', 'userVerifications'],
+            dimensions: ['date', 'region'],
             filters: {
               dateRange: {
-                from: "2024-01-01",
-                to: "2024-12-31"
+                from: '2024-01-01',
+                to: '2024-12-31',
               },
-              userType: "verified"
+              userType: 'verified',
             },
-            groupBy: "month"
-          })
+            groupBy: 'month',
+          }),
         }
       );
 
       const body = await expectSuccess(response, 201);
       expect(body.data.query).toBeDefined();
       expect(body.data.query.id).toBeDefined();
-      expect(body.data.query.name).toBe("Custom User Growth Analysis");
+      expect(body.data.query.name).toBe('Custom User Growth Analysis');
       expect(body.data.results).toBeDefined();
     });
 
-    it("validates query parameters", async () => {
+    it('validates query parameters', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/analytics/custom`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
             // Missing required fields
-            filters: {}
-          })
+            filters: {},
+          }),
         }
       );
 
@@ -461,8 +455,8 @@ describe("Admin Analytics & Dashboard API", () => {
     });
   });
 
-  describe("GET /api-v1/admin/analytics/reports/scheduled", () => {
-    it("returns scheduled reports list", async () => {
+  describe('GET /api-v1/admin/analytics/reports/scheduled', () => {
+    it('returns scheduled reports list', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -484,42 +478,42 @@ describe("Admin Analytics & Dashboard API", () => {
     });
   });
 
-  describe("POST /api-v1/admin/analytics/reports/scheduled", () => {
-    it("creates scheduled report", async () => {
+  describe('POST /api-v1/admin/analytics/reports/scheduled', () => {
+    it('creates scheduled report', async () => {
       const { token, admin } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/analytics/reports/scheduled`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Weekly User Report",
-            description: "Weekly summary of user registrations and activity",
-            metrics: ["userRegistrations", "activeUsers", "newAds"],
+            name: 'Weekly User Report',
+            description: 'Weekly summary of user registrations and activity',
+            metrics: ['userRegistrations', 'activeUsers', 'newAds'],
             schedule: {
-              frequency: "weekly",
+              frequency: 'weekly',
               dayOfWeek: 1, // Monday
-              time: "09:00"
+              time: '09:00',
             },
-            recipients: ["admin@oysloe.com"],
-            format: "pdf",
-            isActive: true
-          })
+            recipients: ['admin@oysloe.com'],
+            format: 'pdf',
+            isActive: true,
+          }),
         }
       );
 
       const body = await expectSuccess(response, 201);
       expect(body.data.report).toBeDefined();
-      expect(body.data.report.name).toBe("Weekly User Report");
-      expect(body.data.report.schedule.frequency).toBe("weekly");
+      expect(body.data.report.name).toBe('Weekly User Report');
+      expect(body.data.report.schedule.frequency).toBe('weekly');
       expect(body.data.report.createdBy).toBe(admin.id);
       expect(body.data.auditLogId).toBeDefined();
     });
   });
 
-  describe("PUT /api-v1/admin/analytics/reports/scheduled/:id", () => {
-    it("updates scheduled report", async () => {
+  describe('PUT /api-v1/admin/analytics/reports/scheduled/:id', () => {
+    it('updates scheduled report', async () => {
       const { token } = await createAdminAndToken();
 
       // First create a report
@@ -527,19 +521,19 @@ describe("Admin Analytics & Dashboard API", () => {
         `${baseURL}/api-v1/admin/analytics/reports/scheduled`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Test Report",
-            description: "Test scheduled report",
-            metrics: ["userRegistrations"],
+            name: 'Test Report',
+            description: 'Test scheduled report',
+            metrics: ['userRegistrations'],
             schedule: {
-              frequency: "daily",
-              time: "10:00"
+              frequency: 'daily',
+              time: '10:00',
             },
-            recipients: ["test@example.com"],
-            format: "pdf",
-            isActive: true
-          })
+            recipients: ['test@example.com'],
+            format: 'pdf',
+            isActive: true,
+          }),
         }
       );
 
@@ -551,29 +545,29 @@ describe("Admin Analytics & Dashboard API", () => {
         `${baseURL}/api-v1/admin/analytics/reports/scheduled/${reportId}`,
         token,
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify({
-            name: "Updated Test Report",
+            name: 'Updated Test Report',
             schedule: {
-              frequency: "weekly",
+              frequency: 'weekly',
               dayOfWeek: 5, // Friday
-              time: "15:00"
+              time: '15:00',
             },
-            isActive: false
-          })
+            isActive: false,
+          }),
         }
       );
 
       const updateBody = await expectSuccess(updateResponse, 200);
-      expect(updateBody.data.report.name).toBe("Updated Test Report");
-      expect(updateBody.data.report.schedule.frequency).toBe("weekly");
+      expect(updateBody.data.report.name).toBe('Updated Test Report');
+      expect(updateBody.data.report.schedule.frequency).toBe('weekly');
       expect(updateBody.data.report.schedule.dayOfWeek).toBe(5);
       expect(updateBody.data.report.isActive).toBe(false);
     });
   });
 
-  describe("DELETE /api-v1/admin/analytics/reports/scheduled/:id", () => {
-    it("deletes scheduled report", async () => {
+  describe('DELETE /api-v1/admin/analytics/reports/scheduled/:id', () => {
+    it('deletes scheduled report', async () => {
       const { token } = await createAdminAndToken();
 
       // Create a report first
@@ -581,15 +575,15 @@ describe("Admin Analytics & Dashboard API", () => {
         `${baseURL}/api-v1/admin/analytics/reports/scheduled`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Report to Delete",
-            description: "Will be deleted",
-            metrics: ["userRegistrations"],
-            schedule: { frequency: "daily", time: "12:00" },
-            recipients: ["test@example.com"],
-            format: "pdf"
-          })
+            name: 'Report to Delete',
+            description: 'Will be deleted',
+            metrics: ['userRegistrations'],
+            schedule: { frequency: 'daily', time: '12:00' },
+            recipients: ['test@example.com'],
+            format: 'pdf',
+          }),
         }
       );
 
@@ -601,10 +595,10 @@ describe("Admin Analytics & Dashboard API", () => {
         `${baseURL}/api-v1/admin/analytics/reports/scheduled/${reportId}`,
         token,
         {
-          method: "DELETE",
+          method: 'DELETE',
           body: JSON.stringify({
-            reason: "No longer needed"
-          })
+            reason: 'No longer needed',
+          }),
         }
       );
 
@@ -614,4 +608,3 @@ describe("Admin Analytics & Dashboard API", () => {
     });
   });
 });
-

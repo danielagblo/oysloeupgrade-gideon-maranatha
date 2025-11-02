@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export const searchHistoryItemSchema = z.object({
   id: z.string().uuid(),
@@ -36,62 +36,37 @@ export const enhancedSearchResponseSchema = z.object({
 
 export const getSearchSuggestionsSchema = z.object({
   query: z.object({
-    q: z.string().min(1).describe("Search query"),
-    limit: z.coerce
-      .number()
-      .int()
-      .positive()
-      .optional()
-      .describe("Number of suggestions"),
+    q: z.string().min(1).describe('Search query'),
+    limit: z.coerce.number().int().positive().optional().describe('Number of suggestions'),
   }),
 });
 
 export const getSearchHistorySchema = z.object({
   query: z.object({
-    limit: z.coerce
-      .number()
-      .int()
-      .positive()
-      .optional()
-      .describe("Number of history items"),
+    limit: z.coerce.number().int().positive().optional().describe('Number of history items'),
   }),
 });
 
 export const getRecentlyViewedSchema = z.object({
   query: z.object({
-    limit: z.coerce
-      .number()
-      .int()
-      .positive()
-      .optional()
-      .describe("Number of products"),
+    limit: z.coerce.number().int().positive().optional().describe('Number of products'),
   }),
 });
 
 export const getTrendingSchema = z.object({
   query: z.object({
-    limit: z.coerce
-      .number()
-      .int()
-      .positive()
-      .optional()
-      .describe("Number of trending products"),
+    limit: z.coerce.number().int().positive().optional().describe('Number of trending products'),
   }),
 });
 
 export const enhancedSearchSchema = z.object({
   query: z.object({
-    q: z.string().min(1).describe("Search query"),
-    category: z.string().optional().describe("Category filter"),
-    minPrice: z.coerce.number().min(0).optional().describe("Minimum price"),
-    maxPrice: z.coerce.number().min(0).optional().describe("Maximum price"),
-    condition: z.string().optional().describe("Product condition"),
-    page: z.coerce.number().int().positive().optional().describe("Page number"),
-    limit: z.coerce
-      .number()
-      .int()
-      .positive()
-      .optional()
-      .describe("Results per page"),
+    q: z.string().min(1).describe('Search query'),
+    category: z.string().optional().describe('Category filter'),
+    minPrice: z.coerce.number().min(0).optional().describe('Minimum price'),
+    maxPrice: z.coerce.number().min(0).optional().describe('Maximum price'),
+    condition: z.string().optional().describe('Product condition'),
+    page: z.coerce.number().int().positive().optional().describe('Page number'),
+    limit: z.coerce.number().int().positive().optional().describe('Results per page'),
   }),
 });

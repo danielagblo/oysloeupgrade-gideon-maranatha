@@ -1,36 +1,45 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, Unique, Index } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  Unique,
+} from 'typeorm';
 
-import type { Coupon } from "./Coupon.js";
-import type { User } from "./User.js";
+import type { Coupon } from './Coupon.js';
+import type { User } from './User.js';
 
-@Entity("coupon_redemptions")
-@Unique(["userId", "couponId"])
+@Entity('coupon_redemptions')
+@Unique(['userId', 'couponId'])
 export class CouponRedemption {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ type: "uuid", name: "coupon_id" })
+  @Column({ type: 'uuid', name: 'coupon_id' })
   @Index()
   couponId!: string;
 
-  @Column({ type: "uuid", name: "user_id" })
+  @Column({ type: 'uuid', name: 'user_id' })
   @Index()
   userId!: string;
 
-  @Column({ type: "decimal", precision: 10, scale: 2, name: "discount_amount" })
+  @Column({ type: 'decimal', precision: 10, scale: 2, name: 'discount_amount' })
   discountAmount!: number;
 
-  @Column({ type: "decimal", precision: 10, scale: 2, name: "order_amount" })
+  @Column({ type: 'decimal', precision: 10, scale: 2, name: 'order_amount' })
   orderAmount!: number;
 
-  @CreateDateColumn({ type: "timestamp", name: "redeemed_at" })
+  @CreateDateColumn({ type: 'timestamp', name: 'redeemed_at' })
   redeemedAt!: Date;
 
-  @ManyToOne("Coupon", (c: any) => c.redemptions, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "coupon_id" })
+  @ManyToOne('Coupon', (c: any) => c.redemptions, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'coupon_id' })
   coupon?: Coupon;
 
-  @ManyToOne("User", (u: any) => u.couponRedemptions, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "user_id" })
+  @ManyToOne('User', (u: any) => u.couponRedemptions, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
   user?: User;
 }

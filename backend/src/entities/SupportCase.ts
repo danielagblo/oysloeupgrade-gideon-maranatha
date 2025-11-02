@@ -1,6 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from "typeorm";
-import { AdminUser } from "./AdminUser.js";
-import { User } from "./User.js";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { AdminUser } from './AdminUser.js';
+import { User } from './User.js';
 
 @Entity('support_cases')
 export class SupportCase {

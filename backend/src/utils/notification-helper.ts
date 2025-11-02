@@ -1,18 +1,18 @@
-import { AppDataSource } from "../config/database.js";
-import { FCMDevice } from "../entities/FCMDevice.js";
-import { NotificationService } from "../services/notification.service.js";
-import { logError, logInfo } from "./logger.js";
+import { AppDataSource } from '../config/database.js';
+import { FCMDevice } from '../entities/FCMDevice.js';
+import { NotificationService } from '../services/notification.service.js';
+import { logError, logInfo } from './logger.js';
 
 export enum NotificationType {
-  CHAT_MESSAGE = "chat_message",
-  WALLET_CREDIT = "wallet_credit",
-  WALLET_DEBIT = "wallet_debit",
-  WELCOME = "welcome",
-  ACCOUNT_CREATED = "account_created",
-  COUPON_REDEMPTION = "coupon_redemption",
-  REFERRAL_BONUS = "referral_bonus",
-  REFERRAL_REDEMPTION = "referral_redemption",
-  PRODUCT_REVIEW = "product_review",
+  CHAT_MESSAGE = 'chat_message',
+  WALLET_CREDIT = 'wallet_credit',
+  WALLET_DEBIT = 'wallet_debit',
+  WELCOME = 'welcome',
+  ACCOUNT_CREATED = 'account_created',
+  COUPON_REDEMPTION = 'coupon_redemption',
+  REFERRAL_BONUS = 'referral_bonus',
+  REFERRAL_REDEMPTION = 'referral_redemption',
+  PRODUCT_REVIEW = 'product_review',
 }
 
 export interface NotificationData {
@@ -41,11 +41,7 @@ export class NotificationHelper {
     this.notificationService = new NotificationService();
   }
 
-  private checkRateLimit(
-    recipientId: string,
-    type: NotificationType,
-    senderId?: string
-  ): boolean {
+  private checkRateLimit(recipientId: string, type: NotificationType, senderId?: string): boolean {
     if (this.testMode) return true;
 
     const now = Date.now();
@@ -73,10 +69,7 @@ export class NotificationHelper {
     return true;
   }
 
-  private async hasUnreadInRoom(
-    _userId: string,
-    _roomId?: string
-  ): Promise<boolean> {
+  private async hasUnreadInRoom(_userId: string, _roomId?: string): Promise<boolean> {
     return false;
   }
 
@@ -86,7 +79,7 @@ export class NotificationHelper {
     body: string,
     data: NotificationData,
     type: NotificationType,
-    opts?: { roomId?: string; senderId?: string; priority?: "high" | "normal" }
+    opts?: { roomId?: string; senderId?: string; priority?: 'high' | 'normal' }
   ): Promise<boolean> {
     try {
       if (!this.checkRateLimit(userId, type, opts?.senderId)) {
@@ -102,9 +95,7 @@ export class NotificationHelper {
         type === NotificationType.CHAT_MESSAGE &&
         (await this.hasUnreadInRoom(userId, opts?.roomId))
       ) {
-        logInfo(
-          `Unread in room; suppressing push: user=${userId}, room=${opts?.roomId}`
-        );
+        logInfo(`Unread in room; suppressing push: user=${userId}, room=${opts?.roomId}`);
         return false;
       }
 
@@ -116,24 +107,15 @@ export class NotificationHelper {
         return false;
       }
 
-      const priority: "high" | "normal" =
+      const priority: 'high' | 'normal' =
         opts?.priority ??
-        (type === NotificationType.WALLET_CREDIT ||
-        type === NotificationType.WALLET_DEBIT
-          ? "high"
-          : "normal");
+        (type === NotificationType.WALLET_CREDIT || type === NotificationType.WALLET_DEBIT
+          ? 'high'
+          : 'normal');
 
-      await this.notificationService.sendPushNotification(
-        userId,
-        title,
-        body,
-        data,
-        { priority }
-      );
+      await this.notificationService.sendPushNotification(userId, title, body, data, { priority });
 
-      logInfo(
-        `Notification sent: user=${userId}, type=${type}, title="${title}"`
-      );
+      logInfo(`Notification sent: user=${userId}, type=${type}, title="${title}"`);
       return true;
     } catch (error) {
       logError(`Failed to send notification to user ${userId}:`, error);
@@ -166,13 +148,13 @@ export class NotificationHelper {
       body,
       data,
       NotificationType.CHAT_MESSAGE,
-      { roomId, senderId, priority: "normal" }
+      { roomId, senderId, priority: 'normal' }
     );
   }
 
   async notifyWalletTransaction(
     userId: string,
-    type: "credit" | "debit",
+    type: 'credit' | 'debit',
     amountPesewas: number,
     source: string,
     balancePesewas: number,
@@ -181,44 +163,31 @@ export class NotificationHelper {
     const amountFormatted = this.formatAmount(amountPesewas);
     const balanceFormatted = this.formatAmount(balancePesewas);
 
-    const title = type === "credit" ? "Wallet Credited" : "Wallet Debited";
-    const sign = type === "credit" ? "+" : "-";
+    const title = type === 'credit' ? 'Wallet Credited' : 'Wallet Debited';
+    const sign = type === 'credit' ? '+' : '-';
     const body = `${sign}${amountFormatted} ${
-      type === "credit" ? "added to" : "deducted from"
+      type === 'credit' ? 'added to' : 'deducted from'
     } your wallet. Balance: ${balanceFormatted}`;
     const notificationType =
-      type === "credit"
-        ? NotificationType.WALLET_CREDIT
-        : NotificationType.WALLET_DEBIT;
+      type === 'credit' ? NotificationType.WALLET_CREDIT : NotificationType.WALLET_DEBIT;
 
     const data: NotificationData = {
       type: notificationType,
       source,
-      referenceId: referenceId || "",
+      referenceId: referenceId || '',
       amountFormatted,
       balanceFormatted,
       amountPesewas: String(amountPesewas),
       balancePesewas: String(balancePesewas),
     };
 
-    return this.sendNotificationIfOffline(
-      userId,
-      title,
-      body,
-      data,
-      notificationType,
-      {
-        priority: "high",
-      }
-    );
+    return this.sendNotificationIfOffline(userId, title, body, data, notificationType, {
+      priority: 'high',
+    });
   }
 
-  async notifyWelcome(
-    userId: string,
-    name: string,
-    referralCode: string
-  ): Promise<boolean> {
-    const title = "Welcome to Oysloe!";
+  async notifyWelcome(userId: string, name: string, referralCode: string): Promise<boolean> {
+    const title = 'Welcome to Oysloe!';
     const body = `Welcome ${name}! Your referral code is ${referralCode}`;
     const data: NotificationData = {
       type: NotificationType.WELCOME,
@@ -227,26 +196,19 @@ export class NotificationHelper {
       name,
     };
 
-    return this.sendNotificationIfOffline(
-      userId,
-      title,
-      body,
-      data,
-      NotificationType.WELCOME,
-      {
-        priority: "normal",
-      }
-    );
+    return this.sendNotificationIfOffline(userId, title, body, data, NotificationType.WELCOME, {
+      priority: 'normal',
+    });
   }
 
   async notifyAccountCreated(userId: string, phone: string): Promise<boolean> {
-    const title = "Account Created!";
-    const body = "Complete your profile to start shopping";
+    const title = 'Account Created!';
+    const body = 'Complete your profile to start shopping';
     const data: NotificationData = {
       type: NotificationType.ACCOUNT_CREATED,
       phone,
       userId,
-      nextStep: "complete_profile",
+      nextStep: 'complete_profile',
     };
 
     return this.sendNotificationIfOffline(
@@ -255,7 +217,7 @@ export class NotificationHelper {
       body,
       data,
       NotificationType.ACCOUNT_CREATED,
-      { priority: "high" }
+      { priority: 'high' }
     );
   }
 
@@ -266,14 +228,14 @@ export class NotificationHelper {
     orderId?: string
   ): Promise<boolean> {
     const discountFormatted = this.formatAmount(discountPesewas);
-    const title = "Coupon Redeemed!";
+    const title = 'Coupon Redeemed!';
     const body = `You saved ${discountFormatted} with ${couponCode}`;
     const data: NotificationData = {
       type: NotificationType.COUPON_REDEMPTION,
       couponCode,
       discountPesewas: String(discountPesewas),
       discountFormatted,
-      orderId: orderId || "",
+      orderId: orderId || '',
     };
 
     return this.sendNotificationIfOffline(
@@ -282,7 +244,7 @@ export class NotificationHelper {
       body,
       data,
       NotificationType.COUPON_REDEMPTION,
-      { priority: "normal" }
+      { priority: 'normal' }
     );
   }
 
@@ -292,7 +254,7 @@ export class NotificationHelper {
     referredUserId: string,
     referralId: string
   ): Promise<boolean> {
-    const title = "Referral Bonus!";
+    const title = 'Referral Bonus!';
     const body = `You earned ${points} points for your referral`;
     const data: NotificationData = {
       type: NotificationType.REFERRAL_BONUS,
@@ -307,7 +269,7 @@ export class NotificationHelper {
       body,
       data,
       NotificationType.REFERRAL_BONUS,
-      { priority: "normal" }
+      { priority: 'normal' }
     );
   }
 
@@ -320,7 +282,7 @@ export class NotificationHelper {
     const creditFormatted = this.formatAmount(walletCreditPesewas);
     const balanceFormatted = this.formatAmount(newBalancePesewas);
 
-    const title = "Points Redeemed!";
+    const title = 'Points Redeemed!';
     const body = `${creditFormatted} added to your wallet`;
     const data: NotificationData = {
       type: NotificationType.REFERRAL_REDEMPTION,
@@ -337,7 +299,7 @@ export class NotificationHelper {
       body,
       data,
       NotificationType.REFERRAL_REDEMPTION,
-      { priority: "normal" }
+      { priority: 'normal' }
     );
   }
 
@@ -348,7 +310,7 @@ export class NotificationHelper {
     rating: number,
     reviewerId: string
   ): Promise<boolean> {
-    const title = "New Product Review";
+    const title = 'New Product Review';
     const body = `${rating}-star review on '${productName}'`;
     const data: NotificationData = {
       type: NotificationType.PRODUCT_REVIEW,
@@ -364,7 +326,7 @@ export class NotificationHelper {
       body,
       data,
       NotificationType.PRODUCT_REVIEW,
-      { priority: "normal" }
+      { priority: 'normal' }
     );
   }
 }

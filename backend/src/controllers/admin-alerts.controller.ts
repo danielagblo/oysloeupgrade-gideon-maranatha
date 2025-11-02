@@ -1,10 +1,11 @@
-import type { Request, Response, NextFunction } from "express";
-import { AdminAlertsService } from "../services/admin-alerts.service.js";
+import type { NextFunction, Request, Response } from "express";
 import {
-  SendAlertSchema,
   CreateCouponSchema,
   GetAlertsHistoryQuerySchema,
+  SendAlertSchema,
 } from "../schemas/admin.js";
+import { AdminAlertsService } from "../services/admin-alerts.service.js";
+import { requireAdminId } from "../utils/guards.js";
 
 const alertsService = new AdminAlertsService();
 
@@ -24,7 +25,7 @@ export const sendAlert = async (
     }
     const result = await alertsService.sendAlert({
       ...body,
-      createdBy: req.admin.id!,
+      createdBy: requireAdminId(req),
     });
 
     res.json({

@@ -1,19 +1,15 @@
-import type { Request, Response, NextFunction } from "express";
-import { AdminCategoriesService } from "../services/admin-categories.service.js";
+import type { NextFunction, Request, Response } from 'express';
 import {
   CreateCategorySchema,
-  UpdateCategorySchema,
   CreateSubcategorySchema,
+  UpdateCategorySchema,
   UpdateSubcategorySchema,
-} from "../schemas/admin.js";
+} from '../schemas/admin.js';
+import { AdminCategoriesService } from '../services/admin-categories.service.js';
 
 const categoriesService = new AdminCategoriesService();
 
-export const getCategories = async (
-  _req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const getCategories = async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await categoriesService.getCategories();
 
@@ -29,11 +25,7 @@ export const getCategories = async (
   }
 };
 
-export const createCategory = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const createCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body = CreateCategorySchema.parse(req.body);
     const category = await categoriesService.createCategory({
@@ -50,11 +42,7 @@ export const createCategory = async (
   }
 };
 
-export const updateCategory = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const updateCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const categoryId = req.params.id;
     const body = UpdateCategorySchema.parse(req.body);
@@ -72,18 +60,11 @@ export const updateCategory = async (
   }
 };
 
-export const createSubcategory = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const createSubcategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const categoryId = req.params.id;
     const body = CreateSubcategorySchema.parse(req.body);
-    const subcategory = await categoriesService.createSubcategory(
-      categoryId,
-      body
-    );
+    const subcategory = await categoriesService.createSubcategory(categoryId, body);
 
     res.json({
       success: true,
@@ -94,20 +75,12 @@ export const createSubcategory = async (
   }
 };
 
-export const updateSubcategory = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const updateSubcategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const categoryId = req.params.catId;
     const subcategoryId = req.params.subId;
     const body = UpdateSubcategorySchema.parse(req.body);
-    const subcategory = await categoriesService.updateSubcategory(
-      categoryId,
-      subcategoryId,
-      body
-    );
+    const subcategory = await categoriesService.updateSubcategory(categoryId, subcategoryId, body);
 
     res.json({
       success: true,

@@ -1,16 +1,12 @@
-import type { Request, Response, NextFunction } from "express";
-import { AppDataSource } from "../config/database.js";
-import { Product } from "../entities/Product.js";
-import { AdModerationHistory } from "../entities/AdModerationHistory.js";
-import { ProductImage } from "../entities/ProductImage.js";
-import { cloudinary } from "../config/cloudinary.js";
-import { NotFoundError } from "../utils/errors.js";
+import type { NextFunction, Request, Response } from 'express';
+import { cloudinary } from '../config/cloudinary.js';
+import { AppDataSource } from '../config/database.js';
+import { AdModerationHistory } from '../entities/AdModerationHistory.js';
+import { Product } from '../entities/Product.js';
+import { ProductImage } from '../entities/ProductImage.js';
+import { NotFoundError } from '../utils/errors.js';
 
-export const getAds = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const getAds = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const {
       page = 1,
@@ -21,47 +17,47 @@ export const getAds = async (
       sellerId,
       dateFrom,
       dateTo,
-      sortBy = "createdAt",
-      sortOrder = "desc",
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
     } = req.query;
 
     const productRepository = AppDataSource.getRepository(Product);
     const queryBuilder = productRepository
-      .createQueryBuilder("p")
-      .leftJoinAndSelect("p.user", "u")
-      .leftJoinAndSelect("p.category", "c")
-      .where("p.deleted = :deleted", { deleted: false });
+      .createQueryBuilder('p')
+      .leftJoinAndSelect('p.user', 'u')
+      .leftJoinAndSelect('p.category', 'c')
+      .where('p.deleted = :deleted', { deleted: false });
 
     // Apply filters
     if (status) {
-      queryBuilder.andWhere("p.moderationStatus = :status", { status });
+      queryBuilder.andWhere('p.moderationStatus = :status', { status });
     }
 
     if (search) {
       queryBuilder.andWhere(
-        "(p.name ILIKE :search OR p.description ILIKE :search OR u.name ILIKE :search)",
+        '(p.name ILIKE :search OR p.description ILIKE :search OR u.name ILIKE :search)',
         { search: `%${search}%` }
       );
     }
 
     if (category) {
-      queryBuilder.andWhere("p.categoryId = :category", { category });
+      queryBuilder.andWhere('p.categoryId = :category', { category });
     }
 
     if (sellerId) {
-      queryBuilder.andWhere("p.userId = :sellerId", { sellerId });
+      queryBuilder.andWhere('p.userId = :sellerId', { sellerId });
     }
 
     if (dateFrom) {
-      queryBuilder.andWhere("p.createdAt >= :dateFrom", { dateFrom });
+      queryBuilder.andWhere('p.createdAt >= :dateFrom', { dateFrom });
     }
 
     if (dateTo) {
-      queryBuilder.andWhere("p.createdAt <= :dateTo", { dateTo });
+      queryBuilder.andWhere('p.createdAt <= :dateTo', { dateTo });
     }
 
     // Sorting
-    const order = sortOrder === "asc" ? "ASC" : "DESC";
+    const order = sortOrder === 'asc' ? 'ASC' : 'DESC';
     queryBuilder.orderBy(`p.${sortBy}`, order);
 
     // Pagination
@@ -72,22 +68,22 @@ export const getAds = async (
 
     // Get filter options
     const statusFilters = await productRepository
-      .createQueryBuilder("p")
-      .select("p.moderationStatus", "status")
-      .addSelect("COUNT(*)", "count")
-      .where("p.deleted = :deleted", { deleted: false })
-      .groupBy("p.moderationStatus")
+      .createQueryBuilder('p')
+      .select('p.moderationStatus', 'status')
+      .addSelect('COUNT(*)', 'count')
+      .where('p.deleted = :deleted', { deleted: false })
+      .groupBy('p.moderationStatus')
       .getRawMany();
 
     const categoryFilters = await productRepository
-      .createQueryBuilder("p")
-      .leftJoin("p.category", "c")
-      .select("c.id", "id")
-      .addSelect("c.name", "name")
-      .addSelect("COUNT(*)", "count")
-      .where("p.deleted = :deleted", { deleted: false })
-      .groupBy("c.id")
-      .addGroupBy("c.name")
+      .createQueryBuilder('p')
+      .leftJoin('p.category', 'c')
+      .select('c.id', 'id')
+      .addSelect('c.name', 'name')
+      .addSelect('COUNT(*)', 'count')
+      .where('p.deleted = :deleted', { deleted: false })
+      .groupBy('c.id')
+      .addGroupBy('c.name')
       .getRawMany();
 
     res.json({
@@ -120,19 +116,15 @@ export const getAds = async (
   }
 };
 
-export const updateAdStatus = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const updateAdStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const { status, reason, notes } = req.body;
     if (!req.admin?.id) {
       return res.status(401).json({
         success: false,
-        message: "Unauthorized",
-        error: { code: "UNAUTHORIZED" },
+        message: 'Unauthorized',
+        error: { code: 'UNAUTHORIZED' },
       });
     }
     const adminId = req.admin.id;
@@ -140,14 +132,14 @@ export const updateAdStatus = async (
     const productRepository = AppDataSource.getRepository(Product);
     const product = await productRepository.findOne({
       where: { id, deleted: false },
-      relations: ["user"],
+      relations: ['user'],
     });
 
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Ad not found",
-        error: { code: "AD_NOT_FOUND" },
+        message: 'Ad not found',
+        error: { code: 'AD_NOT_FOUND' },
       });
     }
 
@@ -164,11 +156,11 @@ export const updateAdStatus = async (
     product.moderatedBy = adminId;
     product.moderatedAt = new Date();
 
-    if (status === "suspended" && reason) {
+    if (status === 'suspended' && reason) {
       product.suspensionReason = reason;
-    } else if (status === "rejected" && reason) {
+    } else if (status === 'rejected' && reason) {
       product.rejectionReason = reason;
-    } else if (status === "active") {
+    } else if (status === 'active') {
       product.approvedBy = adminId;
       product.approvedAt = new Date();
     }
@@ -184,19 +176,17 @@ export const updateAdStatus = async (
     await productRepository.save(product);
 
     // Create moderation history
-    const moderationHistory = await AppDataSource.getRepository(
-      AdModerationHistory
-    ).save({
+    const moderationHistory = await AppDataSource.getRepository(AdModerationHistory).save({
       adId: product.id,
       adminUserId: adminId,
       action:
-        status === "active"
-          ? "approve"
-          : status === "suspended"
-          ? "suspend"
-          : status === "rejected"
-          ? "reject"
-          : "moderate",
+        status === 'active'
+          ? 'approve'
+          : status === 'suspended'
+            ? 'suspend'
+            : status === 'rejected'
+              ? 'reject'
+              : 'moderate',
       reason,
       oldStatus,
       newStatus: status,
@@ -222,25 +212,20 @@ export const updateAdStatus = async (
   }
 };
 
-export const bulkUpdateAds = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const bulkUpdateAds = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { adIds, status, reason, notes } = req.body;
     if (!req.admin?.id) {
       return res.status(401).json({
         success: false,
-        message: "Unauthorized",
-        error: { code: "UNAUTHORIZED" },
+        message: 'Unauthorized',
+        error: { code: 'UNAUTHORIZED' },
       });
     }
     const adminId = req.admin.id;
 
     const productRepository = AppDataSource.getRepository(Product);
-    const moderationHistoryRepository =
-      AppDataSource.getRepository(AdModerationHistory);
+    const moderationHistoryRepository = AppDataSource.getRepository(AdModerationHistory);
 
     const results = [];
     let updated = 0;
@@ -253,7 +238,7 @@ export const bulkUpdateAds = async (
         });
 
         if (!product) {
-          results.push({ adId, success: false, error: "Ad not found" });
+          results.push({ adId, success: false, error: 'Ad not found' });
           failed++;
           continue;
         }
@@ -263,11 +248,11 @@ export const bulkUpdateAds = async (
         product.moderatedBy = adminId;
         product.moderatedAt = new Date();
 
-        if (status === "suspended" && reason) {
+        if (status === 'suspended' && reason) {
           product.suspensionReason = reason;
-        } else if (status === "rejected" && reason) {
+        } else if (status === 'rejected' && reason) {
           product.rejectionReason = reason;
-        } else if (status === "active") {
+        } else if (status === 'active') {
           product.approvedBy = adminId;
           product.approvedAt = new Date();
         }
@@ -287,13 +272,13 @@ export const bulkUpdateAds = async (
           adId: product.id,
           adminUserId: adminId,
           action:
-            status === "active"
-              ? "approve"
-              : status === "suspended"
-              ? "suspend"
-              : status === "rejected"
-              ? "reject"
-              : "moderate",
+            status === 'active'
+              ? 'approve'
+              : status === 'suspended'
+                ? 'suspend'
+                : status === 'rejected'
+                  ? 'reject'
+                  : 'moderate',
           reason,
           oldStatus,
           newStatus: status,
@@ -321,19 +306,15 @@ export const bulkUpdateAds = async (
   }
 };
 
-export const deleteAdImage = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const deleteAdImage = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id, imageId } = req.params;
     const { reason: _reason } = req.body;
     if (!req.admin?.id) {
       return res.status(401).json({
         success: false,
-        message: "Unauthorized",
-        error: { code: "UNAUTHORIZED" },
+        message: 'Unauthorized',
+        error: { code: 'UNAUTHORIZED' },
       });
     }
     const _adminId = req.admin.id;
@@ -346,7 +327,7 @@ export const deleteAdImage = async (
     });
 
     if (!product) {
-      throw new NotFoundError("Ad not found");
+      throw new NotFoundError('Ad not found');
     }
 
     const image = await productImageRepository.findOne({
@@ -354,7 +335,7 @@ export const deleteAdImage = async (
     });
 
     if (!image) {
-      throw new NotFoundError("Image not found");
+      throw new NotFoundError('Image not found');
     }
 
     // Delete from Cloudinary
@@ -365,7 +346,7 @@ export const deleteAdImage = async (
       }
     } catch (error) {
       // Log but don't fail if Cloudinary deletion fails
-      console.error("Failed to delete image from Cloudinary:", error);
+      console.error('Failed to delete image from Cloudinary:', error);
     }
 
     // Delete from database
@@ -387,34 +368,30 @@ export const deleteAdImage = async (
         ad: product,
         deletedImageUrl: image.url,
       },
-      message: "Image deleted successfully",
+      message: 'Image deleted successfully',
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const getAdsStats = async (
-  _req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const getAdsStats = async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const productRepository = AppDataSource.getRepository(Product);
 
     // Basic counts
     const total = await productRepository.count({ where: { deleted: false } });
     const active = await productRepository.count({
-      where: { moderationStatus: "active", deleted: false },
+      where: { moderationStatus: 'active', deleted: false },
     });
     const pending = await productRepository.count({
-      where: { moderationStatus: "pending", deleted: false },
+      where: { moderationStatus: 'pending', deleted: false },
     });
     const suspended = await productRepository.count({
-      where: { moderationStatus: "suspended", deleted: false },
+      where: { moderationStatus: 'suspended', deleted: false },
     });
     const rejected = await productRepository.count({
-      where: { moderationStatus: "rejected", deleted: false },
+      where: { moderationStatus: 'rejected', deleted: false },
     });
 
     // Recent activity
@@ -424,48 +401,48 @@ export const getAdsStats = async (
     const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
     const todayPosted = await productRepository
-      .createQueryBuilder("p")
-      .where("p.createdAt >= :dayAgo", { dayAgo })
-      .andWhere("p.deleted = :deleted", { deleted: false })
+      .createQueryBuilder('p')
+      .where('p.createdAt >= :dayAgo', { dayAgo })
+      .andWhere('p.deleted = :deleted', { deleted: false })
       .getCount();
 
     const weekPosted = await productRepository
-      .createQueryBuilder("p")
-      .where("p.createdAt >= :weekAgo", { weekAgo })
-      .andWhere("p.deleted = :deleted", { deleted: false })
+      .createQueryBuilder('p')
+      .where('p.createdAt >= :weekAgo', { weekAgo })
+      .andWhere('p.deleted = :deleted', { deleted: false })
       .getCount();
 
     const monthPosted = await productRepository
-      .createQueryBuilder("p")
-      .where("p.createdAt >= :monthAgo", { monthAgo })
-      .andWhere("p.deleted = :deleted", { deleted: false })
+      .createQueryBuilder('p')
+      .where('p.createdAt >= :monthAgo', { monthAgo })
+      .andWhere('p.deleted = :deleted', { deleted: false })
       .getCount();
 
     // Top categories
     const topCategories = await productRepository
-      .createQueryBuilder("p")
-      .leftJoin("p.category", "c")
-      .select("c.name", "category")
-      .addSelect("COUNT(*)", "count")
-      .where("p.deleted = :deleted", { deleted: false })
-      .andWhere("p.moderationStatus = :status", { status: "active" })
-      .groupBy("c.name")
-      .orderBy("count", "DESC")
+      .createQueryBuilder('p')
+      .leftJoin('p.category', 'c')
+      .select('c.name', 'category')
+      .addSelect('COUNT(*)', 'count')
+      .where('p.deleted = :deleted', { deleted: false })
+      .andWhere('p.moderationStatus = :status', { status: 'active' })
+      .groupBy('c.name')
+      .orderBy('count', 'DESC')
       .limit(10)
       .getRawMany();
 
     // Top sellers
     const topSellers = await productRepository
-      .createQueryBuilder("p")
-      .leftJoin("p.user", "u")
-      .select("u.id", "sellerId")
-      .addSelect("u.name", "sellerName")
-      .addSelect("COUNT(*)", "adCount")
-      .where("p.deleted = :deleted", { deleted: false })
-      .andWhere("p.moderationStatus = :status", { status: "active" })
-      .groupBy("u.id")
-      .addGroupBy("u.name")
-      .orderBy("adCount", "DESC")
+      .createQueryBuilder('p')
+      .leftJoin('p.user', 'u')
+      .select('u.id', 'sellerId')
+      .addSelect('u.name', 'sellerName')
+      .addSelect('COUNT(*)', 'adCount')
+      .where('p.deleted = :deleted', { deleted: false })
+      .andWhere('p.moderationStatus = :status', { status: 'active' })
+      .groupBy('u.id')
+      .addGroupBy('u.name')
+      .orderBy('adCount', 'DESC')
       .limit(10)
       .getRawMany();
 
@@ -473,8 +450,8 @@ export const getAdsStats = async (
     const avgResponseTime = 0; // TODO: calculate from moderation history
     const pendingCount = pending;
     const resolvedToday = await AppDataSource.getRepository(AdModerationHistory)
-      .createQueryBuilder("amh")
-      .where("amh.createdAt >= :dayAgo", { dayAgo })
+      .createQueryBuilder('amh')
+      .where('amh.createdAt >= :dayAgo', { dayAgo })
       .getCount();
 
     res.json({
@@ -488,10 +465,13 @@ export const getAdsStats = async (
         todayPosted,
         weekPosted,
         monthPosted,
-        byCategory: topCategories.reduce((acc, curr) => {
-          acc[curr.category] = parseInt(curr.count, 10);
-          return acc;
-        }, {} as Record<string, number>),
+        byCategory: topCategories.reduce(
+          (acc, curr) => {
+            acc[curr.category] = parseInt(curr.count, 10);
+            return acc;
+          },
+          {} as Record<string, number>
+        ),
         topSellers: topSellers.map((s) => ({
           sellerId: s.sellerId,
           sellerName: s.sellerName,

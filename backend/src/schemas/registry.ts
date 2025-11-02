@@ -12,7 +12,6 @@ import {
   HealthCheckResponse,
   JoinPrivateChatRequest,
   JoinPrivateChatResponse,
-
   JoinRoomRequest,
   JoinRoomResponse,
   LoginBody,

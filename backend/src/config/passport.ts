@@ -23,7 +23,6 @@ passport.use(
         });
 
         if (user) {
-
           return done(null, user);
         }
 
@@ -32,7 +31,6 @@ passport.use(
         });
 
         if (user) {
-
           user.googleId = profile.id;
           if (profile.photos?.[0]?.value) {
             user.avatarUrl = profile.photos[0].value;

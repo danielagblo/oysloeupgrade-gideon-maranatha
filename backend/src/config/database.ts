@@ -1,14 +1,14 @@
-import "reflect-metadata";
-import { DataSource } from "typeorm";
-import { logError, logInfo } from "../utils/logger.js";
-import { config } from "./env.js";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import 'reflect-metadata';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { DataSource } from 'typeorm';
+import { logError, logInfo } from '../utils/logger.js';
+import { config } from './env.js';
 
-const __dirname = fileURLToPath(new URL(".", import.meta.url));
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 export const AppDataSource = new DataSource({
-  type: "postgres",
+  type: 'postgres',
   host: config.database.host,
   port: config.database.port,
   username: config.database.user,
@@ -16,7 +16,7 @@ export const AppDataSource = new DataSource({
   database: config.database.name,
   synchronize: false,
   logging: config.database.logging,
-  entities: [join(__dirname, "..", "entities", "**", "*.{ts,js}")],
+  entities: [join(__dirname, '..', 'entities', '**', '*.{ts,js}')],
   subscribers: [],
   extra: {
     max: 20,
@@ -29,16 +29,16 @@ export const AppDataSource = new DataSource({
 export const initializeDatabase = async (): Promise<void> => {
   try {
     await AppDataSource.initialize();
-    logInfo("Database connection established");
+    logInfo('Database connection established');
 
     const pendingMigrations = await AppDataSource.showMigrations();
     if (pendingMigrations) {
-      logInfo("Running pending migrations...");
+      logInfo('Running pending migrations...');
       await AppDataSource.runMigrations();
-      logInfo("Migrations completed");
+      logInfo('Migrations completed');
     }
   } catch (error) {
-    logError("Database connection failed:", error);
+    logError('Database connection failed:', error);
     throw error;
   }
 };
@@ -46,6 +46,6 @@ export const initializeDatabase = async (): Promise<void> => {
 export const closeDatabase = async (): Promise<void> => {
   if (AppDataSource.isInitialized) {
     await AppDataSource.destroy();
-    logInfo("Database connection closed");
+    logInfo('Database connection closed');
   }
 };

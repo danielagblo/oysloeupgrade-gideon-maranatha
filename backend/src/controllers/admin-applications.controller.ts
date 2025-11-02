@@ -1,18 +1,15 @@
-import type { Request, Response, NextFunction } from "express";
-import { AdminApplicationsService } from "../services/admin-applications.service.js";
+import type { NextFunction, Request, Response } from 'express';
 import {
-  GetApplicationsQuerySchema,
   DownloadApplicationSchema,
+  GetApplicationsQuerySchema,
   UpdateApplicationStatusSchema,
-} from "../schemas/admin.js";
+} from '../schemas/admin.js';
+import { AdminApplicationsService } from '../services/admin-applications.service.js';
+import { requireAdminId } from '../utils/guards.js';
 
 const applicationsService = new AdminApplicationsService();
 
-export const getApplications = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const getApplications = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const query = GetApplicationsQuerySchema.parse(req.query);
     const result = await applicationsService.getApplications(query);
@@ -29,11 +26,7 @@ export const getApplications = async (
   }
 };
 
-export const getApplication = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const getApplication = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const applicationId = parseInt(req.params.id, 10);
     const application = await applicationsService.getApplication(applicationId);
@@ -47,19 +40,12 @@ export const getApplication = async (
   }
 };
 
-export const downloadDocument = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const downloadDocument = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const applicationId = parseInt(req.params.id, 10);
     const body = DownloadApplicationSchema.parse(req.body);
 
-    const result = await applicationsService.downloadDocument(
-      applicationId,
-      body.documentType
-    );
+    const result = await applicationsService.downloadDocument(applicationId, body.documentType);
 
     res.json({
       success: true,
@@ -73,22 +59,18 @@ export const downloadDocument = async (
   }
 };
 
-export const updateStatus = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const updateStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const applicationId = parseInt(req.params.id, 10);
     const body = UpdateApplicationStatusSchema.parse(req.body);
     if (!req.admin?.id) {
       return res.status(401).json({
         success: false,
-        message: "Unauthorized",
-        error: { code: "UNAUTHORIZED" },
+        message: 'Unauthorized',
+        error: { code: 'UNAUTHORIZED' },
       });
     }
-    const adminUserId = req.admin.id!;
+    const adminUserId = requireAdminId(req);
 
     const application = await applicationsService.updateStatus(
       applicationId,

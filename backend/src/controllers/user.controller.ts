@@ -1,9 +1,9 @@
-import type { Request, Response } from "express";
-import { AppDataSource } from "../config/database.js";
-import { User } from "../entities/User.js";
-import { BadRequestError, NotFoundError } from "../utils/errors.js";
-import { logError, logInfo } from "../utils/logger.js";
-import { comparePassword, hashPassword } from "../utils/password.js";
+import type { Request, Response } from 'express';
+import { AppDataSource } from '../config/database.js';
+import { User } from '../entities/User.js';
+import { BadRequestError, NotFoundError } from '../utils/errors.js';
+import { logError, logInfo } from '../utils/logger.js';
+import { comparePassword, hashPassword } from '../utils/password.js';
 
 export class UserController {
   private get userRepository() {
@@ -13,21 +13,21 @@ export class UserController {
   async getProfile(req: Request, res: Response) {
     try {
       if (!req.user?.id) {
-        throw new BadRequestError("User not authenticated");
+        throw new BadRequestError('User not authenticated');
       }
 
       const user = await this.userRepository.findOne({
         where: { id: req.user.id },
-        relations: ["wallet"],
+        relations: ['wallet'],
       });
 
       if (!user) {
-        throw new NotFoundError("User not found");
+        throw new NotFoundError('User not found');
       }
 
-      const nameParts = user.name?.split(" ") || [];
-      const firstName = nameParts[0] || "";
-      const lastName = nameParts.slice(1).join(" ") || "";
+      const nameParts = user.name?.split(' ') || [];
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
 
       res.json({
         success: true,
@@ -56,11 +56,11 @@ export class UserController {
         },
       });
     } catch (error) {
-      logError("Error getting user profile:", error);
+      logError('Error getting user profile:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to get user profile",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to get user profile',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -68,25 +68,25 @@ export class UserController {
   async getPreferences(req: Request, res: Response) {
     try {
       if (!req.user?.id) {
-        throw new BadRequestError("User not authenticated");
+        throw new BadRequestError('User not authenticated');
       }
 
       const user = await this.userRepository.findOne({
         where: { id: req.user.id },
         select: [
-          "id",
-          "email",
-          "phone",
-          "name",
-          "address",
-          "avatarUrl",
-          "preferredNotificationEmail",
-          "preferredNotificationPhone",
+          'id',
+          'email',
+          'phone',
+          'name',
+          'address',
+          'avatarUrl',
+          'preferredNotificationEmail',
+          'preferredNotificationPhone',
         ],
       });
 
       if (!user) {
-        throw new NotFoundError("User not found");
+        throw new NotFoundError('User not found');
       }
 
       res.json({
@@ -99,11 +99,11 @@ export class UserController {
         },
       });
     } catch (error) {
-      logError("Error getting user preferences:", error);
+      logError('Error getting user preferences:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to get user preferences",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to get user preferences',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -121,7 +121,7 @@ export class UserController {
       } = req.body;
 
       if (!req.user?.id) {
-        throw new BadRequestError("User not authenticated");
+        throw new BadRequestError('User not authenticated');
       }
 
       const user = await this.userRepository.findOne({
@@ -129,7 +129,7 @@ export class UserController {
       });
 
       if (!user) {
-        throw new NotFoundError("User not found");
+        throw new NotFoundError('User not found');
       }
 
       if (email !== undefined) user.email = email;
@@ -162,11 +162,11 @@ export class UserController {
         },
       });
     } catch (error) {
-      logError("Error updating user preferences:", error);
+      logError('Error updating user preferences:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to update user preferences",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to update user preferences',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -184,7 +184,7 @@ export class UserController {
       } = req.body;
 
       if (!req.user?.id) {
-        throw new BadRequestError("User not authenticated");
+        throw new BadRequestError('User not authenticated');
       }
 
       const user = await this.userRepository.findOne({
@@ -192,25 +192,21 @@ export class UserController {
       });
 
       if (!user) {
-        throw new NotFoundError("User not found");
+        throw new NotFoundError('User not found');
       }
 
       if (firstName !== undefined || lastName !== undefined) {
-        const nameParts = user.name?.split(" ") || [];
-        const firstPart =
-          firstName !== undefined ? firstName : nameParts[0] || "";
-        const lastPart =
-          lastName !== undefined
-            ? lastName
-            : nameParts.slice(1).join(" ") || "";
+        const nameParts = user.name?.split(' ') || [];
+        const firstPart = firstName !== undefined ? firstName : nameParts[0] || '';
+        const lastPart = lastName !== undefined ? lastName : nameParts.slice(1).join(' ') || '';
         const fullName = `${firstPart} ${lastPart}`.trim();
         if (!fullName) {
-          throw new BadRequestError("Name cannot be empty");
+          throw new BadRequestError('Name cannot be empty');
         }
         user.name = fullName;
       } else if (name !== undefined) {
         if (!name.trim()) {
-          throw new BadRequestError("Name cannot be empty");
+          throw new BadRequestError('Name cannot be empty');
         }
         user.name = name;
       }
@@ -228,13 +224,13 @@ export class UserController {
 
       logInfo(`User ${user.id} updated profile`);
 
-      const nameParts = user.name?.split(" ") || [];
-      const firstNamePart = nameParts[0] || "";
-      const lastNamePart = nameParts.slice(1).join(" ") || "";
+      const nameParts = user.name?.split(' ') || [];
+      const firstNamePart = nameParts[0] || '';
+      const lastNamePart = nameParts.slice(1).join(' ') || '';
 
       res.json({
         success: true,
-        message: "Profile updated successfully",
+        message: 'Profile updated successfully',
         data: {
           user: {
             id: user.id,
@@ -249,11 +245,11 @@ export class UserController {
         },
       });
     } catch (error) {
-      logError("Error updating user profile:", error);
+      logError('Error updating user profile:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to update profile",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to update profile',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -263,19 +259,15 @@ export class UserController {
       const { currentPassword, newPassword } = req.body;
 
       if (!currentPassword || !newPassword) {
-        throw new BadRequestError(
-          "Current password and new password are required"
-        );
+        throw new BadRequestError('Current password and new password are required');
       }
 
       if (newPassword.length < 8) {
-        throw new BadRequestError(
-          "New password must be at least 8 characters long"
-        );
+        throw new BadRequestError('New password must be at least 8 characters long');
       }
 
       if (!req.user?.id) {
-        throw new BadRequestError("User not authenticated");
+        throw new BadRequestError('User not authenticated');
       }
 
       const user = await this.userRepository.findOne({
@@ -283,19 +275,16 @@ export class UserController {
       });
 
       if (!user) {
-        throw new NotFoundError("User not found");
+        throw new NotFoundError('User not found');
       }
 
       if (!user.passwordHash) {
-        throw new BadRequestError("Password not set for this account");
+        throw new BadRequestError('Password not set for this account');
       }
 
-      const isCurrentPasswordValid = await comparePassword(
-        currentPassword,
-        user.passwordHash
-      );
+      const isCurrentPasswordValid = await comparePassword(currentPassword, user.passwordHash);
       if (!isCurrentPasswordValid) {
-        throw new BadRequestError("Current password is incorrect");
+        throw new BadRequestError('Current password is incorrect');
       }
 
       const newPasswordHash = await hashPassword(newPassword);
@@ -307,14 +296,14 @@ export class UserController {
 
       res.json({
         success: true,
-        message: "Password changed successfully",
+        message: 'Password changed successfully',
       });
     } catch (error) {
-      logError("Error changing password:", error);
+      logError('Error changing password:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to change password",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to change password',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -325,17 +314,17 @@ export class UserController {
       const offset = (Number(page) - 1) * Number(limit);
 
       const queryBuilder = this.userRepository
-        .createQueryBuilder("user")
-        .leftJoinAndSelect("user.products", "product")
-        .leftJoinAndSelect("product.images", "image")
-        .where("user.id = :userId", { userId: req.user?.id || "" });
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.products', 'product')
+        .leftJoinAndSelect('product.images', 'image')
+        .where('user.id = :userId', { userId: req.user?.id || '' });
 
       if (status) {
-        queryBuilder.andWhere("product.status = :status", { status });
+        queryBuilder.andWhere('product.status = :status', { status });
       }
 
       const [products, total] = await queryBuilder
-        .orderBy("product.createdAt", "DESC")
+        .orderBy('product.createdAt', 'DESC')
         .skip(offset)
         .take(Number(limit))
         .getManyAndCount();
@@ -355,11 +344,11 @@ export class UserController {
         },
       });
     } catch (error) {
-      logError("Error getting user products:", error);
+      logError('Error getting user products:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to get user products",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to get user products',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -370,11 +359,11 @@ export class UserController {
       const offset = (Number(page) - 1) * Number(limit);
 
       const [reviews, total] = await this.userRepository
-        .createQueryBuilder("user")
-        .leftJoinAndSelect("user.reviews", "review")
-        .leftJoinAndSelect("review.product", "product")
-        .where("user.id = :userId", { userId: req.user?.id || "" })
-        .orderBy("review.createdAt", "DESC")
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.reviews', 'review')
+        .leftJoinAndSelect('review.product', 'product')
+        .where('user.id = :userId', { userId: req.user?.id || '' })
+        .orderBy('review.createdAt', 'DESC')
         .skip(offset)
         .take(Number(limit))
         .getManyAndCount();
@@ -394,11 +383,11 @@ export class UserController {
         },
       });
     } catch (error) {
-      logError("Error getting user reviews:", error);
+      logError('Error getting user reviews:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to get user reviews",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to get user reviews',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -409,12 +398,12 @@ export class UserController {
       const offset = (Number(page) - 1) * Number(limit);
 
       const [users, total] = await this.userRepository
-        .createQueryBuilder("user")
-        .leftJoinAndSelect("user.favorites", "favorite")
-        .leftJoinAndSelect("favorite.product", "product")
-        .leftJoinAndSelect("product.images", "image")
-        .where("user.id = :userId", { userId: req.user?.id || "" })
-        .orderBy("favorite.createdAt", "DESC")
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.favorites', 'favorite')
+        .leftJoinAndSelect('favorite.product', 'product')
+        .leftJoinAndSelect('product.images', 'image')
+        .where('user.id = :userId', { userId: req.user?.id || '' })
+        .orderBy('favorite.createdAt', 'DESC')
         .skip(offset)
         .take(Number(limit))
         .getManyAndCount();
@@ -434,11 +423,11 @@ export class UserController {
         },
       });
     } catch (error) {
-      logError("Error getting user favorites:", error);
+      logError('Error getting user favorites:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to get user favorites",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to get user favorites',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -449,17 +438,17 @@ export class UserController {
       const offset = (Number(page) - 1) * Number(limit);
 
       const queryBuilder = this.userRepository
-        .createQueryBuilder("user")
-        .leftJoinAndSelect("user.wallet", "wallet")
-        .leftJoinAndSelect("wallet.ledger", "ledger")
-        .where("user.id = :userId", { userId: req.user?.id || "" });
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.wallet', 'wallet')
+        .leftJoinAndSelect('wallet.ledger', 'ledger')
+        .where('user.id = :userId', { userId: req.user?.id || '' });
 
       if (type) {
-        queryBuilder.andWhere("ledger.transactionType = :type", { type });
+        queryBuilder.andWhere('ledger.transactionType = :type', { type });
       }
 
       const [users, total] = await queryBuilder
-        .orderBy("ledger.createdAt", "DESC")
+        .orderBy('ledger.createdAt', 'DESC')
         .skip(offset)
         .take(Number(limit))
         .getManyAndCount();
@@ -481,11 +470,11 @@ export class UserController {
         },
       });
     } catch (error) {
-      logError("Error getting wallet transactions:", error);
+      logError('Error getting wallet transactions:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to get wallet transactions",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to get wallet transactions',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -495,11 +484,11 @@ export class UserController {
       const { password } = req.body;
 
       if (!password) {
-        throw new BadRequestError("Password is required to delete account");
+        throw new BadRequestError('Password is required to delete account');
       }
 
       if (!req.user?.id) {
-        throw new BadRequestError("User not authenticated");
+        throw new BadRequestError('User not authenticated');
       }
 
       const user = await this.userRepository.findOne({
@@ -507,19 +496,16 @@ export class UserController {
       });
 
       if (!user) {
-        throw new NotFoundError("User not found");
+        throw new NotFoundError('User not found');
       }
 
       if (!user.passwordHash) {
-        throw new BadRequestError("Password not set for this account");
+        throw new BadRequestError('Password not set for this account');
       }
 
-      const isPasswordValid = await comparePassword(
-        password,
-        user.passwordHash
-      );
+      const isPasswordValid = await comparePassword(password, user.passwordHash);
       if (!isPasswordValid) {
-        throw new BadRequestError("Password is incorrect");
+        throw new BadRequestError('Password is incorrect');
       }
 
       user.deleted = true;
@@ -532,14 +518,14 @@ export class UserController {
 
       res.json({
         success: true,
-        message: "Account deleted successfully",
+        message: 'Account deleted successfully',
       });
     } catch (error) {
-      logError("Error deleting account:", error);
+      logError('Error deleting account:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to delete account",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to delete account',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }

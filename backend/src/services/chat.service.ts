@@ -1,9 +1,9 @@
-import { AppDataSource } from "../config/database.js";
-import { Chatroom } from "../entities/Chatroom.js";
-import { ChatroomMember } from "../entities/ChatroomMember.js";
-import { Message } from "../entities/Message.js";
-import { User } from "../entities/User.js";
-import { logError, logInfo } from "../utils/logger.js";
+import { AppDataSource } from '../config/database.js';
+import { Chatroom } from '../entities/Chatroom.js';
+import { ChatroomMember } from '../entities/ChatroomMember.js';
+import { Message } from '../entities/Message.js';
+import { User } from '../entities/User.js';
+import { logError, logInfo } from '../utils/logger.js';
 
 export interface ChatroomWithMetadata {
   id: string;
@@ -37,18 +37,15 @@ export class ChatService {
     return AppDataSource.getRepository(User);
   }
 
-  async getOrCreatePrivateChatroom(
-    user1Id: string,
-    user2Id: string
-  ): Promise<Chatroom | null> {
+  async getOrCreatePrivateChatroom(user1Id: string, user2Id: string): Promise<Chatroom | null> {
     try {
       const existingRoom = await this.chatroomRepository
-        .createQueryBuilder("room")
-        .leftJoin("room.members", "member1")
-        .leftJoin("room.members", "member2")
-        .where("room.isGroup = false")
-        .andWhere("member1.user_id = :user1Id", { user1Id })
-        .andWhere("member2.user_id = :user2Id", { user2Id })
+        .createQueryBuilder('room')
+        .leftJoin('room.members', 'member1')
+        .leftJoin('room.members', 'member2')
+        .where('room.isGroup = false')
+        .andWhere('member1.user_id = :user1Id', { user1Id })
+        .andWhere('member2.user_id = :user2Id', { user2Id })
         .getOne();
 
       if (existingRoom) {
@@ -78,9 +75,7 @@ export class ChatService {
 
       await this.memberRepository.save([member1, member2]);
 
-      logInfo(
-        `Created private chatroom between users ${user1Id} and ${user2Id}`
-      );
+      logInfo(`Created private chatroom between users ${user1Id} and ${user2Id}`);
       return savedRoom;
     } catch (error) {
       logError(`Error creating private chatroom: ${error}`);
@@ -92,8 +87,8 @@ export class ChatService {
     try {
       return await this.messageRepository.find({
         where: { roomId },
-        relations: ["sender"],
-        order: { createdAt: "DESC" },
+        relations: ['sender'],
+        order: { createdAt: 'DESC' },
         take: limit,
       });
     } catch (error) {
@@ -106,7 +101,7 @@ export class ChatService {
     roomId: string,
     senderId: string,
     content: string,
-    messageType: "text" | "audio" | "image" = "text"
+    messageType: 'text' | 'audio' | 'image' = 'text'
   ): Promise<Message | null> {
     try {
       const message = this.messageRepository.create({
@@ -132,8 +127,8 @@ export class ChatService {
         .createQueryBuilder()
         .update(Message)
         .set({ isRead: true })
-        .where("room_id = :roomId", { roomId })
-        .andWhere("sender_id != :userId", { userId })
+        .where('room_id = :roomId', { roomId })
+        .andWhere('sender_id != :userId', { userId })
         .execute();
 
       logInfo(`Marked messages as read for user ${userId} in room ${roomId}`);
@@ -145,10 +140,10 @@ export class ChatService {
   async getChatroomsForUser(userId: string): Promise<ChatroomWithMetadata[]> {
     try {
       const chatrooms = await this.chatroomRepository
-        .createQueryBuilder("room")
-        .leftJoin("room.members", "member")
-        .where("member.user_id = :userId", { userId })
-        .orderBy("room.created_at", "DESC")
+        .createQueryBuilder('room')
+        .leftJoin('room.members', 'member')
+        .where('member.user_id = :userId', { userId })
+        .orderBy('room.created_at', 'DESC')
         .getMany();
 
       const result: ChatroomWithMetadata[] = [];
@@ -166,25 +161,25 @@ export class ChatService {
 
         if (!room.isGroup) {
           const otherMember = (await this.memberRepository
-            .createQueryBuilder("member")
-            .leftJoin("member.user", "user")
-            .where("member.chatroom_id = :roomId", { roomId: room.id })
-            .andWhere("member.user_id != :userId", { userId })
-            .select(["user.name", "user.avatar"])
+            .createQueryBuilder('member')
+            .leftJoin('member.user', 'user')
+            .where('member.chatroom_id = :roomId', { roomId: room.id })
+            .andWhere('member.user_id != :userId', { userId })
+            .select(['user.name', 'user.avatar'])
             .getOne()) as { user?: { name: string; avatar?: string } } | null;
 
           if (otherMember?.user) {
             otherUser = otherMember.user.name;
-            otherUserAvatar = otherMember.user.avatar || "";
+            otherUserAvatar = otherMember.user.avatar || '';
           }
         }
 
         const lastMessage = await this.messageRepository
-          .createQueryBuilder("message")
-          .leftJoin("message.sender", "sender")
-          .where("message.roomId = :roomId", { roomId: room.id })
-          .orderBy("message.createdAt", "DESC")
-          .select(["message.content", "message.createdAt", "sender.name"])
+          .createQueryBuilder('message')
+          .leftJoin('message.sender', 'sender')
+          .where('message.roomId = :roomId', { roomId: room.id })
+          .orderBy('message.createdAt', 'DESC')
+          .select(['message.content', 'message.createdAt', 'sender.name'])
           .getOne();
 
         const roomData: ChatroomWithMetadata = {
@@ -199,7 +194,7 @@ export class ChatService {
             ? {
                 text: lastMessage.content,
                 createdAt: lastMessage.createdAt,
-                sender: lastMessage.sender?.name || "Unknown",
+                sender: lastMessage.sender?.name || 'Unknown',
               }
             : undefined,
         };
@@ -217,9 +212,9 @@ export class ChatService {
   async getTotalUnreadCount(userId: string): Promise<number> {
     try {
       const chatrooms = await this.chatroomRepository
-        .createQueryBuilder("room")
-        .leftJoin("room.members", "member")
-        .where("member.user_id = :userId", { userId })
+        .createQueryBuilder('room')
+        .leftJoin('room.members', 'member')
+        .where('member.user_id = :userId', { userId })
         .getMany();
 
       let totalUnread = 0;
@@ -268,8 +263,7 @@ export class ChatService {
   }
 
   private isValidUUID(uuid: string): boolean {
-    const uuidRegex =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     return uuidRegex.test(uuid);
   }
 
@@ -311,12 +305,12 @@ export class ChatService {
   async getRoomMembers(roomId: string): Promise<User[]> {
     try {
       const members = await this.memberRepository
-        .createQueryBuilder("member")
-        .leftJoinAndSelect("member.user", "user")
-        .where("member.chatroomId = :roomId", { roomId })
-        .andWhere("user.deleted = false")
-        .andWhere("user.isActive = true")
-        .select(["user.id", "user.name", "user.email", "user.phone"])
+        .createQueryBuilder('member')
+        .leftJoinAndSelect('member.user', 'user')
+        .where('member.chatroomId = :roomId', { roomId })
+        .andWhere('user.deleted = false')
+        .andWhere('user.isActive = true')
+        .select(['user.id', 'user.name', 'user.email', 'user.phone'])
         .getMany();
 
       return members.map((member) => member.user).filter(Boolean) as User[];

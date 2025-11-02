@@ -26,7 +26,6 @@ export const logger = winston.createLogger({
   format: logFormat,
   defaultMeta: { service: 'oysloe-backend' },
   transports: [
-
     new winston.transports.File({
       filename: config.logging.filePath,
       maxsize: 5242880,

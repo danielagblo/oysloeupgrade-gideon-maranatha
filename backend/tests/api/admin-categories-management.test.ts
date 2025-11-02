@@ -1,22 +1,15 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-  beforeEach,
-} from "bun:test";
-import {
-  createTestServer,
-  closeTestServer,
-  resetDb,
-  createAdminAndToken,
   authenticatedAdminRequest,
+  closeTestServer,
+  createAdminAndToken,
+  createTestServer,
   expectError,
   expectSuccess,
-} from "../test-helpers";
+  resetDb,
+} from '../test-helpers';
 
-describe("Admin Categories Management API", () => {
+describe('Admin Categories Management API', () => {
   let server: unknown;
   let baseURL: string;
 
@@ -34,14 +27,11 @@ describe("Admin Categories Management API", () => {
     await closeTestServer(server);
   });
 
-  describe("GET /api-v1/admin/categories", () => {
-    it("returns all categories with hierarchy", async () => {
+  describe('GET /api-v1/admin/categories', () => {
+    it('returns all categories with hierarchy', async () => {
       const { token } = await createAdminAndToken();
 
-      const response = await authenticatedAdminRequest(
-        `${baseURL}/api-v1/admin/categories`,
-        token
-      );
+      const response = await authenticatedAdminRequest(`${baseURL}/api-v1/admin/categories`, token);
 
       const body = await expectSuccess(response, 200);
       expect(body.data.categories).toBeInstanceOf(Array);
@@ -52,17 +42,14 @@ describe("Admin Categories Management API", () => {
         expect(category.id).toBeDefined();
         expect(category.name).toBeDefined();
         expect(category.slug).toBeDefined();
-        expect(typeof category.isActive).toBe("boolean");
+        expect(typeof category.isActive).toBe('boolean');
       });
     });
 
-    it("includes subcategories in hierarchy", async () => {
+    it('includes subcategories in hierarchy', async () => {
       const { token } = await createAdminAndToken();
 
-      const response = await authenticatedAdminRequest(
-        `${baseURL}/api-v1/admin/categories`,
-        token
-      );
+      const response = await authenticatedAdminRequest(`${baseURL}/api-v1/admin/categories`, token);
 
       const body = await expectSuccess(response, 200);
       expect(body.data.hierarchy).toBeDefined();
@@ -81,106 +68,102 @@ describe("Admin Categories Management API", () => {
       }
     });
 
-    it("rejects unauthenticated requests", async () => {
+    it('rejects unauthenticated requests', async () => {
       const response = await fetch(`${baseURL}/api-v1/admin/categories`);
 
       await expectError(response, 401);
     });
   });
 
-  describe("POST /api-v1/admin/categories", () => {
-    it("creates new category successfully", async () => {
+  describe('POST /api-v1/admin/categories', () => {
+    it('creates new category successfully', async () => {
       const { token, admin } = await createAdminAndToken();
 
       const categoryData = {
-        name: "Electronics",
-        slug: "electronics",
-        description: "Electronic devices and gadgets",
-        isActive: true
+        name: 'Electronics',
+        slug: 'electronics',
+        description: 'Electronic devices and gadgets',
+        isActive: true,
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/categories`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(categoryData)
+          method: 'POST',
+          body: JSON.stringify(categoryData),
         }
       );
 
       const body = await expectSuccess(response, 201);
       expect(body.data.category).toBeDefined();
-      expect(body.data.category.name).toBe("Electronics");
-      expect(body.data.category.slug).toBe("electronics");
-      expect(body.data.category.description).toBe("Electronic devices and gadgets");
+      expect(body.data.category.name).toBe('Electronics');
+      expect(body.data.category.slug).toBe('electronics');
+      expect(body.data.category.description).toBe('Electronic devices and gadgets');
       expect(body.data.category.isActive).toBe(true);
       expect(body.data.category.createdBy).toBe(admin.id);
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("auto-generates slug when not provided", async () => {
+    it('auto-generates slug when not provided', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/categories`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Home & Garden",
-            description: "Home improvement and gardening supplies"
-          })
+            name: 'Home & Garden',
+            description: 'Home improvement and gardening supplies',
+          }),
         }
       );
 
       const body = await expectSuccess(response, 201);
-      expect(body.data.category.slug).toBe("home-garden");
+      expect(body.data.category.slug).toBe('home-garden');
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("validates required name field", async () => {
+    it('validates required name field', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/categories`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            description: "Missing name field"
-          })
+            description: 'Missing name field',
+          }),
         }
       );
 
       await expectError(response, 400);
     });
 
-    it("validates unique slug", async () => {
+    it('validates unique slug', async () => {
       const { token } = await createAdminAndToken();
 
       // Create first category
-      await authenticatedAdminRequest(
-        `${baseURL}/api-v1/admin/categories`,
-        token,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            name: "Test Category",
-            slug: "test-slug"
-          })
-        }
-      );
+      await authenticatedAdminRequest(`${baseURL}/api-v1/admin/categories`, token, {
+        method: 'POST',
+        body: JSON.stringify({
+          name: 'Test Category',
+          slug: 'test-slug',
+        }),
+      });
 
       // Try to create duplicate slug
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/categories`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Different Name",
-            slug: "test-slug" // duplicate
-          })
+            name: 'Different Name',
+            slug: 'test-slug', // duplicate
+          }),
         }
       );
 
@@ -188,8 +171,8 @@ describe("Admin Categories Management API", () => {
     });
   });
 
-  describe("PUT /api-v1/admin/categories/:id", () => {
-    it("updates category successfully", async () => {
+  describe('PUT /api-v1/admin/categories/:id', () => {
+    it('updates category successfully', async () => {
       const { token, admin } = await createAdminAndToken();
 
       // First create a category
@@ -197,11 +180,11 @@ describe("Admin Categories Management API", () => {
         `${baseURL}/api-v1/admin/categories`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Original Category",
-            description: "Original description"
-          })
+            name: 'Original Category',
+            description: 'Original description',
+          }),
         }
       );
 
@@ -213,24 +196,24 @@ describe("Admin Categories Management API", () => {
         `${baseURL}/api-v1/admin/categories/${categoryId}`,
         token,
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify({
-            name: "Updated Category",
-            description: "Updated description",
-            isActive: false
-          })
+            name: 'Updated Category',
+            description: 'Updated description',
+            isActive: false,
+          }),
         }
       );
 
       const updateBody = await expectSuccess(updateResponse, 200);
-      expect(updateBody.data.category.name).toBe("Updated Category");
-      expect(updateBody.data.category.description).toBe("Updated description");
+      expect(updateBody.data.category.name).toBe('Updated Category');
+      expect(updateBody.data.category.description).toBe('Updated description');
       expect(updateBody.data.category.isActive).toBe(false);
       expect(updateBody.data.category.updatedBy).toBe(admin.id);
       expect(updateBody.data.auditLogId).toBeDefined();
     });
 
-    it("updates only provided fields", async () => {
+    it('updates only provided fields', async () => {
       const { token } = await createAdminAndToken();
 
       // Create category
@@ -238,12 +221,12 @@ describe("Admin Categories Management API", () => {
         `${baseURL}/api-v1/admin/categories`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Partial Update Test",
-            description: "Original description",
-            isActive: true
-          })
+            name: 'Partial Update Test',
+            description: 'Original description',
+            isActive: true,
+          }),
         }
       );
 
@@ -255,30 +238,30 @@ describe("Admin Categories Management API", () => {
         `${baseURL}/api-v1/admin/categories/${categoryId}`,
         token,
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify({
-            description: "Updated description only"
-          })
+            description: 'Updated description only',
+          }),
         }
       );
 
       const updateBody = await expectSuccess(updateResponse, 200);
-      expect(updateBody.data.category.name).toBe("Partial Update Test"); // Unchanged
-      expect(updateBody.data.category.description).toBe("Updated description only"); // Changed
+      expect(updateBody.data.category.name).toBe('Partial Update Test'); // Unchanged
+      expect(updateBody.data.category.description).toBe('Updated description only'); // Changed
       expect(updateBody.data.category.isActive).toBe(true); // Unchanged
     });
 
-    it("returns 404 for non-existent category", async () => {
+    it('returns 404 for non-existent category', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/categories/99999`,
         token,
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify({
-            name: "Non-existent Category"
-          })
+            name: 'Non-existent Category',
+          }),
         }
       );
 
@@ -286,8 +269,8 @@ describe("Admin Categories Management API", () => {
     });
   });
 
-  describe("DELETE /api-v1/admin/categories/:id", () => {
-    it("deletes category successfully", async () => {
+  describe('DELETE /api-v1/admin/categories/:id', () => {
+    it('deletes category successfully', async () => {
       const { token } = await createAdminAndToken();
 
       // Create category
@@ -295,11 +278,11 @@ describe("Admin Categories Management API", () => {
         `${baseURL}/api-v1/admin/categories`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Category to Delete",
-            description: "Will be deleted"
-          })
+            name: 'Category to Delete',
+            description: 'Will be deleted',
+          }),
         }
       );
 
@@ -311,10 +294,10 @@ describe("Admin Categories Management API", () => {
         `${baseURL}/api-v1/admin/categories/${categoryId}`,
         token,
         {
-          method: "DELETE",
+          method: 'DELETE',
           body: JSON.stringify({
-            reason: "Category no longer needed"
-          })
+            reason: 'Category no longer needed',
+          }),
         }
       );
 
@@ -323,7 +306,7 @@ describe("Admin Categories Management API", () => {
       expect(deleteBody.data.auditLogId).toBeDefined();
     });
 
-    it("prevents deletion of categories with subcategories", async () => {
+    it('prevents deletion of categories with subcategories', async () => {
       const { token } = await createAdminAndToken();
 
       // Create category
@@ -331,11 +314,11 @@ describe("Admin Categories Management API", () => {
         `${baseURL}/api-v1/admin/categories`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Category with Subs",
-            description: "Has subcategories"
-          })
+            name: 'Category with Subs',
+            description: 'Has subcategories',
+          }),
         }
       );
 
@@ -349,10 +332,10 @@ describe("Admin Categories Management API", () => {
         `${baseURL}/api-v1/admin/categories/${categoryId}`,
         token,
         {
-          method: "DELETE",
+          method: 'DELETE',
           body: JSON.stringify({
-            reason: "Test deletion prevention"
-          })
+            reason: 'Test deletion prevention',
+          }),
         }
       );
 
@@ -362,8 +345,8 @@ describe("Admin Categories Management API", () => {
     });
   });
 
-  describe("POST /api-v1/admin/categories/:id/subcategories", () => {
-    it("creates subcategory successfully", async () => {
+  describe('POST /api-v1/admin/categories/:id/subcategories', () => {
+    it('creates subcategory successfully', async () => {
       const { token, admin } = await createAdminAndToken();
 
       // Create parent category first
@@ -371,11 +354,11 @@ describe("Admin Categories Management API", () => {
         `${baseURL}/api-v1/admin/categories`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Electronics",
-            description: "Electronic devices"
-          })
+            name: 'Electronics',
+            description: 'Electronic devices',
+          }),
         }
       );
 
@@ -387,47 +370,47 @@ describe("Admin Categories Management API", () => {
         `${baseURL}/api-v1/admin/categories/${categoryId}/subcategories`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Smartphones",
-            description: "Mobile phones and accessories",
+            name: 'Smartphones',
+            description: 'Mobile phones and accessories',
             parameters: [
-              { name: "brand", type: "string", required: true },
-              { name: "storage", type: "number", unit: "GB" }
+              { name: 'brand', type: 'string', required: true },
+              { name: 'storage', type: 'number', unit: 'GB' },
             ],
-            isActive: true
-          })
+            isActive: true,
+          }),
         }
       );
 
       const subBody = await expectSuccess(subResponse, 201);
       expect(subBody.data.subcategory).toBeDefined();
-      expect(subBody.data.subcategory.name).toBe("Smartphones");
+      expect(subBody.data.subcategory.name).toBe('Smartphones');
       expect(subBody.data.subcategory.categoryId).toBe(categoryId);
       expect(subBody.data.subcategory.parameters).toBeInstanceOf(Array);
       expect(subBody.data.subcategory.parameters.length).toBe(2);
       expect(subBody.data.auditLogId).toBeDefined();
     });
 
-    it("validates parent category exists", async () => {
+    it('validates parent category exists', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/categories/99999/subcategories`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Invalid Subcategory",
-            description: "Parent category doesn't exist"
-          })
+            name: 'Invalid Subcategory',
+            description: "Parent category doesn't exist",
+          }),
         }
       );
 
       await expectError(response, 404);
     });
 
-    it("validates subcategory parameters", async () => {
+    it('validates subcategory parameters', async () => {
       const { token } = await createAdminAndToken();
 
       // Create parent category
@@ -435,11 +418,11 @@ describe("Admin Categories Management API", () => {
         `${baseURL}/api-v1/admin/categories`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Test Category",
-            description: "For subcategory testing"
-          })
+            name: 'Test Category',
+            description: 'For subcategory testing',
+          }),
         }
       );
 
@@ -450,11 +433,11 @@ describe("Admin Categories Management API", () => {
         `${baseURL}/api-v1/admin/categories/${categoryId}/subcategories`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Test Subcategory",
-            parameters: "invalid-parameters" // Should be array
-          })
+            name: 'Test Subcategory',
+            parameters: 'invalid-parameters', // Should be array
+          }),
         }
       );
 
@@ -462,8 +445,8 @@ describe("Admin Categories Management API", () => {
     });
   });
 
-  describe("PUT /api-v1/admin/categories/:catId/subcategories/:subId", () => {
-    it("updates subcategory successfully", async () => {
+  describe('PUT /api-v1/admin/categories/:catId/subcategories/:subId', () => {
+    it('updates subcategory successfully', async () => {
       const { token, admin } = await createAdminAndToken();
 
       // Create category and subcategory first
@@ -471,11 +454,11 @@ describe("Admin Categories Management API", () => {
         `${baseURL}/api-v1/admin/categories`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Vehicles",
-            description: "Cars and vehicles"
-          })
+            name: 'Vehicles',
+            description: 'Cars and vehicles',
+          }),
         }
       );
 
@@ -486,12 +469,12 @@ describe("Admin Categories Management API", () => {
         `${baseURL}/api-v1/admin/categories/${categoryId}/subcategories`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Sedans",
-            description: "Four door cars",
-            isActive: true
-          })
+            name: 'Sedans',
+            description: 'Four door cars',
+            isActive: true,
+          }),
         }
       );
 
@@ -503,33 +486,33 @@ describe("Admin Categories Management API", () => {
         `${baseURL}/api-v1/admin/categories/${categoryId}/subcategories/${subcategoryId}`,
         token,
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify({
-            name: "Luxury Sedans",
-            description: "Premium four door cars",
-            isActive: true
-          })
+            name: 'Luxury Sedans',
+            description: 'Premium four door cars',
+            isActive: true,
+          }),
         }
       );
 
       const updateBody = await expectSuccess(updateResponse, 200);
-      expect(updateBody.data.subcategory.name).toBe("Luxury Sedans");
-      expect(updateBody.data.subcategory.description).toBe("Premium four door cars");
+      expect(updateBody.data.subcategory.name).toBe('Luxury Sedans');
+      expect(updateBody.data.subcategory.description).toBe('Premium four door cars');
       expect(updateBody.data.subcategory.categoryId).toBe(categoryId);
       expect(updateBody.data.auditLogId).toBeDefined();
     });
 
-    it("returns 404 for non-existent subcategory", async () => {
+    it('returns 404 for non-existent subcategory', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/categories/1/subcategories/99999`,
         token,
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify({
-            name: "Non-existent Subcategory"
-          })
+            name: 'Non-existent Subcategory',
+          }),
         }
       );
 
@@ -537,8 +520,8 @@ describe("Admin Categories Management API", () => {
     });
   });
 
-  describe("GET /api-v1/admin/categories/stats", () => {
-    it("returns category statistics", async () => {
+  describe('GET /api-v1/admin/categories/stats', () => {
+    it('returns category statistics', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -556,19 +539,19 @@ describe("Admin Categories Management API", () => {
     });
   });
 
-  describe("POST /api-v1/admin/categories/reorder", () => {
-    it("reorders categories successfully", async () => {
+  describe('POST /api-v1/admin/categories/reorder', () => {
+    it('reorders categories successfully', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/categories/reorder`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            categoryIds: ["cat-1", "cat-2", "cat-3"],
-            reason: "Reordering for better UX"
-          })
+            categoryIds: ['cat-1', 'cat-2', 'cat-3'],
+            reason: 'Reordering for better UX',
+          }),
         }
       );
 
@@ -577,17 +560,17 @@ describe("Admin Categories Management API", () => {
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("validates category IDs array", async () => {
+    it('validates category IDs array', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/categories/reorder`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            categoryIds: "not-an-array"
-          })
+            categoryIds: 'not-an-array',
+          }),
         }
       );
 
@@ -595,4 +578,3 @@ describe("Admin Categories Management API", () => {
     });
   });
 });
-

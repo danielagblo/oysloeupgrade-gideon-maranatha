@@ -1,12 +1,12 @@
-import { AppDataSource } from "../config/database.js";
-import { User } from "../entities/User.js";
-import { Product } from "../entities/Product.js";
-import { SupportCase } from "../entities/SupportCase.js";
-import { UserReport } from "../entities/UserReport.js";
-import { NotFoundError } from "../utils/errors.js";
+import { AppDataSource } from '../config/database.js';
+import { Product } from '../entities/Product.js';
+import { SupportCase } from '../entities/SupportCase.js';
+import { User } from '../entities/User.js';
+import { UserReport } from '../entities/UserReport.js';
+import { NotFoundError } from '../utils/errors.js';
 
 export interface ExportOptions {
-  format: "csv" | "xlsx" | "pdf";
+  format: 'csv' | 'xlsx' | 'pdf';
   filters?: any;
   fields?: string[];
   dateRange?: {
@@ -37,40 +37,40 @@ export class AdminExportService {
 
     // Build query based on filters (matching getUsers logic)
     const queryBuilder = this.userRepository
-      .createQueryBuilder("user")
-      .where("user.deleted = :deleted", { deleted: false });
+      .createQueryBuilder('user')
+      .where('user.deleted = :deleted', { deleted: false });
 
     // Apply search filter
     if (filters?.search) {
       queryBuilder.andWhere(
-        "(user.email ILIKE :search OR user.name ILIKE :search OR user.phone ILIKE :search)",
+        '(user.email ILIKE :search OR user.name ILIKE :search OR user.phone ILIKE :search)',
         { search: `%${filters.search}%` }
       );
     }
 
     // Apply status filter
     if (filters?.status) {
-      queryBuilder.andWhere("user.verificationStatus = :status", {
+      queryBuilder.andWhere('user.verificationStatus = :status', {
         status: filters.status,
       });
     }
 
     // Apply level filter
     if (filters?.level) {
-      queryBuilder.andWhere("user.level = :level", { level: filters.level });
+      queryBuilder.andWhere('user.level = :level', { level: filters.level });
     }
 
     // Apply role filter (using level as role for now)
     if (filters?.role) {
-      queryBuilder.andWhere("user.level = :role", { role: filters.role });
+      queryBuilder.andWhere('user.level = :role', { role: filters.role });
     }
 
     // Apply date range filter
     if (filters?.dateRange) {
-      queryBuilder.andWhere("user.createdAt >= :from", {
+      queryBuilder.andWhere('user.createdAt >= :from', {
         from: filters.dateRange.from,
       });
-      queryBuilder.andWhere("user.createdAt <= :to", {
+      queryBuilder.andWhere('user.createdAt <= :to', {
         to: filters.dateRange.to,
       });
     }
@@ -100,15 +100,15 @@ export class AdminExportService {
     const { format, filters, fields } = options;
 
     const queryBuilder = this.productRepository
-      .createQueryBuilder("product")
-      .leftJoinAndSelect("product.user", "user")
-      .where("product.deleted = :deleted", { deleted: false });
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.user', 'user')
+      .where('product.deleted = :deleted', { deleted: false });
 
     if (filters?.dateRange) {
-      queryBuilder.andWhere("product.createdAt >= :from", {
+      queryBuilder.andWhere('product.createdAt >= :from', {
         from: filters.dateRange.from,
       });
-      queryBuilder.andWhere("product.createdAt <= :to", {
+      queryBuilder.andWhere('product.createdAt <= :to', {
         to: filters.dateRange.to,
       });
     }
@@ -131,14 +131,14 @@ export class AdminExportService {
     const { format, filters } = options;
 
     const queryBuilder = this.supportCaseRepository
-      .createQueryBuilder("case")
-      .leftJoinAndSelect("case.user", "user");
+      .createQueryBuilder('case')
+      .leftJoinAndSelect('case.user', 'user');
 
     if (filters?.dateRange) {
-      queryBuilder.andWhere("case.createdAt >= :from", {
+      queryBuilder.andWhere('case.createdAt >= :from', {
         from: filters.dateRange.from,
       });
-      queryBuilder.andWhere("case.createdAt <= :to", {
+      queryBuilder.andWhere('case.createdAt <= :to', {
         to: filters.dateRange.to,
       });
     }
@@ -161,15 +161,15 @@ export class AdminExportService {
     const { format, filters } = options;
 
     const queryBuilder = this.userReportRepository
-      .createQueryBuilder("report")
-      .leftJoinAndSelect("report.reporterUser", "reporter")
-      .leftJoinAndSelect("report.reportedUser", "reported");
+      .createQueryBuilder('report')
+      .leftJoinAndSelect('report.reporterUser', 'reporter')
+      .leftJoinAndSelect('report.reportedUser', 'reported');
 
     if (filters?.dateRange) {
-      queryBuilder.andWhere("report.createdAt >= :from", {
+      queryBuilder.andWhere('report.createdAt >= :from', {
         from: filters.dateRange.from,
       });
-      queryBuilder.andWhere("report.createdAt <= :to", {
+      queryBuilder.andWhere('report.createdAt <= :to', {
         to: filters.dateRange.to,
       });
     }
@@ -188,4 +188,3 @@ export class AdminExportService {
     };
   }
 }
-

@@ -1,7 +1,7 @@
-import type { Request, Response } from "express";
-import { CouponService } from "../services/coupon.service.js";
-import { AppError, BadRequestError } from "../utils/errors.js";
-import { logError } from "../utils/logger.js";
+import type { Request, Response } from 'express';
+import { CouponService } from '../services/coupon.service.js';
+import { AppError, BadRequestError } from '../utils/errors.js';
+import { logError } from '../utils/logger.js';
 
 export class CouponController {
   private couponService = new CouponService();
@@ -22,7 +22,7 @@ export class CouponController {
       } = req.body;
 
       if (!req.user?.id) {
-        throw new BadRequestError("User not authenticated");
+        throw new BadRequestError('User not authenticated');
       }
 
       const coupon = await this.couponService.createCoupon(
@@ -43,15 +43,15 @@ export class CouponController {
 
       res.status(201).json({
         success: true,
-        message: "Coupon created successfully",
+        message: 'Coupon created successfully',
         data: { coupon },
       });
     } catch (error) {
-      logError("Error creating coupon:", error);
+      logError('Error creating coupon:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to create coupon",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to create coupon',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -63,7 +63,7 @@ export class CouponController {
       const { coupons, total } = await this.couponService.getCoupons(
         Number(page),
         Number(limit),
-        isActive === "true" ? true : isActive === "false" ? false : undefined,
+        isActive === 'true' ? true : isActive === 'false' ? false : undefined,
         createdBy as string
       );
 
@@ -80,11 +80,11 @@ export class CouponController {
         },
       });
     } catch (error) {
-      logError("Error getting coupons:", error);
+      logError('Error getting coupons:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to get coupons",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to get coupons',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -93,7 +93,7 @@ export class CouponController {
     try {
       const { id } = req.params;
       if (!id) {
-        throw new BadRequestError("Coupon ID is required");
+        throw new BadRequestError('Coupon ID is required');
       }
 
       const coupon = await this.couponService.getCouponById(id);
@@ -103,11 +103,11 @@ export class CouponController {
         data: { coupon },
       });
     } catch (error) {
-      logError("Error getting coupon:", error);
+      logError('Error getting coupon:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to get coupon",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to get coupon',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -116,31 +116,27 @@ export class CouponController {
     try {
       const { id } = req.params;
       if (!id) {
-        throw new BadRequestError("Coupon ID is required");
+        throw new BadRequestError('Coupon ID is required');
       }
       const updates = req.body;
 
       if (!req.user?.id) {
-        throw new BadRequestError("User not authenticated");
+        throw new BadRequestError('User not authenticated');
       }
 
-      const coupon = await this.couponService.updateCoupon(
-        id,
-        updates,
-        req.user.id
-      );
+      const coupon = await this.couponService.updateCoupon(id, updates, req.user.id);
 
       res.json({
         success: true,
-        message: "Coupon updated successfully",
+        message: 'Coupon updated successfully',
         data: { coupon },
       });
     } catch (error) {
-      logError("Error updating coupon:", error);
+      logError('Error updating coupon:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to update coupon",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to update coupon',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -149,25 +145,25 @@ export class CouponController {
     try {
       const { id } = req.params;
       if (!id) {
-        throw new BadRequestError("Coupon ID is required");
+        throw new BadRequestError('Coupon ID is required');
       }
 
       if (!req.user?.id) {
-        throw new BadRequestError("User not authenticated");
+        throw new BadRequestError('User not authenticated');
       }
 
       await this.couponService.deleteCoupon(id, req.user.id);
 
       res.json({
         success: true,
-        message: "Coupon deleted successfully",
+        message: 'Coupon deleted successfully',
       });
     } catch (error) {
-      logError("Error deleting coupon:", error);
+      logError('Error deleting coupon:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to delete coupon",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to delete coupon',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -176,26 +172,26 @@ export class CouponController {
     try {
       const { id } = req.params;
       if (!id) {
-        throw new BadRequestError("Coupon ID is required");
+        throw new BadRequestError('Coupon ID is required');
       }
 
       if (!req.user?.id) {
-        throw new BadRequestError("User not authenticated");
+        throw new BadRequestError('User not authenticated');
       }
 
       const coupon = await this.couponService.expireCoupon(id, req.user.id);
 
       res.json({
         success: true,
-        message: "Coupon expired successfully",
+        message: 'Coupon expired successfully',
         data: { coupon },
       });
     } catch (error) {
-      logError("Error expiring coupon:", error);
+      logError('Error expiring coupon:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to expire coupon",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to expire coupon',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -205,11 +201,11 @@ export class CouponController {
       const { code, orderAmount, orderId } = req.body;
 
       if (!code || !orderAmount) {
-        throw new BadRequestError("Code and orderAmount are required");
+        throw new BadRequestError('Code and orderAmount are required');
       }
 
       if (!req.user?.id) {
-        throw new BadRequestError("User not authenticated");
+        throw new BadRequestError('User not authenticated');
       }
 
       const result = await this.couponService.redeemCoupon({
@@ -221,7 +217,7 @@ export class CouponController {
 
       res.json({
         success: true,
-        message: "Coupon redeemed successfully",
+        message: 'Coupon redeemed successfully',
         data: {
           coupon: result.coupon,
           discountAmount: result.discountAmount,
@@ -238,8 +234,8 @@ export class CouponController {
       }
       res.status(500).json({
         success: false,
-        message: "Failed to redeem coupon",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to redeem coupon',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -249,24 +245,21 @@ export class CouponController {
       const { code, orderAmount } = req.query;
 
       if (!code || !orderAmount) {
-        throw new BadRequestError("Code and orderAmount are required");
+        throw new BadRequestError('Code and orderAmount are required');
       }
 
-      const result = await this.couponService.validateCoupon(
-        code as string,
-        Number(orderAmount)
-      );
+      const result = await this.couponService.validateCoupon(code as string, Number(orderAmount));
 
       res.json({
         success: true,
         data: result,
       });
     } catch (error) {
-      logError("Error validating coupon:", error);
+      logError('Error validating coupon:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to validate coupon",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to validate coupon',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -276,15 +269,14 @@ export class CouponController {
       const { page = 1, limit = 20 } = req.query;
 
       if (!req.user?.id) {
-        throw new BadRequestError("User not authenticated");
+        throw new BadRequestError('User not authenticated');
       }
 
-      const { redemptions, total } =
-        await this.couponService.getUserRedemptions(
-          req.user.id,
-          Number(page),
-          Number(limit)
-        );
+      const { redemptions, total } = await this.couponService.getUserRedemptions(
+        req.user.id,
+        Number(page),
+        Number(limit)
+      );
 
       res.json({
         success: true,
@@ -299,11 +291,11 @@ export class CouponController {
         },
       });
     } catch (error) {
-      logError("Error getting user redemptions:", error);
+      logError('Error getting user redemptions:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to get user redemptions",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to get user redemptions',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -312,7 +304,7 @@ export class CouponController {
     try {
       const { id } = req.params;
       if (!id) {
-        throw new BadRequestError("Coupon ID is required");
+        throw new BadRequestError('Coupon ID is required');
       }
 
       const stats = await this.couponService.getCouponStats(id);
@@ -322,11 +314,11 @@ export class CouponController {
         data: stats,
       });
     } catch (error) {
-      logError("Error getting coupon stats:", error);
+      logError('Error getting coupon stats:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to get coupon statistics",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to get coupon statistics',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }

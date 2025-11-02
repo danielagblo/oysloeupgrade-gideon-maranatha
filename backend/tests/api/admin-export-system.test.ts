@@ -1,24 +1,17 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-  beforeEach,
-} from "bun:test";
-import {
-  createTestServer,
-  closeTestServer,
-  resetDb,
-  seedUser,
-  seedProduct,
-  createAdminAndToken,
   authenticatedAdminRequest,
+  closeTestServer,
+  createAdminAndToken,
+  createTestServer,
   expectError,
   expectSuccess,
-} from "../test-helpers";
+  resetDb,
+  seedProduct,
+  seedUser,
+} from '../test-helpers';
 
-describe("Admin Data Export System", () => {
+describe('Admin Data Export System', () => {
   let server: unknown;
   let baseURL: string;
 
@@ -36,13 +29,13 @@ describe("Admin Data Export System", () => {
     await closeTestServer(server);
   });
 
-  describe("GET /api-v1/admin/export/users", () => {
-    it("exports users data in CSV format", async () => {
+  describe('GET /api-v1/admin/export/users', () => {
+    it('exports users data in CSV format', async () => {
       const { token } = await createAdminAndToken();
 
       // Create test users
-      await seedUser({ name: "John Doe", email: "john@example.com" });
-      await seedUser({ name: "Jane Smith", email: "jane@example.com" });
+      await seedUser({ name: 'John Doe', email: 'john@example.com' });
+      await seedUser({ name: 'Jane Smith', email: 'jane@example.com' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/export/users?format=csv&fields=id,name,email,verificationStatus`,
@@ -54,10 +47,10 @@ describe("Admin Data Export System", () => {
       expect(body.data.expiresAt).toBeDefined();
       expect(body.data.fileSize).toBeDefined();
       expect(body.data.recordCount).toBeGreaterThanOrEqual(2);
-      expect(body.data.format).toBe("csv");
+      expect(body.data.format).toBe('csv');
     });
 
-    it("exports users data in Excel format", async () => {
+    it('exports users data in Excel format', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -67,15 +60,15 @@ describe("Admin Data Export System", () => {
 
       const body = await expectSuccess(response, 200);
       expect(body.data.downloadUrl).toMatch(/\.xlsx$/);
-      expect(body.data.format).toBe("xlsx");
+      expect(body.data.format).toBe('xlsx');
     });
 
-    it("applies filters to exported data", async () => {
+    it('applies filters to exported data', async () => {
       const { token } = await createAdminAndToken();
 
       // Create users with different statuses
-      await seedUser({ name: "Verified User", email: "verified@example.com" });
-      await seedUser({ name: "Unverified User", email: "unverified@example.com" });
+      await seedUser({ name: 'Verified User', email: 'verified@example.com' });
+      await seedUser({ name: 'Unverified User', email: 'unverified@example.com' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/export/users?format=csv&status=verified`,
@@ -86,7 +79,7 @@ describe("Admin Data Export System", () => {
       expect(body.data.recordCount).toBe(1);
     });
 
-    it("validates export format", async () => {
+    it('validates export format', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -98,13 +91,13 @@ describe("Admin Data Export System", () => {
     });
   });
 
-  describe("GET /api-v1/admin/export/ads", () => {
-    it("exports ads data with full product information", async () => {
+  describe('GET /api-v1/admin/export/ads', () => {
+    it('exports ads data with full product information', async () => {
       const { token } = await createAdminAndToken();
 
       // Create test products
-      await seedProduct({ name: "Test Product 1", price: 99.99 });
-      await seedProduct({ name: "Test Product 2", price: 149.99 });
+      await seedProduct({ name: 'Test Product 1', price: 99.99 });
+      await seedProduct({ name: 'Test Product 2', price: 149.99 });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/export/ads?format=csv&fields=id,name,price,status,createdAt`,
@@ -113,11 +106,11 @@ describe("Admin Data Export System", () => {
 
       const body = await expectSuccess(response, 200);
       expect(body.data.recordCount).toBeGreaterThanOrEqual(2);
-      expect(body.data.fields).toContain("price");
-      expect(body.data.fields).toContain("status");
+      expect(body.data.fields).toContain('price');
+      expect(body.data.fields).toContain('status');
     });
 
-    it("includes category and seller information", async () => {
+    it('includes category and seller information', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -126,11 +119,11 @@ describe("Admin Data Export System", () => {
       );
 
       const body = await expectSuccess(response, 200);
-      expect(body.data.includes).toContain("category");
-      expect(body.data.includes).toContain("seller");
+      expect(body.data.includes).toContain('category');
+      expect(body.data.includes).toContain('seller');
     });
 
-    it("exports ads within date range", async () => {
+    it('exports ads within date range', async () => {
       const { token } = await createAdminAndToken();
 
       const fromDate = new Date();
@@ -147,8 +140,8 @@ describe("Admin Data Export System", () => {
     });
   });
 
-  describe("GET /api-v1/admin/export/support", () => {
-    it("exports support cases with conversation history", async () => {
+  describe('GET /api-v1/admin/export/support', () => {
+    it('exports support cases with conversation history', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -157,11 +150,11 @@ describe("Admin Data Export System", () => {
       );
 
       const body = await expectSuccess(response, 200);
-      expect(body.data.includes).toContain("messages");
-      expect(body.data.format).toBe("csv");
+      expect(body.data.includes).toContain('messages');
+      expect(body.data.format).toBe('csv');
     });
 
-    it("exports support cases by status and priority", async () => {
+    it('exports support cases by status and priority', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -171,11 +164,11 @@ describe("Admin Data Export System", () => {
 
       const body = await expectSuccess(response, 200);
       expect(body.data.filters).toBeDefined();
-      expect(body.data.filters.status).toContain("open");
-      expect(body.data.filters.priority).toContain("high");
+      expect(body.data.filters.status).toContain('open');
+      expect(body.data.filters.priority).toContain('high');
     });
 
-    it("includes agent performance metrics", async () => {
+    it('includes agent performance metrics', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -184,12 +177,12 @@ describe("Admin Data Export System", () => {
       );
 
       const body = await expectSuccess(response, 200);
-      expect(body.data.includes).toContain("performance");
+      expect(body.data.includes).toContain('performance');
     });
   });
 
-  describe("GET /api-v1/admin/export/reports", () => {
-    it("exports user reports and moderation actions", async () => {
+  describe('GET /api-v1/admin/export/reports', () => {
+    it('exports user reports and moderation actions', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -198,11 +191,11 @@ describe("Admin Data Export System", () => {
       );
 
       const body = await expectSuccess(response, 200);
-      expect(body.data.types).toContain("user_reports");
-      expect(body.data.types).toContain("moderation_actions");
+      expect(body.data.types).toContain('user_reports');
+      expect(body.data.types).toContain('moderation_actions');
     });
 
-    it("exports reports within date range", async () => {
+    it('exports reports within date range', async () => {
       const { token } = await createAdminAndToken();
 
       const fromDate = new Date();
@@ -218,7 +211,7 @@ describe("Admin Data Export System", () => {
       expect(body.data.dateRange).toBeDefined();
     });
 
-    it("includes resolution details and admin actions", async () => {
+    it('includes resolution details and admin actions', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -227,72 +220,72 @@ describe("Admin Data Export System", () => {
       );
 
       const body = await expectSuccess(response, 200);
-      expect(body.data.includes).toContain("resolutions");
-      expect(body.data.includes).toContain("admin_actions");
+      expect(body.data.includes).toContain('resolutions');
+      expect(body.data.includes).toContain('admin_actions');
     });
   });
 
-  describe("POST /api-v1/admin/export/custom", () => {
-    it("creates custom export with advanced filtering", async () => {
+  describe('POST /api-v1/admin/export/custom', () => {
+    it('creates custom export with advanced filtering', async () => {
       const { token, admin } = await createAdminAndToken();
 
       const customExportData = {
-        name: "Custom User Analytics Export",
-        description: "Monthly user activity and engagement metrics",
-        entityType: "users",
-        format: "xlsx",
+        name: 'Custom User Analytics Export',
+        description: 'Monthly user activity and engagement metrics',
+        entityType: 'users',
+        format: 'xlsx',
         filters: [
           {
-            field: "verificationStatus",
-            operator: "eq",
-            value: "verified"
+            field: 'verificationStatus',
+            operator: 'eq',
+            value: 'verified',
           },
           {
-            field: "createdAt",
-            operator: "gte",
-            value: "2024-01-01T00:00:00Z"
-          }
+            field: 'createdAt',
+            operator: 'gte',
+            value: '2024-01-01T00:00:00Z',
+          },
         ],
-        fields: ["id", "name", "email", "verificationStatus", "lastLoginAt", "createdAt"],
-        include: ["activityStats", "preferences"],
-        sortBy: "createdAt",
-        sortOrder: "desc",
-        scheduled: false
+        fields: ['id', 'name', 'email', 'verificationStatus', 'lastLoginAt', 'createdAt'],
+        include: ['activityStats', 'preferences'],
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+        scheduled: false,
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/export/custom`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(customExportData)
+          method: 'POST',
+          body: JSON.stringify(customExportData),
         }
       );
 
       const body = await expectSuccess(response, 201);
       expect(body.data.export).toBeDefined();
-      expect(body.data.export.name).toBe("Custom User Analytics Export");
+      expect(body.data.export.name).toBe('Custom User Analytics Export');
       expect(body.data.export.createdBy).toBe(admin.id);
-      expect(body.data.export.status).toBe("processing");
+      expect(body.data.export.status).toBe('processing');
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("validates custom export parameters", async () => {
+    it('validates custom export parameters', async () => {
       const { token } = await createAdminAndToken();
 
       const invalidExport = {
-        name: "Invalid Export",
-        entityType: "invalid_type",
-        format: "invalid_format",
-        fields: []
+        name: 'Invalid Export',
+        entityType: 'invalid_type',
+        format: 'invalid_format',
+        fields: [],
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/export/custom`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(invalidExport)
+          method: 'POST',
+          body: JSON.stringify(invalidExport),
         }
       );
 
@@ -300,8 +293,8 @@ describe("Admin Data Export System", () => {
     });
   });
 
-  describe("GET /api-v1/admin/export/history", () => {
-    it("lists export history with download links", async () => {
+  describe('GET /api-v1/admin/export/history', () => {
+    it('lists export history with download links', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -319,14 +312,14 @@ describe("Admin Data Export System", () => {
         expect(export_.format).toBeDefined();
         expect(export_.status).toBeDefined();
         expect(export_.createdAt).toBeDefined();
-        if (export_.status === "completed") {
+        if (export_.status === 'completed') {
           expect(export_.downloadUrl).toBeDefined();
           expect(export_.expiresAt).toBeDefined();
         }
       });
     });
 
-    it("filters export history by status", async () => {
+    it('filters export history by status', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -335,10 +328,10 @@ describe("Admin Data Export System", () => {
       );
 
       const body = await expectSuccess(response, 200);
-      expect(body.data.exports.every((export_: any) => export_.status === "completed")).toBe(true);
+      expect(body.data.exports.every((export_: any) => export_.status === 'completed')).toBe(true);
     });
 
-    it("includes export statistics", async () => {
+    it('includes export statistics', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -348,76 +341,76 @@ describe("Admin Data Export System", () => {
 
       const body = await expectSuccess(response, 200);
       expect(body.data.stats).toBeDefined();
-      expect(typeof body.data.stats.totalExports).toBe("number");
-      expect(typeof body.data.stats.totalSize).toBe("number");
+      expect(typeof body.data.stats.totalExports).toBe('number');
+      expect(typeof body.data.stats.totalSize).toBe('number');
       expect(body.data.stats.byFormat).toBeDefined();
       expect(body.data.stats.byStatus).toBeDefined();
     });
   });
 
-  describe("POST /api-v1/admin/export/scheduled", () => {
-    it("creates scheduled export job", async () => {
+  describe('POST /api-v1/admin/export/scheduled', () => {
+    it('creates scheduled export job', async () => {
       const { token, admin } = await createAdminAndToken();
 
       const scheduledExportData = {
-        name: "Weekly User Report",
-        description: "Weekly export of all verified users",
-        entityType: "users",
-        format: "csv",
+        name: 'Weekly User Report',
+        description: 'Weekly export of all verified users',
+        entityType: 'users',
+        format: 'csv',
         filters: [
           {
-            field: "verificationStatus",
-            operator: "eq",
-            value: "verified"
-          }
+            field: 'verificationStatus',
+            operator: 'eq',
+            value: 'verified',
+          },
         ],
-        fields: ["id", "name", "email", "createdAt"],
+        fields: ['id', 'name', 'email', 'createdAt'],
         schedule: {
-          frequency: "weekly",
+          frequency: 'weekly',
           dayOfWeek: 1, // Monday
-          time: "09:00"
+          time: '09:00',
         },
-        recipients: ["admin@oysloe.com"],
-        isActive: true
+        recipients: ['admin@oysloe.com'],
+        isActive: true,
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/export/scheduled`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(scheduledExportData)
+          method: 'POST',
+          body: JSON.stringify(scheduledExportData),
         }
       );
 
       const body = await expectSuccess(response, 201);
       expect(body.data.scheduledExport).toBeDefined();
-      expect(body.data.scheduledExport.name).toBe("Weekly User Report");
-      expect(body.data.scheduledExport.schedule.frequency).toBe("weekly");
+      expect(body.data.scheduledExport.name).toBe('Weekly User Report');
+      expect(body.data.scheduledExport.schedule.frequency).toBe('weekly');
       expect(body.data.scheduledExport.createdBy).toBe(admin.id);
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("validates schedule parameters", async () => {
+    it('validates schedule parameters', async () => {
       const { token } = await createAdminAndToken();
 
       const invalidSchedule = {
-        name: "Invalid Schedule",
-        entityType: "users",
-        format: "csv",
+        name: 'Invalid Schedule',
+        entityType: 'users',
+        format: 'csv',
         schedule: {
-          frequency: "invalid",
+          frequency: 'invalid',
           dayOfWeek: 8, // Invalid day
-          time: "25:00" // Invalid time
-        }
+          time: '25:00', // Invalid time
+        },
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/export/scheduled`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(invalidSchedule)
+          method: 'POST',
+          body: JSON.stringify(invalidSchedule),
         }
       );
 
@@ -425,8 +418,8 @@ describe("Admin Data Export System", () => {
     });
   });
 
-  describe("GET /api-v1/admin/export/templates", () => {
-    it("returns available export templates", async () => {
+  describe('GET /api-v1/admin/export/templates', () => {
+    it('returns available export templates', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -446,7 +439,7 @@ describe("Admin Data Export System", () => {
       });
     });
 
-    it("includes predefined templates for common exports", async () => {
+    it('includes predefined templates for common exports', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -457,57 +450,57 @@ describe("Admin Data Export System", () => {
       const body = await expectSuccess(response, 200);
 
       const templateNames = body.data.templates.map((t: any) => t.name);
-      expect(templateNames).toContain("User Activity Report");
-      expect(templateNames).toContain("Ads Performance Report");
-      expect(templateNames).toContain("Support Metrics Report");
+      expect(templateNames).toContain('User Activity Report');
+      expect(templateNames).toContain('Ads Performance Report');
+      expect(templateNames).toContain('Support Metrics Report');
     });
   });
 
-  describe("POST /api-v1/admin/export/templates/:id/use", () => {
-    it("creates export from template", async () => {
+  describe('POST /api-v1/admin/export/templates/:id/use', () => {
+    it('creates export from template', async () => {
       const { token } = await createAdminAndToken();
 
       const templateUsage = {
         customFilters: [
           {
-            field: "status",
-            operator: "eq",
-            value: "active"
-          }
+            field: 'status',
+            operator: 'eq',
+            value: 'active',
+          },
         ],
-        customFields: ["id", "name", "email", "status", "createdAt"],
-        format: "xlsx"
+        customFields: ['id', 'name', 'email', 'status', 'createdAt'],
+        format: 'xlsx',
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/export/templates/user-activity/use`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(templateUsage)
+          method: 'POST',
+          body: JSON.stringify(templateUsage),
         }
       );
 
       const body = await expectSuccess(response, 200);
       expect(body.data.export).toBeDefined();
       expect(body.data.template).toBeDefined();
-      expect(body.data.export.format).toBe("xlsx");
+      expect(body.data.export.format).toBe('xlsx');
     });
 
-    it("validates template customizations", async () => {
+    it('validates template customizations', async () => {
       const { token } = await createAdminAndToken();
 
       const invalidCustomization = {
         customFields: [], // Empty fields
-        format: "invalid"
+        format: 'invalid',
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/export/templates/user-activity/use`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(invalidCustomization)
+          method: 'POST',
+          body: JSON.stringify(invalidCustomization),
         }
       );
 
@@ -515,8 +508,8 @@ describe("Admin Data Export System", () => {
     });
   });
 
-  describe("DELETE /api-v1/admin/export/:id", () => {
-    it("deletes export file and record", async () => {
+  describe('DELETE /api-v1/admin/export/:id', () => {
+    it('deletes export file and record', async () => {
       const { token } = await createAdminAndToken();
 
       // First create an export (would need to mock or use real export)
@@ -526,10 +519,10 @@ describe("Admin Data Export System", () => {
         `${baseURL}/api-v1/admin/export/test-export-id`,
         token,
         {
-          method: "DELETE",
+          method: 'DELETE',
           body: JSON.stringify({
-            reason: "File no longer needed"
-          })
+            reason: 'File no longer needed',
+          }),
         }
       );
 
@@ -538,8 +531,8 @@ describe("Admin Data Export System", () => {
     });
   });
 
-  describe("GET /api-v1/admin/export/queue", () => {
-    it("returns export processing queue", async () => {
+  describe('GET /api-v1/admin/export/queue', () => {
+    it('returns export processing queue', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -550,8 +543,8 @@ describe("Admin Data Export System", () => {
       const body = await expectSuccess(response, 200);
       expect(body.data.queue).toBeInstanceOf(Array);
       expect(body.data.processing).toBeDefined();
-      expect(typeof body.data.processing.active).toBe("number");
-      expect(typeof body.data.processing.queued).toBe("number");
+      expect(typeof body.data.processing.active).toBe('number');
+      expect(typeof body.data.processing.queued).toBe('number');
 
       body.data.queue.forEach((job: any) => {
         expect(job.id).toBeDefined();
@@ -561,7 +554,7 @@ describe("Admin Data Export System", () => {
       });
     });
 
-    it("shows queue statistics", async () => {
+    it('shows queue statistics', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -571,41 +564,41 @@ describe("Admin Data Export System", () => {
 
       const body = await expectSuccess(response, 200);
       expect(body.data.stats).toBeDefined();
-      expect(typeof body.data.stats.averageProcessingTime).toBe("number");
-      expect(typeof body.data.stats.successRate).toBe("number");
+      expect(typeof body.data.stats.averageProcessingTime).toBe('number');
+      expect(typeof body.data.stats.successRate).toBe('number');
       expect(body.data.stats.byEntityType).toBeDefined();
       expect(body.data.stats.recentFailures).toBeInstanceOf(Array);
     });
   });
 
-  describe("POST /api-v1/admin/export/batch", () => {
-    it("creates multiple exports in batch", async () => {
+  describe('POST /api-v1/admin/export/batch', () => {
+    it('creates multiple exports in batch', async () => {
       const { token } = await createAdminAndToken();
 
       const batchExports = {
         exports: [
           {
-            name: "Users Export",
-            entityType: "users",
-            format: "csv",
-            filters: [{ field: "status", operator: "eq", value: "active" }]
+            name: 'Users Export',
+            entityType: 'users',
+            format: 'csv',
+            filters: [{ field: 'status', operator: 'eq', value: 'active' }],
           },
           {
-            name: "Ads Export",
-            entityType: "ads",
-            format: "xlsx",
-            filters: [{ field: "status", operator: "eq", value: "active" }]
-          }
+            name: 'Ads Export',
+            entityType: 'ads',
+            format: 'xlsx',
+            filters: [{ field: 'status', operator: 'eq', value: 'active' }],
+          },
         ],
-        notifyOnCompletion: true
+        notifyOnCompletion: true,
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/export/batch`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(batchExports)
+          method: 'POST',
+          body: JSON.stringify(batchExports),
         }
       );
 
@@ -616,25 +609,25 @@ describe("Admin Data Export System", () => {
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("validates batch export parameters", async () => {
+    it('validates batch export parameters', async () => {
       const { token } = await createAdminAndToken();
 
       const invalidBatch = {
         exports: [
           {
-            name: "Invalid Export",
-            entityType: "invalid_type",
-            format: "invalid_format"
-          }
-        ]
+            name: 'Invalid Export',
+            entityType: 'invalid_type',
+            format: 'invalid_format',
+          },
+        ],
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/export/batch`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(invalidBatch)
+          method: 'POST',
+          body: JSON.stringify(invalidBatch),
         }
       );
 
@@ -642,4 +635,3 @@ describe("Admin Data Export System", () => {
     });
   });
 });
-

@@ -1,7 +1,7 @@
-import "express";
+import 'express';
 
-import type { AdminUser } from "../entities/AdminUser.js";
-import type { User as AppUser } from "../entities/User.js";
+import type { AdminUser } from '../entities/AdminUser.js';
+import type { User as AppUser } from '../entities/User.js';
 
 declare global {
   namespace Express {

@@ -1,22 +1,15 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-  beforeEach,
-} from "bun:test";
-import {
-  createTestServer,
   closeTestServer,
-  resetDb,
-  seedProduct,
+  createTestServer,
   createUserAndToken,
   expectError,
   expectSuccess,
-} from "../test-helpers";
+  resetDb,
+  seedProduct,
+} from '../test-helpers';
 
-describe("Products API", () => {
+describe('Products API', () => {
   let server: unknown;
   let baseURL: string;
 
@@ -34,8 +27,8 @@ describe("Products API", () => {
     await closeTestServer(server);
   });
 
-  describe("GET /api-v1/products/", () => {
-    it("returns empty list when no products exist", async () => {
+  describe('GET /api-v1/products/', () => {
+    it('returns empty list when no products exist', async () => {
       const response = await fetch(`${baseURL}/api-v1/products/`);
 
       const body = await expectSuccess(response, 200);
@@ -43,9 +36,9 @@ describe("Products API", () => {
       expect(body.data.pagination.total).toBe(0);
     });
 
-    it("returns list of products", async () => {
-      await seedProduct({ name: "Test Product 1", price: 29.99 });
-      await seedProduct({ name: "Test Product 2", price: 39.99 });
+    it('returns list of products', async () => {
+      await seedProduct({ name: 'Test Product 1', price: 29.99 });
+      await seedProduct({ name: 'Test Product 2', price: 39.99 });
 
       const response = await fetch(`${baseURL}/api-v1/products/`);
 
@@ -53,21 +46,17 @@ describe("Products API", () => {
       expect(body.data.products).toHaveLength(2);
       expect(body.data.pagination.total).toBe(2);
 
-      const productNames = body.data.products.map(
-        (p: { name: string }) => p.name
-      );
-      expect(productNames).toContain("Test Product 1");
-      expect(productNames).toContain("Test Product 2");
+      const productNames = body.data.products.map((p: { name: string }) => p.name);
+      expect(productNames).toContain('Test Product 1');
+      expect(productNames).toContain('Test Product 2');
     });
 
-    it("supports pagination", async () => {
+    it('supports pagination', async () => {
       for (let i = 1; i <= 5; i++) {
         await seedProduct({ name: `Product ${i}`, price: 10 + i });
       }
 
-      const response = await fetch(
-        `${baseURL}/api-v1/products/?page=1&limit=2`
-      );
+      const response = await fetch(`${baseURL}/api-v1/products/?page=1&limit=2`);
 
       const body = await expectSuccess(response, 200);
       expect(body.data.products).toHaveLength(2);
@@ -76,38 +65,36 @@ describe("Products API", () => {
       expect(body.data.pagination.limit).toBe(2);
     });
 
-    it("supports search query", async () => {
-      await seedProduct({ name: "Electronics Gadget", price: 99.99 });
-      await seedProduct({ name: "Clothing Item", price: 29.99 });
+    it('supports search query', async () => {
+      await seedProduct({ name: 'Electronics Gadget', price: 99.99 });
+      await seedProduct({ name: 'Clothing Item', price: 29.99 });
 
-      const response = await fetch(
-        `${baseURL}/api-v1/products/?search=Electronics`
-      );
+      const response = await fetch(`${baseURL}/api-v1/products/?search=Electronics`);
 
       const body = await expectSuccess(response, 200);
       expect(body.data.products).toHaveLength(1);
-      expect(body.data.products[0].name).toBe("Electronics Gadget");
+      expect(body.data.products[0].name).toBe('Electronics Gadget');
     });
   });
 
-  describe("GET /api-v1/products/:id", () => {
-    it("returns product by id", async () => {
+  describe('GET /api-v1/products/:id', () => {
+    it('returns product by id', async () => {
       const product = await seedProduct({
-        name: "Test Product",
+        name: 'Test Product',
         price: 29.99,
-        description: "A test product",
+        description: 'A test product',
       });
 
       const response = await fetch(`${baseURL}/api-v1/products/${product.id}`);
 
       const body = await expectSuccess(response, 200);
       expect(body.data.product.id).toBe(product.id);
-      expect(body.data.product.name).toBe("Test Product");
-      expect(body.data.product.price).toBe("29.99");
-      expect(body.data.product.description).toBe("A test product");
+      expect(body.data.product.name).toBe('Test Product');
+      expect(body.data.product.price).toBe('29.99');
+      expect(body.data.product.description).toBe('A test product');
     });
 
-    it("returns 404 for non-existent product", async () => {
+    it('returns 404 for non-existent product', async () => {
       const response = await fetch(
         `${baseURL}/api-v1/products/00000000-0000-0000-0000-000000000000`
       );
@@ -115,44 +102,44 @@ describe("Products API", () => {
       await expectError(response, 404);
     });
 
-    it("validates product id format", async () => {
+    it('validates product id format', async () => {
       const response = await fetch(`${baseURL}/api-v1/products/invalid-id`);
 
       await expectError(response, 400);
     });
   });
 
-  describe("POST /api-v1/products/", () => {
-    it("creates product with valid data", async () => {
+  describe('POST /api-v1/products/', () => {
+    it('creates product with valid data', async () => {
       const { token } = await createUserAndToken({}, baseURL);
 
       const response = await fetch(`${baseURL}/api-v1/products/`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          name: "New Product",
+          name: 'New Product',
           price: 49.99,
-          description: "A new product",
-          category: "Electronics",
+          description: 'A new product',
+          category: 'Electronics',
         }),
       });
 
       const body = await expectSuccess(response, 201);
-      expect(body.data.product.name).toBe("New Product");
+      expect(body.data.product.name).toBe('New Product');
       expect(body.data.product.price).toBe(49.99);
-      expect(body.data.product.description).toBe("A new product");
+      expect(body.data.product.description).toBe('A new product');
       expect(body.data.product.categoryId).toBeDefined();
     });
 
-    it("rejects creation without authentication", async () => {
+    it('rejects creation without authentication', async () => {
       const response = await fetch(`${baseURL}/api-v1/products/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: "New Product",
+          name: 'New Product',
           price: 49.99,
         }),
       });
@@ -160,13 +147,13 @@ describe("Products API", () => {
       await expectError(response, 401);
     });
 
-    it("validates required fields", async () => {
+    it('validates required fields', async () => {
       const { token } = await createUserAndToken({}, baseURL);
 
       const response = await fetch(`${baseURL}/api-v1/products/`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({}),
@@ -175,17 +162,17 @@ describe("Products API", () => {
       await expectError(response, 400);
     });
 
-    it("validates price is positive", async () => {
+    it('validates price is positive', async () => {
       const { token } = await createUserAndToken({}, baseURL);
 
       const response = await fetch(`${baseURL}/api-v1/products/`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          name: "New Product",
+          name: 'New Product',
           price: -10,
         }),
       });
@@ -194,61 +181,61 @@ describe("Products API", () => {
     });
   });
 
-  describe("PUT /api-v1/products/:id", () => {
-    it("updates product with valid data", async () => {
+  describe('PUT /api-v1/products/:id', () => {
+    it('updates product with valid data', async () => {
       const { user, token } = await createUserAndToken({}, baseURL);
       const product = await seedProduct({
-        name: "Original Product",
+        name: 'Original Product',
         price: 29.99,
         userId: user.id,
       });
 
       const response = await fetch(`${baseURL}/api-v1/products/${product.id}`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          name: "Updated Product",
+          name: 'Updated Product',
           price: 39.99,
-          description: "Updated description",
+          description: 'Updated description',
         }),
       });
 
       const body = await expectSuccess(response, 200);
-      expect(body.data.product.name).toBe("Updated Product");
+      expect(body.data.product.name).toBe('Updated Product');
       expect(body.data.product.price).toBe(39.99);
-      expect(body.data.product.description).toBe("Updated description");
+      expect(body.data.product.description).toBe('Updated description');
     });
 
-    it("rejects update without authentication", async () => {
-      const product = await seedProduct({ name: "Test Product" });
+    it('rejects update without authentication', async () => {
+      const product = await seedProduct({ name: 'Test Product' });
 
       const response = await fetch(`${baseURL}/api-v1/products/${product.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: "Updated Product",
+          name: 'Updated Product',
         }),
       });
 
       await expectError(response, 401);
     });
 
-    it("returns 404 for non-existent product", async () => {
+    it('returns 404 for non-existent product', async () => {
       const { token } = await createUserAndToken({}, baseURL);
 
       const response = await fetch(
         `${baseURL}/api-v1/products/00000000-0000-0000-0000-000000000000`,
         {
-          method: "PUT",
+          method: 'PUT',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            name: "Updated Product",
+            name: 'Updated Product',
           }),
         }
       );
@@ -257,16 +244,16 @@ describe("Products API", () => {
     });
   });
 
-  describe("DELETE /api-v1/products/:id", () => {
-    it("deletes product", async () => {
+  describe('DELETE /api-v1/products/:id', () => {
+    it('deletes product', async () => {
       const { user, token } = await createUserAndToken({}, baseURL);
       const product = await seedProduct({
-        name: "Product to Delete",
+        name: 'Product to Delete',
         userId: user.id,
       });
 
       const response = await fetch(`${baseURL}/api-v1/products/${product.id}`, {
-        method: "DELETE",
+        method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -274,29 +261,27 @@ describe("Products API", () => {
 
       await expectSuccess(response, 200);
 
-      const getResponse = await fetch(
-        `${baseURL}/api-v1/products/${product.id}`
-      );
+      const getResponse = await fetch(`${baseURL}/api-v1/products/${product.id}`);
       await expectError(getResponse, 404);
     });
 
-    it("rejects deletion without authentication", async () => {
-      const product = await seedProduct({ name: "Test Product" });
+    it('rejects deletion without authentication', async () => {
+      const product = await seedProduct({ name: 'Test Product' });
 
       const response = await fetch(`${baseURL}/api-v1/products/${product.id}`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
 
       await expectError(response, 401);
     });
 
-    it("returns 404 for non-existent product", async () => {
+    it('returns 404 for non-existent product', async () => {
       const { token } = await createUserAndToken({}, baseURL);
 
       const response = await fetch(
         `${baseURL}/api-v1/products/00000000-0000-0000-0000-000000000000`,
         {
-          method: "DELETE",
+          method: 'DELETE',
           headers: {
             Authorization: `Bearer ${token}`,
           },

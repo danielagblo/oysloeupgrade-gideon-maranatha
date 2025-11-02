@@ -1,18 +1,18 @@
-import type { EntityManager } from "typeorm";
-import { AppDataSource } from "../config/database.js";
-import { AdminUser, AdminRole } from "../entities/AdminUser.js";
-import { AdminSession } from "../entities/AdminSession.js";
-import { AdminAuditLog } from "../entities/AdminAuditLog.js";
+import type { EntityManager } from 'typeorm';
+import { AppDataSource } from '../config/database.js';
+import { AdminAuditLog } from '../entities/AdminAuditLog.js';
+import { AdminSession } from '../entities/AdminSession.js';
+import { AdminRole, AdminUser } from '../entities/AdminUser.js';
 import {
   BadRequestError,
   ConflictError,
+  NotFoundError,
   TooManyRequestsError,
   UnauthorizedError,
-  NotFoundError,
-} from "../utils/errors.js";
-import { issueJwt, verifyToken, getTokenExpiry } from "../utils/jwt.js";
-import { logInfo, logError } from "../utils/logger.js";
-import { comparePassword, hashPassword } from "../utils/password.js";
+} from '../utils/errors.js';
+import { getTokenExpiry, issueJwt, verifyToken } from '../utils/jwt.js';
+import { logError, logInfo } from '../utils/logger.js';
+import { comparePassword, hashPassword } from '../utils/password.js';
 
 export interface AdminLoginInput {
   username: string;
@@ -56,7 +56,11 @@ export class AdminAuthService {
     return AppDataSource.getRepository(AdminAuditLog);
   }
 
-  async login(input: AdminLoginInput, ipAddress?: string, userAgent?: string): Promise<AdminLoginResponse> {
+  async login(
+    input: AdminLoginInput,
+    ipAddress?: string,
+    userAgent?: string
+  ): Promise<AdminLoginResponse> {
     const admin = await this.findAdminByUsername(input.username);
     this.validateAdminStatus(admin);
     await this.verifyPassword(input.password, admin.passwordHash);
@@ -104,7 +108,7 @@ export class AdminAuthService {
     try {
       const payload = verifyToken(token) as AdminJWTPayload;
       const admin = await this.adminUserRepository.findOne({
-        where: { id: payload.adminId }
+        where: { id: payload.adminId },
       });
 
       if (admin) {
@@ -130,15 +134,19 @@ export class AdminAuthService {
     }
   }
 
-  async refreshToken(refreshToken: string, ipAddress?: string, userAgent?: string): Promise<AdminLoginResponse> {
+  async refreshToken(
+    refreshToken: string,
+    ipAddress?: string,
+    userAgent?: string
+  ): Promise<AdminLoginResponse> {
     try {
       const payload = verifyToken(refreshToken) as AdminJWTPayload;
       const admin = await this.adminUserRepository.findOne({
-        where: { id: payload.adminId, isActive: true }
+        where: { id: payload.adminId, isActive: true },
       });
 
       if (!admin) {
-        throw new UnauthorizedError("Invalid refresh token");
+        throw new UnauthorizedError('Invalid refresh token');
       }
 
       // Generate new tokens
@@ -147,12 +155,14 @@ export class AdminAuthService {
 
       // Update session
       const session = await this.adminSessionRepository.findOne({
-        where: { adminUserId: admin.id }
+        where: { adminUserId: admin.id },
       });
 
       if (session) {
         session.tokenHash = await hashPassword(newToken);
-        session.refreshTokenHash = newRefreshToken ? await hashPassword(newRefreshToken) : undefined;
+        session.refreshTokenHash = newRefreshToken
+          ? await hashPassword(newRefreshToken)
+          : undefined;
         session.expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
         session.ipAddress = ipAddress;
         session.userAgent = userAgent;
@@ -167,18 +177,18 @@ export class AdminAuthService {
         expiresIn: 24 * 60 * 60,
       };
     } catch (error) {
-      throw new UnauthorizedError("Invalid refresh token");
+      throw new UnauthorizedError('Invalid refresh token');
     }
   }
 
   async getSession(token: string): Promise<{ admin: AdminUser; permissions: string[] }> {
     const payload = verifyToken(token) as AdminJWTPayload;
     const admin = await this.adminUserRepository.findOne({
-      where: { id: payload.adminId, isActive: true }
+      where: { id: payload.adminId, isActive: true },
     });
 
     if (!admin) {
-      throw new UnauthorizedError("Invalid session");
+      throw new UnauthorizedError('Invalid session');
     }
 
     return {
@@ -187,10 +197,13 @@ export class AdminAuthService {
     };
   }
 
-  async verifyPermissions(token: string, requiredPermissions: string[]): Promise<{ hasAccess: boolean; missingPermissions?: string[] }> {
+  async verifyPermissions(
+    token: string,
+    requiredPermissions: string[]
+  ): Promise<{ hasAccess: boolean; missingPermissions?: string[] }> {
     const payload = verifyToken(token) as AdminJWTPayload;
     const admin = await this.adminUserRepository.findOne({
-      where: { id: payload.adminId, isActive: true }
+      where: { id: payload.adminId, isActive: true },
     });
 
     if (!admin) {
@@ -198,7 +211,7 @@ export class AdminAuthService {
     }
 
     const missingPermissions = requiredPermissions.filter(
-      permission => !admin.permissions.includes(permission)
+      (permission) => !admin.permissions.includes(permission)
     );
 
     return {
@@ -219,12 +232,12 @@ export class AdminAuthService {
     const existingAdmin = await this.adminUserRepository.findOne({
       where: [
         { username: adminData.username },
-        ...(adminData.email ? [{ email: adminData.email }] : [])
-      ].filter(Boolean)
+        ...(adminData.email ? [{ email: adminData.email }] : []),
+      ].filter(Boolean),
     });
 
     if (existingAdmin) {
-      throw new ConflictError("Admin with this username or email already exists");
+      throw new ConflictError('Admin with this username or email already exists');
     }
 
     const passwordHash = await hashPassword(adminData.password);
@@ -235,7 +248,8 @@ export class AdminAuthService {
       passwordHash,
       role: adminData.role || AdminRole.STAFF,
       businessName: adminData.businessName,
-      permissions: adminData.permissions || this.getDefaultPermissions(adminData.role || AdminRole.STAFF),
+      permissions:
+        adminData.permissions || this.getDefaultPermissions(adminData.role || AdminRole.STAFF),
       isActive: true,
     });
 
@@ -248,11 +262,11 @@ export class AdminAuthService {
 
   private async findAdminByUsername(username: string): Promise<AdminUser> {
     const admin = await this.adminUserRepository.findOne({
-      where: { username }
+      where: { username },
     });
 
     if (!admin) {
-      throw new UnauthorizedError("Invalid credentials");
+      throw new UnauthorizedError('Invalid credentials');
     }
 
     return admin;
@@ -260,14 +274,14 @@ export class AdminAuthService {
 
   private validateAdminStatus(admin: AdminUser): void {
     if (!admin.isActive) {
-      throw new UnauthorizedError("Admin account is disabled");
+      throw new UnauthorizedError('Admin account is disabled');
     }
   }
 
   private async verifyPassword(password: string, hash: string): Promise<void> {
     const isValid = await comparePassword(password, hash);
     if (!isValid) {
-      throw new UnauthorizedError("Invalid credentials");
+      throw new UnauthorizedError('Invalid credentials');
     }
   }
 
@@ -279,7 +293,7 @@ export class AdminAuthService {
       permissions: admin.permissions,
     };
 
-    return issueJwt(payload, "24h");
+    return issueJwt(payload, '24h');
   }
 
   private generateRefreshToken(admin: AdminUser): string {
@@ -290,7 +304,7 @@ export class AdminAuthService {
       permissions: admin.permissions,
     };
 
-    return issueJwt(payload, "7d");
+    return issueJwt(payload, '7d');
   }
 
   private async createSession(sessionData: AdminSessionInput): Promise<AdminSession> {
@@ -307,26 +321,36 @@ export class AdminAuthService {
     switch (role) {
       case AdminRole.SUPER_ADMIN:
         return [
-          'user:read', 'user:update', 'user:delete', 'user:verify', 'user:mute',
-          'ads:read', 'ads:moderate', 'ads:delete',
-          'support:read', 'support:manage',
+          'user:read',
+          'user:update',
+          'user:delete',
+          'user:verify',
+          'user:mute',
+          'ads:read',
+          'ads:moderate',
+          'ads:delete',
+          'support:read',
+          'support:manage',
           'content:manage',
-          'system:config', 'system:reports'
+          'system:config',
+          'system:reports',
         ];
       case AdminRole.ADMIN:
         return [
-          'user:read', 'user:update', 'user:verify', 'user:mute',
-          'ads:read', 'ads:moderate', 'ads:delete',
-          'support:read', 'support:manage',
+          'user:read',
+          'user:update',
+          'user:verify',
+          'user:mute',
+          'ads:read',
+          'ads:moderate',
+          'ads:delete',
+          'support:read',
+          'support:manage',
           'content:manage',
-          'system:reports'
+          'system:reports',
         ];
       case AdminRole.STAFF:
-        return [
-          'user:read',
-          'ads:read', 'ads:moderate',
-          'support:read', 'support:manage'
-        ];
+        return ['user:read', 'ads:read', 'ads:moderate', 'support:read', 'support:manage'];
       case AdminRole.SUPPORT:
         return ['support:read', 'support:manage'];
       default:
@@ -362,4 +386,3 @@ export class AdminAuthService {
     }
   }
 }
-

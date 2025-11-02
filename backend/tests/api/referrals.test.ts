@@ -1,21 +1,14 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-  beforeEach,
-} from "bun:test";
-import {
-  createTestServer,
   closeTestServer,
-  resetDb,
+  createTestServer,
   createUserAndToken,
   expectError,
   expectSuccess,
-} from "../test-helpers";
+  resetDb,
+} from '../test-helpers';
 
-describe("Referrals API", () => {
+describe('Referrals API', () => {
   let server: unknown;
   let baseURL: string;
 
@@ -33,12 +26,12 @@ describe("Referrals API", () => {
     await closeTestServer(server);
   });
 
-  describe("GET /api-v1/referrals/stats", () => {
-    it("returns referral stats for authenticated user", async () => {
+  describe('GET /api-v1/referrals/stats', () => {
+    it('returns referral stats for authenticated user', async () => {
       const { user: _user, token } = await createUserAndToken({}, baseURL);
 
       const response = await fetch(`${baseURL}/api-v1/referrals/stats`, {
-        method: "GET",
+        method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -48,22 +41,22 @@ describe("Referrals API", () => {
       expect(body.data.referralCode).toBeDefined();
       expect(body.data.totalReferrals).toBe(0);
       expect(body.data.totalPointsEarned).toBe(0);
-      expect(body.data.availablePoints).toBe("0");
+      expect(body.data.availablePoints).toBe('0');
     });
 
-    it("rejects referral stats request without authentication", async () => {
+    it('rejects referral stats request without authentication', async () => {
       const response = await fetch(`${baseURL}/api-v1/referrals/stats`, {
-        method: "GET",
+        method: 'GET',
       });
 
       await expectError(response, 401);
     });
 
-    it("rejects referral stats request with invalid token", async () => {
+    it('rejects referral stats request with invalid token', async () => {
       const response = await fetch(`${baseURL}/api-v1/referrals/stats`, {
-        method: "GET",
+        method: 'GET',
         headers: {
-          Authorization: "Bearer invalid-token",
+          Authorization: 'Bearer invalid-token',
         },
       });
 
@@ -71,37 +64,26 @@ describe("Referrals API", () => {
     });
   });
 
-  describe("POST /api-v1/referrals/redeem", () => {
-    it("redeems referral points successfully", async () => {
-      const { user: referrer, token: referrerToken } = await createUserAndToken(
-        {},
-        baseURL
-      );
-      const { user: referee, token: _refereeToken } = await createUserAndToken(
-        {},
-        baseURL
-      );
+  describe('POST /api-v1/referrals/redeem', () => {
+    it('redeems referral points successfully', async () => {
+      const { user: referrer, token: referrerToken } = await createUserAndToken({}, baseURL);
+      const { user: referee, token: _refereeToken } = await createUserAndToken({}, baseURL);
 
-      const generateResponse = await fetch(
-        `${baseURL}/api-v1/referrals/generate-code`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${referrerToken}`,
-          },
-        }
-      );
+      const generateResponse = await fetch(`${baseURL}/api-v1/referrals/generate-code`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${referrerToken}`,
+        },
+      });
 
       if (!generateResponse.ok) {
         const errorBody = await generateResponse.text();
-        throw new Error(
-          `Referral code generation failed: ${generateResponse.status} ${errorBody}`
-        );
+        throw new Error(`Referral code generation failed: ${generateResponse.status} ${errorBody}`);
       }
 
       const statsResponse = await fetch(`${baseURL}/api-v1/referrals/stats`, {
-        method: "GET",
+        method: 'GET',
         headers: {
           Authorization: `Bearer ${referrerToken}`,
         },
@@ -111,9 +93,9 @@ describe("Referrals API", () => {
       const referralCode = statsBody.data.referralCode;
 
       const createResponse = await fetch(`${baseURL}/api-v1/referrals/`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${referrerToken}`,
         },
         body: JSON.stringify({
@@ -125,38 +107,31 @@ describe("Referrals API", () => {
 
       if (!createResponse.ok) {
         const errorBody = await createResponse.text();
-        throw new Error(
-          `Referral creation failed: ${createResponse.status} ${errorBody}`
-        );
+        throw new Error(`Referral creation failed: ${createResponse.status} ${errorBody}`);
       }
 
-      const confirmResponse = await fetch(
-        `${baseURL}/api-v1/referrals/confirm/${referee.id}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${referrerToken}`,
-          },
-        }
-      );
+      const confirmResponse = await fetch(`${baseURL}/api-v1/referrals/confirm/${referee.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${referrerToken}`,
+        },
+      });
 
       if (!confirmResponse.ok) {
         const errorBody = await confirmResponse.text();
-        throw new Error(
-          `Referral confirmation failed: ${confirmResponse.status} ${errorBody}`
-        );
+        throw new Error(`Referral confirmation failed: ${confirmResponse.status} ${errorBody}`);
       }
 
       const response = await fetch(`${baseURL}/api-v1/referrals/redeem`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${referrerToken}`,
         },
         body: JSON.stringify({
           points: 2500,
-          reason: "Test redemption",
+          reason: 'Test redemption',
         }),
       });
 
@@ -165,36 +140,30 @@ describe("Referrals API", () => {
       expect(body.data.walletCredit).toBeDefined();
     });
 
-    it("rejects duplicate redemption flow (insufficient points on second attempt)", async () => {
-      const { user: referrer, token: referrerToken } = await createUserAndToken(
-        {},
-        baseURL
-      );
-      const { user: referee, token: _refereeToken } = await createUserAndToken(
-        {},
-        baseURL
-      );
+    it('rejects duplicate redemption flow (insufficient points on second attempt)', async () => {
+      const { user: referrer, token: referrerToken } = await createUserAndToken({}, baseURL);
+      const { user: referee, token: _refereeToken } = await createUserAndToken({}, baseURL);
 
       const gen = await fetch(`${baseURL}/api-v1/referrals/generate-code`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${referrerToken}`,
         },
       });
       if (!gen.ok) throw new Error(`gen failed ${gen.status}`);
 
       const statsResponse = await fetch(`${baseURL}/api-v1/referrals/stats`, {
-        method: "GET",
+        method: 'GET',
         headers: { Authorization: `Bearer ${referrerToken}` },
       });
       const statsBody = await statsResponse.json();
       const referralCode = statsBody.data.referralCode;
 
       const createResponse = await fetch(`${baseURL}/api-v1/referrals/`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${referrerToken}`,
         },
         body: JSON.stringify({
@@ -203,87 +172,82 @@ describe("Referrals API", () => {
           referralCode,
         }),
       });
-      if (!createResponse.ok)
-        throw new Error(`create failed ${createResponse.status}`);
+      if (!createResponse.ok) throw new Error(`create failed ${createResponse.status}`);
 
-      const confirmResponse = await fetch(
-        `${baseURL}/api-v1/referrals/confirm/${referee.id}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${referrerToken}`,
-          },
-        }
-      );
-      if (!confirmResponse.ok)
-        throw new Error(`confirm failed ${confirmResponse.status}`);
-
-      const first = await fetch(`${baseURL}/api-v1/referrals/redeem`, {
-        method: "POST",
+      const confirmResponse = await fetch(`${baseURL}/api-v1/referrals/confirm/${referee.id}`, {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${referrerToken}`,
         },
-        body: JSON.stringify({ points: 2500, reason: "First" }),
+      });
+      if (!confirmResponse.ok) throw new Error(`confirm failed ${confirmResponse.status}`);
+
+      const first = await fetch(`${baseURL}/api-v1/referrals/redeem`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${referrerToken}`,
+        },
+        body: JSON.stringify({ points: 2500, reason: 'First' }),
       });
       await expectSuccess(first, 200);
 
       const second = await fetch(`${baseURL}/api-v1/referrals/redeem`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${referrerToken}`,
         },
-        body: JSON.stringify({ points: 2500, reason: "Second" }),
+        body: JSON.stringify({ points: 2500, reason: 'Second' }),
       });
 
       await expectError(second, 400);
     });
 
-    it("rejects insufficient points", async () => {
+    it('rejects insufficient points', async () => {
       const { token } = await createUserAndToken({}, baseURL);
 
       const response = await fetch(`${baseURL}/api-v1/referrals/redeem`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           points: 5000,
-          reason: "Test redemption",
+          reason: 'Test redemption',
         }),
       });
 
       await expectError(response, 400);
     });
 
-    it("rejects minimum points requirement", async () => {
+    it('rejects minimum points requirement', async () => {
       const { token } = await createUserAndToken({}, baseURL);
 
       const response = await fetch(`${baseURL}/api-v1/referrals/redeem`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           points: 1000,
-          reason: "Test redemption",
+          reason: 'Test redemption',
         }),
       });
 
       await expectError(response, 400);
     });
 
-    it("validates required fields", async () => {
+    it('validates required fields', async () => {
       const { token } = await createUserAndToken({}, baseURL);
 
       const response = await fetch(`${baseURL}/api-v1/referrals/redeem`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({}),
@@ -292,12 +256,12 @@ describe("Referrals API", () => {
       await expectError(response, 400);
     });
 
-    it("rejects redemption without authentication", async () => {
+    it('rejects redemption without authentication', async () => {
       const response = await fetch(`${baseURL}/api-v1/referrals/redeem`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          referralCode: "SOME_CODE",
+          referralCode: 'SOME_CODE',
         }),
       });
 

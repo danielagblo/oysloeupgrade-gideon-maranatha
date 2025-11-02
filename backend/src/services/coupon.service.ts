@@ -1,21 +1,16 @@
-import { AppDataSource } from "../config/database.js";
-import { Coupon } from "../entities/Coupon.js";
-import { CouponRedemption } from "../entities/CouponRedemption.js";
-import { User } from "../entities/User.js";
-import {
-  BadRequestError,
-  ConflictError,
-  ForbiddenError,
-  NotFoundError,
-} from "../utils/errors.js";
-import { logInfo } from "../utils/logger.js";
-import { notificationHelper } from "../utils/notification-helper.js";
-import { WalletService } from "./wallet.service.js";
+import { AppDataSource } from '../config/database.js';
+import { Coupon } from '../entities/Coupon.js';
+import { CouponRedemption } from '../entities/CouponRedemption.js';
+import { User } from '../entities/User.js';
+import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from '../utils/errors.js';
+import { logInfo } from '../utils/logger.js';
+import { notificationHelper } from '../utils/notification-helper.js';
+import { WalletService } from './wallet.service.js';
 
 export interface CreateCouponInput {
   code: string;
   description: string;
-  discountType: "percent" | "fixed";
+  discountType: 'percent' | 'fixed';
   discountValue: number;
   minOrderAmount?: number;
   maxDiscountAmount?: number;
@@ -46,22 +41,17 @@ export class CouponService {
   }
   private walletService = new WalletService();
 
-  async createCoupon(
-    input: CreateCouponInput,
-    createdBy: string
-  ): Promise<Coupon> {
+  async createCoupon(input: CreateCouponInput, createdBy: string): Promise<Coupon> {
     if (input.discountValue <= 0) {
-      throw new BadRequestError("Discount value must be greater than 0");
+      throw new BadRequestError('Discount value must be greater than 0');
     }
 
-    if (input.discountType === "percent" && input.discountValue > 100) {
-      throw new BadRequestError("Percentage discount cannot exceed 100%");
+    if (input.discountType === 'percent' && input.discountValue > 100) {
+      throw new BadRequestError('Percentage discount cannot exceed 100%');
     }
 
     if (input.validUntil <= input.validFrom) {
-      throw new BadRequestError(
-        "Valid until date must be after valid from date"
-      );
+      throw new BadRequestError('Valid until date must be after valid from date');
     }
 
     const existingCoupon = await this.couponRepository.findOne({
@@ -69,7 +59,7 @@ export class CouponService {
     });
 
     if (existingCoupon) {
-      throw new ConflictError("Coupon code already exists");
+      throw new ConflictError('Coupon code already exists');
     }
 
     const coupon = this.couponRepository.create({
@@ -93,23 +83,20 @@ export class CouponService {
     const offset = (page - 1) * limit;
 
     const queryBuilder = this.couponRepository
-      .createQueryBuilder("coupon")
-      .leftJoinAndSelect("coupon.redemptions", "redemption")
-      .leftJoinAndSelect("redemption.user", "user")
-      .orderBy("coupon.createdAt", "DESC");
+      .createQueryBuilder('coupon')
+      .leftJoinAndSelect('coupon.redemptions', 'redemption')
+      .leftJoinAndSelect('redemption.user', 'user')
+      .orderBy('coupon.createdAt', 'DESC');
 
     if (isActive !== undefined) {
-      queryBuilder.andWhere("coupon.isActive = :isActive", { isActive });
+      queryBuilder.andWhere('coupon.isActive = :isActive', { isActive });
     }
 
     if (createdBy) {
-      queryBuilder.andWhere("coupon.createdBy = :createdBy", { createdBy });
+      queryBuilder.andWhere('coupon.createdBy = :createdBy', { createdBy });
     }
 
-    const [coupons, total] = await queryBuilder
-      .skip(offset)
-      .take(limit)
-      .getManyAndCount();
+    const [coupons, total] = await queryBuilder.skip(offset).take(limit).getManyAndCount();
 
     return { coupons, total };
   }
@@ -117,11 +104,11 @@ export class CouponService {
   async getCouponById(id: string): Promise<Coupon> {
     const coupon = await this.couponRepository.findOne({
       where: { id },
-      relations: ["redemptions", "redemptions.user"],
+      relations: ['redemptions', 'redemptions.user'],
     });
 
     if (!coupon) {
-      throw new NotFoundError("Coupon not found");
+      throw new NotFoundError('Coupon not found');
     }
 
     return coupon;
@@ -130,11 +117,11 @@ export class CouponService {
   async getCouponByCode(code: string): Promise<Coupon> {
     const coupon = await this.couponRepository.findOne({
       where: { code },
-      relations: ["redemptions"],
+      relations: ['redemptions'],
     });
 
     if (!coupon) {
-      throw new NotFoundError("Coupon not found");
+      throw new NotFoundError('Coupon not found');
     }
 
     return coupon;
@@ -150,7 +137,7 @@ export class CouponService {
     });
 
     if (!coupon) {
-      throw new NotFoundError("Coupon not found");
+      throw new NotFoundError('Coupon not found');
     }
 
     if (coupon.createdBy !== updatedBy) {
@@ -158,20 +145,20 @@ export class CouponService {
         where: { id: updatedBy },
       });
       if (!user?.isStaff && !user?.isSuperuser) {
-        throw new ForbiddenError("You can only update coupons you created");
+        throw new ForbiddenError('You can only update coupons you created');
       }
     }
 
     if (updates.discountValue !== undefined && updates.discountValue <= 0) {
-      throw new BadRequestError("Discount value must be greater than 0");
+      throw new BadRequestError('Discount value must be greater than 0');
     }
 
     if (
-      updates.discountType === "percent" &&
+      updates.discountType === 'percent' &&
       updates.discountValue &&
       updates.discountValue > 100
     ) {
-      throw new BadRequestError("Percentage discount cannot exceed 100%");
+      throw new BadRequestError('Percentage discount cannot exceed 100%');
     }
 
     Object.assign(coupon, updates);
@@ -188,7 +175,7 @@ export class CouponService {
     });
 
     if (!coupon) {
-      throw new NotFoundError("Coupon not found");
+      throw new NotFoundError('Coupon not found');
     }
 
     if (coupon.createdBy !== deletedBy) {
@@ -196,7 +183,7 @@ export class CouponService {
         where: { id: deletedBy },
       });
       if (!user?.isStaff && !user?.isSuperuser) {
-        throw new ForbiddenError("You can only delete coupons you created");
+        throw new ForbiddenError('You can only delete coupons you created');
       }
     }
 
@@ -211,7 +198,7 @@ export class CouponService {
     });
 
     if (!coupon) {
-      throw new NotFoundError("Coupon not found");
+      throw new NotFoundError('Coupon not found');
     }
 
     if (coupon.createdBy !== userId) {
@@ -219,7 +206,7 @@ export class CouponService {
         where: { id: userId },
       });
       if (!user?.isStaff && !user?.isSuperuser) {
-        throw new ForbiddenError("You can only expire coupons you created");
+        throw new ForbiddenError('You can only expire coupons you created');
       }
     }
 
@@ -242,15 +229,15 @@ export class CouponService {
     const coupon = await this.getCouponByCode(code);
 
     if (!coupon.isActive) {
-      throw new BadRequestError("Coupon is not active");
+      throw new BadRequestError('Coupon is not active');
     }
 
     const now = new Date();
     if (coupon.validFrom && now < coupon.validFrom) {
-      throw new BadRequestError("Coupon is not valid yet");
+      throw new BadRequestError('Coupon is not valid yet');
     }
     if (coupon.validUntil && now > coupon.validUntil) {
-      throw new BadRequestError("Coupon has expired");
+      throw new BadRequestError('Coupon has expired');
     }
 
     if (coupon.minOrderAmount && orderAmount < coupon.minOrderAmount) {
@@ -265,7 +252,7 @@ export class CouponService {
       });
 
       if (redemptionCount >= coupon.usageLimit) {
-        throw new BadRequestError("Coupon usage limit exceeded");
+        throw new BadRequestError('Coupon usage limit exceeded');
       }
     }
 
@@ -274,11 +261,11 @@ export class CouponService {
     });
 
     if (existingRedemption) {
-      throw new ConflictError("You have already used this coupon");
+      throw new ConflictError('You have already used this coupon');
     }
 
     let discountAmount = 0;
-    if (coupon.discountType === "percent") {
+    if (coupon.discountType === 'percent') {
       discountAmount = (orderAmount * coupon.discountValue) / 100;
     } else {
       discountAmount = coupon.discountValue;
@@ -303,30 +290,17 @@ export class CouponService {
 
       const savedRedemption = await manager.save(redemption);
 
-      await this.walletService.creditWallet(
-        userId,
-        discountAmount,
-        "coupon_discount",
-        coupon.id,
-        {
-          couponId: coupon.id,
-          orderId,
-          discountType: coupon.discountType,
-          originalDiscountValue: coupon.discountValue,
-        }
-      );
+      await this.walletService.creditWallet(userId, discountAmount, 'coupon_discount', coupon.id, {
+        couponId: coupon.id,
+        orderId,
+        discountType: coupon.discountType,
+        originalDiscountValue: coupon.discountValue,
+      });
 
-      logInfo(
-        `Coupon ${code} redeemed by user ${userId} for ${discountAmount}`
-      );
+      logInfo(`Coupon ${code} redeemed by user ${userId} for ${discountAmount}`);
 
       try {
-        await notificationHelper.notifyCouponRedemption(
-          userId,
-          code,
-          discountAmount,
-          orderId
-        );
+        await notificationHelper.notifyCouponRedemption(userId, code, discountAmount, orderId);
       } catch (error) {
         logInfo(`Failed to send coupon redemption notification: ${error}`);
       }
@@ -348,8 +322,8 @@ export class CouponService {
 
     const [redemptions, total] = await this.redemptionRepository.findAndCount({
       where: { userId },
-      relations: ["coupon"],
-      order: { redeemedAt: "DESC" },
+      relations: ['coupon'],
+      order: { redeemedAt: 'DESC' },
       skip: offset,
       take: limit,
     });
@@ -368,15 +342,11 @@ export class CouponService {
     });
 
     const totalRedemptions = redemptions.length;
-    const totalDiscountGiven = redemptions.reduce(
-      (sum, r) => sum + Number(r.discountAmount),
-      0
-    );
+    const totalDiscountGiven = redemptions.reduce((sum, r) => sum + Number(r.discountAmount), 0);
     const uniqueUsers = new Set(redemptions.map((r) => r.userId)).size;
     const averageOrderAmount =
       redemptions.length > 0
-        ? redemptions.reduce((sum, r) => sum + Number(r.orderAmount), 0) /
-          redemptions.length
+        ? redemptions.reduce((sum, r) => sum + Number(r.orderAmount), 0) / redemptions.length
         : 0;
 
     return {
@@ -402,7 +372,7 @@ export class CouponService {
         return {
           valid: false,
           discountAmount: 0,
-          message: "Coupon is not active",
+          message: 'Coupon is not active',
         };
       }
 
@@ -411,14 +381,14 @@ export class CouponService {
         return {
           valid: false,
           discountAmount: 0,
-          message: "Coupon is not yet valid",
+          message: 'Coupon is not yet valid',
         };
       }
       if (coupon.validUntil && now > coupon.validUntil) {
         return {
           valid: false,
           discountAmount: 0,
-          message: "Coupon has expired",
+          message: 'Coupon has expired',
         };
       }
 
@@ -431,16 +401,13 @@ export class CouponService {
       }
 
       let discountAmount = 0;
-      if (coupon.discountType === "percent") {
+      if (coupon.discountType === 'percent') {
         discountAmount = (orderAmount * coupon.discountValue) / 100;
       } else {
         discountAmount = coupon.discountValue;
       }
 
-      if (
-        coupon.maxDiscountAmount &&
-        discountAmount > coupon.maxDiscountAmount
-      ) {
+      if (coupon.maxDiscountAmount && discountAmount > coupon.maxDiscountAmount) {
         discountAmount = coupon.maxDiscountAmount;
       }
 
@@ -453,7 +420,7 @@ export class CouponService {
       return {
         valid: false,
         discountAmount: 0,
-        message: "Invalid coupon code",
+        message: 'Invalid coupon code',
       };
     }
   }

@@ -1,52 +1,54 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
-  ManyToOne,
-  JoinColumn,
   CreateDateColumn,
-} from "typeorm";
-import { JobApplication } from "./JobApplication.js";
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { AdminUser } from './AdminUser.js';
+import { JobApplication } from './JobApplication.js';
 
-import { AdminUser } from "./AdminUser.js";
-
-@Entity("application_reviews")
+@Entity('application_reviews')
 export class ApplicationReview {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ name: "application_id" })
+  @Column({ name: 'application_id' })
   applicationId!: number;
 
-  @ManyToOne(() => JobApplication, (app: any) => app.reviewHistory, {
-    onDelete: "CASCADE",
-  })
-  @JoinColumn({ name: "application_id" })
+  @ManyToOne(
+    () => JobApplication,
+    (app: any) => app.reviewHistory,
+    {
+      onDelete: 'CASCADE',
+    }
+  )
+  @JoinColumn({ name: 'application_id' })
   application!: JobApplication;
 
-  @Column({ name: "admin_user_id" })
+  @Column({ name: 'admin_user_id' })
   adminUserId!: number;
 
   @ManyToOne(() => AdminUser)
-  @JoinColumn({ name: "admin_user_id" })
+  @JoinColumn({ name: 'admin_user_id' })
   adminUser: any;
 
-  @Column({ type: "varchar", length: 50 })
+  @Column({ type: 'varchar', length: 50 })
   action!: string; // 'reviewed', 'accepted', 'rejected', 'note_added'
 
-  @Column({ type: "text", nullable: true })
+  @Column({ type: 'text', nullable: true })
   notes?: string;
 
-  @Column({ type: "text", nullable: true })
+  @Column({ type: 'text', nullable: true })
   feedback?: string;
 
-  @Column({ type: "varchar", length: 50, nullable: true, name: "old_status" })
+  @Column({ type: 'varchar', length: 50, nullable: true, name: 'old_status' })
   oldStatus?: string;
 
-  @Column({ type: "varchar", length: 50, nullable: true, name: "new_status" })
+  @Column({ type: 'varchar', length: 50, nullable: true, name: 'new_status' })
   newStatus?: string;
 
-  @CreateDateColumn({ name: "created_at" })
+  @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 }
-

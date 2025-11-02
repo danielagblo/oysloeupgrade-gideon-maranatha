@@ -1,21 +1,14 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-  beforeEach,
-} from "bun:test";
-import {
-  createTestServer,
   closeTestServer,
-  resetDb,
+  createTestServer,
   createUserAndToken,
   expectError,
   expectSuccess,
-} from "../test-helpers";
+  resetDb,
+} from '../test-helpers';
 
-describe("Users API", () => {
+describe('Users API', () => {
   let server: unknown;
   let baseURL: string;
 
@@ -33,43 +26,43 @@ describe("Users API", () => {
     await closeTestServer(server);
   });
 
-  describe("GET /api-v1/users/profile", () => {
-    it("returns user profile for authenticated user", async () => {
+  describe('GET /api-v1/users/profile', () => {
+    it('returns user profile for authenticated user', async () => {
       const { user: _user, token } = await createUserAndToken(
         {
-          email: "test@example.com",
-          firstName: "John",
-          lastName: "Doe",
+          email: 'test@example.com',
+          firstName: 'John',
+          lastName: 'Doe',
         },
         baseURL
       );
 
       const response = await fetch(`${baseURL}/api-v1/users/profile`, {
-        method: "GET",
+        method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
       const body = await expectSuccess(response, 200);
-      expect(body.data.user.email).toBe("test@example.com");
-      expect(body.data.user.firstName).toBe("John");
-      expect(body.data.user.lastName).toBe("Doe");
+      expect(body.data.user.email).toBe('test@example.com');
+      expect(body.data.user.firstName).toBe('John');
+      expect(body.data.user.lastName).toBe('Doe');
     });
 
-    it("rejects profile request without authentication", async () => {
+    it('rejects profile request without authentication', async () => {
       const response = await fetch(`${baseURL}/api-v1/users/profile`, {
-        method: "GET",
+        method: 'GET',
       });
 
       await expectError(response, 401);
     });
 
-    it("rejects profile request with invalid token", async () => {
+    it('rejects profile request with invalid token', async () => {
       const response = await fetch(`${baseURL}/api-v1/users/profile`, {
-        method: "GET",
+        method: 'GET',
         headers: {
-          Authorization: "Bearer invalid-token",
+          Authorization: 'Bearer invalid-token',
         },
       });
 
@@ -77,95 +70,91 @@ describe("Users API", () => {
     });
   });
 
-  describe("PUT /api-v1/users/profile", () => {
-    it("updates user profile with valid data", async () => {
+  describe('PUT /api-v1/users/profile', () => {
+    it('updates user profile with valid data', async () => {
       const { user: _user, token } = await createUserAndToken(
         {
-          email: "test@example.com",
-          firstName: "John",
-          lastName: "Doe",
+          email: 'test@example.com',
+          firstName: 'John',
+          lastName: 'Doe',
         },
         baseURL
       );
 
       const response = await fetch(`${baseURL}/api-v1/users/profile`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          firstName: "Jane",
-          lastName: "Smith",
-          preferredNotificationPhone: `+123456789${Math.floor(
-            Math.random() * 10
-          )}`,
+          firstName: 'Jane',
+          lastName: 'Smith',
+          preferredNotificationPhone: `+123456789${Math.floor(Math.random() * 10)}`,
         }),
       });
 
       const body = await expectSuccess(response, 200);
-      expect(body.data.user.firstName).toBe("Jane");
-      expect(body.data.user.lastName).toBe("Smith");
-      expect(body.data.user.preferredNotificationPhone).toMatch(
-        /^\+123456789\d$/
-      );
+      expect(body.data.user.firstName).toBe('Jane');
+      expect(body.data.user.lastName).toBe('Smith');
+      expect(body.data.user.preferredNotificationPhone).toMatch(/^\+123456789\d$/);
     });
 
-    it("validates phone number format", async () => {
+    it('validates phone number format', async () => {
       const { token } = await createUserAndToken({}, baseURL);
 
       const response = await fetch(`${baseURL}/api-v1/users/profile`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          phone: "123",
+          phone: '123',
         }),
       });
 
       await expectError(response, 400);
     });
 
-    it("validates firstName is not empty", async () => {
+    it('validates firstName is not empty', async () => {
       const { token } = await createUserAndToken({}, baseURL);
 
       const response = await fetch(`${baseURL}/api-v1/users/profile`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          firstName: "",
+          firstName: '',
         }),
       });
 
       await expectError(response, 400);
     });
 
-    it("rejects update without authentication", async () => {
+    it('rejects update without authentication', async () => {
       const response = await fetch(`${baseURL}/api-v1/users/profile`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          firstName: "Jane",
+          firstName: 'Jane',
         }),
       });
 
       await expectError(response, 401);
     });
 
-    it("rejects update with invalid token", async () => {
+    it('rejects update with invalid token', async () => {
       const response = await fetch(`${baseURL}/api-v1/users/profile`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer invalid-token",
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer invalid-token',
         },
         body: JSON.stringify({
-          firstName: "Jane",
+          firstName: 'Jane',
         }),
       });
 

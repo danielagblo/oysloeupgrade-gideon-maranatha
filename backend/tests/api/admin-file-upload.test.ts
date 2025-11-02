@@ -1,22 +1,15 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-  beforeEach,
-} from "bun:test";
-import {
-  createTestServer,
-  closeTestServer,
-  resetDb,
-  createAdminAndToken,
   authenticatedAdminRequest,
+  closeTestServer,
+  createAdminAndToken,
+  createTestServer,
   expectError,
   expectSuccess,
-} from "../test-helpers";
+  resetDb,
+} from '../test-helpers';
 
-describe("Admin File Upload System API", () => {
+describe('Admin File Upload System API', () => {
   let server: unknown;
   let baseURL: string;
 
@@ -34,23 +27,23 @@ describe("Admin File Upload System API", () => {
     await closeTestServer(server);
   });
 
-  describe("POST /api-v1/admin/uploads/profile-image", () => {
-    it("uploads admin profile image successfully", async () => {
+  describe('POST /api-v1/admin/uploads/profile-image', () => {
+    it('uploads admin profile image successfully', async () => {
       const { token, admin } = await createAdminAndToken();
 
       // Create a mock file (in a real test, you'd use a FormData with actual file)
       const formData = new FormData();
-      formData.append("file", new Blob(["test image data"], { type: "image/jpeg" }), "profile.jpg");
+      formData.append('file', new Blob(['test image data'], { type: 'image/jpeg' }), 'profile.jpg');
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/uploads/profile-image`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: formData,
           headers: {
             // Don't override content-type for FormData
-          }
+          },
         }
       );
 
@@ -58,43 +51,43 @@ describe("Admin File Upload System API", () => {
       expect(body.data.file).toBeDefined();
       expect(body.data.file.url).toBeDefined();
       expect(body.data.file.publicId).toBeDefined();
-      expect(body.data.file.format).toBe("jpg");
-      expect(typeof body.data.file.size).toBe("number");
+      expect(body.data.file.format).toBe('jpg');
+      expect(typeof body.data.file.size).toBe('number');
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("validates file type for profile images", async () => {
+    it('validates file type for profile images', async () => {
       const { token } = await createAdminAndToken();
 
       const formData = new FormData();
-      formData.append("file", new Blob(["test data"], { type: "text/plain" }), "invalid.txt");
+      formData.append('file', new Blob(['test data'], { type: 'text/plain' }), 'invalid.txt');
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/uploads/profile-image`,
         token,
         {
-          method: "POST",
-          body: formData
+          method: 'POST',
+          body: formData,
         }
       );
 
       await expectError(response, 400);
     });
 
-    it("validates file size limits", async () => {
+    it('validates file size limits', async () => {
       const { token } = await createAdminAndToken();
 
       // Create a large file (simulate 10MB+ file)
       const largeData = new Uint8Array(11 * 1024 * 1024); // 11MB
       const formData = new FormData();
-      formData.append("file", new Blob([largeData], { type: "image/jpeg" }), "large.jpg");
+      formData.append('file', new Blob([largeData], { type: 'image/jpeg' }), 'large.jpg');
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/uploads/profile-image`,
         token,
         {
-          method: "POST",
-          body: formData
+          method: 'POST',
+          body: formData,
         }
       );
 
@@ -102,41 +95,41 @@ describe("Admin File Upload System API", () => {
     });
   });
 
-  describe("POST /api-v1/admin/uploads/business-logo", () => {
-    it("uploads business logo successfully", async () => {
+  describe('POST /api-v1/admin/uploads/business-logo', () => {
+    it('uploads business logo successfully', async () => {
       const { token, admin } = await createAdminAndToken();
 
       const formData = new FormData();
-      formData.append("file", new Blob(["logo data"], { type: "image/png" }), "logo.png");
+      formData.append('file', new Blob(['logo data'], { type: 'image/png' }), 'logo.png');
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/uploads/business-logo`,
         token,
         {
-          method: "POST",
-          body: formData
+          method: 'POST',
+          body: formData,
         }
       );
 
       const body = await expectSuccess(response, 200);
       expect(body.data.file).toBeDefined();
-      expect(body.data.file.format).toBe("png");
+      expect(body.data.file.format).toBe('png');
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("validates logo dimensions", async () => {
+    it('validates logo dimensions', async () => {
       const { token } = await createAdminAndToken();
 
       // Create a very small image that might not meet dimension requirements
       const formData = new FormData();
-      formData.append("file", new Blob(["tiny"], { type: "image/png" }), "tiny.png");
+      formData.append('file', new Blob(['tiny'], { type: 'image/png' }), 'tiny.png');
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/uploads/business-logo`,
         token,
         {
-          method: "POST",
-          body: formData
+          method: 'POST',
+          body: formData,
         }
       );
 
@@ -145,20 +138,20 @@ describe("Admin File Upload System API", () => {
     });
   });
 
-  describe("POST /api-v1/admin/uploads/ad-image", () => {
-    it("uploads ad image for moderation", async () => {
+  describe('POST /api-v1/admin/uploads/ad-image', () => {
+    it('uploads ad image for moderation', async () => {
       const { token } = await createAdminAndToken();
 
       const formData = new FormData();
-      formData.append("file", new Blob(["ad image"], { type: "image/jpeg" }), "ad.jpg");
-      formData.append("adId", "test-ad-123");
+      formData.append('file', new Blob(['ad image'], { type: 'image/jpeg' }), 'ad.jpg');
+      formData.append('adId', 'test-ad-123');
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/uploads/ad-image`,
         token,
         {
-          method: "POST",
-          body: formData
+          method: 'POST',
+          body: formData,
         }
       );
 
@@ -166,22 +159,22 @@ describe("Admin File Upload System API", () => {
       expect(body.data.file).toBeDefined();
       expect(body.data.file.url).toBeDefined();
       expect(body.data.metadata).toBeDefined();
-      expect(body.data.metadata.adId).toBe("test-ad-123");
+      expect(body.data.metadata.adId).toBe('test-ad-123');
     });
 
-    it("validates ad image quality", async () => {
+    it('validates ad image quality', async () => {
       const { token } = await createAdminAndToken();
 
       // Very low quality image
       const formData = new FormData();
-      formData.append("file", new Blob(["low quality"], { type: "image/jpeg" }), "low.jpg");
+      formData.append('file', new Blob(['low quality'], { type: 'image/jpeg' }), 'low.jpg');
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/uploads/ad-image`,
         token,
         {
-          method: "POST",
-          body: formData
+          method: 'POST',
+          body: formData,
         }
       );
 
@@ -190,43 +183,47 @@ describe("Admin File Upload System API", () => {
     });
   });
 
-  describe("POST /api-v1/admin/uploads/support-file", () => {
-    it("uploads support case file", async () => {
+  describe('POST /api-v1/admin/uploads/support-file', () => {
+    it('uploads support case file', async () => {
       const { token } = await createAdminAndToken();
 
       const formData = new FormData();
-      formData.append("file", new Blob(["support document"], { type: "application/pdf" }), "support.pdf");
-      formData.append("caseId", "case-123");
-      formData.append("messageId", "msg-456");
+      formData.append(
+        'file',
+        new Blob(['support document'], { type: 'application/pdf' }),
+        'support.pdf'
+      );
+      formData.append('caseId', 'case-123');
+      formData.append('messageId', 'msg-456');
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/uploads/support-file`,
         token,
         {
-          method: "POST",
-          body: formData
+          method: 'POST',
+          body: formData,
         }
       );
 
       const body = await expectSuccess(response, 200);
       expect(body.data.file).toBeDefined();
-      expect(body.data.file.format).toBe("pdf");
-      expect(body.data.metadata.caseId).toBe("case-123");
-      expect(body.data.metadata.messageId).toBe("msg-456");
+      expect(body.data.file.format).toBe('pdf');
+      expect(body.data.metadata.caseId).toBe('case-123');
+      expect(body.data.metadata.messageId).toBe('msg-456');
     });
 
-    it("validates support file types", async () => {
+    it('validates support file types', async () => {
       const { token } = await createAdminAndToken();
 
       const formData = new FormData();
-      formData.append("file", new Blob(["executable"], { type: "application/exe" }), "malware.exe");
+      formData.append('file', new Blob(['executable'], { type: 'application/exe' }), 'malware.exe');
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/uploads/support-file`,
         token,
         {
-          method: "POST",
-          body: formData
+          method: 'POST',
+          body: formData,
         }
       );
 
@@ -234,64 +231,68 @@ describe("Admin File Upload System API", () => {
     });
   });
 
-  describe("POST /api-v1/admin/uploads/category-image", () => {
-    it("uploads category image", async () => {
+  describe('POST /api-v1/admin/uploads/category-image', () => {
+    it('uploads category image', async () => {
       const { token } = await createAdminAndToken();
 
       const formData = new FormData();
-      formData.append("file", new Blob(["category icon"], { type: "image/svg+xml" }), "category.svg");
-      formData.append("categoryId", "cat-123");
+      formData.append(
+        'file',
+        new Blob(['category icon'], { type: 'image/svg+xml' }),
+        'category.svg'
+      );
+      formData.append('categoryId', 'cat-123');
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/uploads/category-image`,
         token,
         {
-          method: "POST",
-          body: formData
+          method: 'POST',
+          body: formData,
         }
       );
 
       const body = await expectSuccess(response, 200);
       expect(body.data.file).toBeDefined();
-      expect(body.data.file.format).toBe("svg");
-      expect(body.data.metadata.categoryId).toBe("cat-123");
+      expect(body.data.file.format).toBe('svg');
+      expect(body.data.metadata.categoryId).toBe('cat-123');
     });
 
-    it("handles SVG uploads for categories", async () => {
+    it('handles SVG uploads for categories', async () => {
       const { token } = await createAdminAndToken();
 
       const svgContent = `<svg xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="40"/></svg>`;
       const formData = new FormData();
-      formData.append("file", new Blob([svgContent], { type: "image/svg+xml" }), "icon.svg");
+      formData.append('file', new Blob([svgContent], { type: 'image/svg+xml' }), 'icon.svg');
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/uploads/category-image`,
         token,
         {
-          method: "POST",
-          body: formData
+          method: 'POST',
+          body: formData,
         }
       );
 
       const body = await expectSuccess(response, 200);
-      expect(body.data.file.format).toBe("svg");
+      expect(body.data.file.format).toBe('svg');
     });
   });
 
-  describe("DELETE /api-v1/admin/uploads/:publicId", () => {
-    it("deletes uploaded file successfully", async () => {
+  describe('DELETE /api-v1/admin/uploads/:publicId', () => {
+    it('deletes uploaded file successfully', async () => {
       const { token } = await createAdminAndToken();
 
       // First upload a file
       const formData = new FormData();
-      formData.append("file", new Blob(["test file"], { type: "image/jpeg" }), "test.jpg");
+      formData.append('file', new Blob(['test file'], { type: 'image/jpeg' }), 'test.jpg');
 
       const uploadResponse = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/uploads/profile-image`,
         token,
         {
-          method: "POST",
-          body: formData
+          method: 'POST',
+          body: formData,
         }
       );
 
@@ -303,10 +304,10 @@ describe("Admin File Upload System API", () => {
         `${baseURL}/api-v1/admin/uploads/${publicId}`,
         token,
         {
-          method: "DELETE",
+          method: 'DELETE',
           body: JSON.stringify({
-            reason: "File no longer needed"
-          })
+            reason: 'File no longer needed',
+          }),
         }
       );
 
@@ -315,17 +316,17 @@ describe("Admin File Upload System API", () => {
       expect(deleteBody.data.auditLogId).toBeDefined();
     });
 
-    it("returns 404 for non-existent file", async () => {
+    it('returns 404 for non-existent file', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/uploads/non-existent-file`,
         token,
         {
-          method: "DELETE",
+          method: 'DELETE',
           body: JSON.stringify({
-            reason: "Test deletion"
-          })
+            reason: 'Test deletion',
+          }),
         }
       );
 
@@ -333,8 +334,8 @@ describe("Admin File Upload System API", () => {
     });
   });
 
-  describe("GET /api-v1/admin/uploads", () => {
-    it("lists uploaded files with pagination", async () => {
+  describe('GET /api-v1/admin/uploads', () => {
+    it('lists uploaded files with pagination', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -359,7 +360,7 @@ describe("Admin File Upload System API", () => {
       });
     });
 
-    it("filters files by folder", async () => {
+    it('filters files by folder', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -372,11 +373,11 @@ describe("Admin File Upload System API", () => {
 
       // All files should be from the specified folder
       body.data.files.forEach((file: any) => {
-        expect(file.folder).toBe("admin/business");
+        expect(file.folder).toBe('admin/business');
       });
     });
 
-    it("filters files by date range", async () => {
+    it('filters files by date range', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -389,8 +390,8 @@ describe("Admin File Upload System API", () => {
     });
   });
 
-  describe("GET /api-v1/admin/uploads/stats", () => {
-    it("returns upload statistics", async () => {
+  describe('GET /api-v1/admin/uploads/stats', () => {
+    it('returns upload statistics', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -400,14 +401,14 @@ describe("Admin File Upload System API", () => {
 
       const body = await expectSuccess(response, 200);
       expect(body.data.stats).toBeDefined();
-      expect(typeof body.data.stats.totalFiles).toBe("number");
-      expect(typeof body.data.stats.totalSize).toBe("number");
+      expect(typeof body.data.stats.totalFiles).toBe('number');
+      expect(typeof body.data.stats.totalSize).toBe('number');
       expect(body.data.stats.byType).toBeDefined();
       expect(body.data.stats.byFolder).toBeDefined();
       expect(body.data.stats.recentUploads).toBeInstanceOf(Array);
     });
 
-    it("includes storage usage breakdown", async () => {
+    it('includes storage usage breakdown', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -422,25 +423,25 @@ describe("Admin File Upload System API", () => {
       const fileTypes = Object.keys(body.data.stats.byType);
       expect(fileTypes.length).toBeGreaterThan(0);
 
-      fileTypes.forEach(type => {
-        expect(typeof body.data.stats.byType[type]).toBe("number");
+      fileTypes.forEach((type) => {
+        expect(typeof body.data.stats.byType[type]).toBe('number');
       });
     });
   });
 
-  describe("POST /api-v1/admin/uploads/bulk-delete", () => {
-    it("deletes multiple files", async () => {
+  describe('POST /api-v1/admin/uploads/bulk-delete', () => {
+    it('deletes multiple files', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/uploads/bulk-delete`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            publicIds: ["file1", "file2", "file3"],
-            reason: "Bulk cleanup of old files"
-          })
+            publicIds: ['file1', 'file2', 'file3'],
+            reason: 'Bulk cleanup of old files',
+          }),
         }
       );
 
@@ -451,18 +452,18 @@ describe("Admin File Upload System API", () => {
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("handles partial failures in bulk delete", async () => {
+    it('handles partial failures in bulk delete', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/uploads/bulk-delete`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            publicIds: ["valid-file", "invalid-file"],
-            reason: "Test bulk delete"
-          })
+            publicIds: ['valid-file', 'invalid-file'],
+            reason: 'Test bulk delete',
+          }),
         }
       );
 
@@ -473,21 +474,21 @@ describe("Admin File Upload System API", () => {
     });
   });
 
-  describe("POST /api-v1/admin/uploads/migrate", () => {
-    it("migrates files between storage providers", async () => {
-      const { token } = await createAdminAndToken({ role: "super-admin" });
+  describe('POST /api-v1/admin/uploads/migrate', () => {
+    it('migrates files between storage providers', async () => {
+      const { token } = await createAdminAndToken({ role: 'super-admin' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/uploads/migrate`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            sourceProvider: "cloudinary",
-            targetProvider: "aws-s3",
-            folder: "admin/profiles",
-            batchSize: 10
-          })
+            sourceProvider: 'cloudinary',
+            targetProvider: 'aws-s3',
+            folder: 'admin/profiles',
+            batchSize: 10,
+          }),
         }
       );
 
@@ -498,18 +499,18 @@ describe("Admin File Upload System API", () => {
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("requires super-admin role for migration", async () => {
-      const { token } = await createAdminAndToken({ role: "staff" });
+    it('requires super-admin role for migration', async () => {
+      const { token } = await createAdminAndToken({ role: 'staff' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/uploads/migrate`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            sourceProvider: "cloudinary",
-            targetProvider: "aws-s3"
-          })
+            sourceProvider: 'cloudinary',
+            targetProvider: 'aws-s3',
+          }),
         }
       );
 
@@ -517,8 +518,8 @@ describe("Admin File Upload System API", () => {
     });
   });
 
-  describe("GET /api-v1/admin/uploads/usage", () => {
-    it("returns storage usage report", async () => {
+  describe('GET /api-v1/admin/uploads/usage', () => {
+    it('returns storage usage report', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -530,12 +531,12 @@ describe("Admin File Upload System API", () => {
       expect(body.data.usage).toBeDefined();
       expect(body.data.usage.current).toBeDefined();
       expect(body.data.usage.limit).toBeDefined();
-      expect(typeof body.data.usage.percentage).toBe("number");
+      expect(typeof body.data.usage.percentage).toBe('number');
       expect(body.data.usage.byFolder).toBeInstanceOf(Array);
       expect(body.data.usage.trends).toBeInstanceOf(Array);
     });
 
-    it("includes quota information", async () => {
+    it('includes quota information', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -551,4 +552,3 @@ describe("Admin File Upload System API", () => {
     });
   });
 });
-

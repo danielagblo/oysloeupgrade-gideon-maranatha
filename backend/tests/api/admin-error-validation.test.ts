@@ -1,23 +1,16 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-  beforeEach,
-} from "bun:test";
-import {
-  createTestServer,
-  closeTestServer,
-  resetDb,
-  seedUser,
-  seedProduct,
-  createAdminAndToken,
   authenticatedAdminRequest,
+  closeTestServer,
+  createAdminAndToken,
+  createTestServer,
   expectError,
-} from "../test-helpers";
+  resetDb,
+  seedProduct,
+  seedUser,
+} from '../test-helpers';
 
-describe("Admin Error Handling & Validation", () => {
+describe('Admin Error Handling & Validation', () => {
   let server: unknown;
   let baseURL: string;
 
@@ -35,71 +28,71 @@ describe("Admin Error Handling & Validation", () => {
     await closeTestServer(server);
   });
 
-  describe("Authentication Errors", () => {
-    describe("INVALID_CREDENTIALS", () => {
-      it("returns INVALID_CREDENTIALS for wrong username", async () => {
+  describe('Authentication Errors', () => {
+    describe('INVALID_CREDENTIALS', () => {
+      it('returns INVALID_CREDENTIALS for wrong username', async () => {
         const response = await fetch(`${baseURL}/api-v1/admin/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            username: "wronguser",
-            password: "password123",
+            username: 'wronguser',
+            password: 'password123',
           }),
         });
 
-        await expectError(response, 401, "INVALID_CREDENTIALS");
+        await expectError(response, 401, 'INVALID_CREDENTIALS');
       });
 
-      it("returns INVALID_CREDENTIALS for wrong password", async () => {
+      it('returns INVALID_CREDENTIALS for wrong password', async () => {
         const adminUser = await seedUser();
         // Try to login as admin with user credentials
         const response = await fetch(`${baseURL}/api-v1/admin/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             username: adminUser.email, // Wrong endpoint
             password: adminUser.password,
           }),
         });
 
-        await expectError(response, 401, "INVALID_CREDENTIALS");
+        await expectError(response, 401, 'INVALID_CREDENTIALS');
       });
     });
 
-    describe("TOKEN_EXPIRED", () => {
-      it("returns TOKEN_EXPIRED for expired JWT", async () => {
+    describe('TOKEN_EXPIRED', () => {
+      it('returns TOKEN_EXPIRED for expired JWT', async () => {
         // This would require mocking an expired token
         // In a real implementation, this would test JWT expiration
         const response = await fetch(`${baseURL}/api-v1/admin/users`, {
-          method: "GET",
+          method: 'GET',
           headers: {
-            Authorization: "Bearer expired.jwt.token",
-            "Content-Type": "application/json"
+            Authorization: 'Bearer expired.jwt.token',
+            'Content-Type': 'application/json',
           },
         });
 
-        await expectError(response, 401, "TOKEN_EXPIRED");
+        await expectError(response, 401, 'TOKEN_EXPIRED');
       });
     });
 
-    describe("INSUFFICIENT_PERMISSIONS", () => {
-      it("returns INSUFFICIENT_PERMISSIONS for staff accessing super-admin features", async () => {
-        const { token } = await createAdminAndToken({ role: "staff" });
+    describe('INSUFFICIENT_PERMISSIONS', () => {
+      it('returns INSUFFICIENT_PERMISSIONS for staff accessing super-admin features', async () => {
+        const { token } = await createAdminAndToken({ role: 'staff' });
 
         const response = await authenticatedAdminRequest(
           `${baseURL}/api-v1/admin/system/config`,
           token,
           {
-            method: "PUT",
-            body: JSON.stringify({ setting: "test" })
+            method: 'PUT',
+            body: JSON.stringify({ setting: 'test' }),
           }
         );
 
-        await expectError(response, 403, "INSUFFICIENT_PERMISSIONS");
+        await expectError(response, 403, 'INSUFFICIENT_PERMISSIONS');
       });
 
-      it("returns INSUFFICIENT_PERMISSIONS for support role accessing user management", async () => {
-        const { token } = await createAdminAndToken({ role: "support" });
+      it('returns INSUFFICIENT_PERMISSIONS for support role accessing user management', async () => {
+        const { token } = await createAdminAndToken({ role: 'support' });
 
         const user = await seedUser();
 
@@ -107,56 +100,52 @@ describe("Admin Error Handling & Validation", () => {
           `${baseURL}/api-v1/admin/users/${user.id}`,
           token,
           {
-            method: "DELETE",
-            body: JSON.stringify({ reason: "test" })
+            method: 'DELETE',
+            body: JSON.stringify({ reason: 'test' }),
           }
         );
 
-        await expectError(response, 403, "INSUFFICIENT_PERMISSIONS");
+        await expectError(response, 403, 'INSUFFICIENT_PERMISSIONS');
       });
     });
   });
 
-  describe("Validation Errors", () => {
-    describe("VALIDATION_ERROR", () => {
-      it("returns VALIDATION_ERROR for invalid email format", async () => {
+  describe('Validation Errors', () => {
+    describe('VALIDATION_ERROR', () => {
+      it('returns VALIDATION_ERROR for invalid email format', async () => {
         const { token } = await createAdminAndToken();
 
-        const response = await authenticatedAdminRequest(
-          `${baseURL}/api-v1/admin/users`,
-          token,
-          {
-            method: "POST",
-            body: JSON.stringify({
-              name: "Test User",
-              email: "invalid-email",
-              password: "password123"
-            })
-          }
-        );
+        const response = await authenticatedAdminRequest(`${baseURL}/api-v1/admin/users`, token, {
+          method: 'POST',
+          body: JSON.stringify({
+            name: 'Test User',
+            email: 'invalid-email',
+            password: 'password123',
+          }),
+        });
 
-        await expectError(response, 400, "VALIDATION_ERROR");
+        await expectError(response, 400, 'VALIDATION_ERROR');
       });
 
-      it("returns VALIDATION_ERROR for missing required fields", async () => {
+      it('returns VALIDATION_ERROR for missing required fields', async () => {
         const { token } = await createAdminAndToken();
 
         const response = await authenticatedAdminRequest(
           `${baseURL}/api-v1/admin/categories`,
           token,
           {
-            method: "POST",
+            method: 'POST',
             body: JSON.stringify({
               // Missing required 'name' field
-              description: "Test category"
-            })
+              description: 'Test category',
+            }),
           }
         );
 
-        await expectError(response, 400, "VALIDATION_ERROR");
+        await expectError(response, 400, 'VALIDATION_ERROR');
       });
 
-      it("returns VALIDATION_ERROR for invalid UUID format", async () => {
+      it('returns VALIDATION_ERROR for invalid UUID format', async () => {
         const { token } = await createAdminAndToken();
 
         const response = await authenticatedAdminRequest(
@@ -164,43 +153,39 @@ describe("Admin Error Handling & Validation", () => {
           token
         );
 
-        await expectError(response, 400, "VALIDATION_ERROR");
+        await expectError(response, 400, 'VALIDATION_ERROR');
       });
     });
 
-    describe("REQUIRED_FIELD_MISSING", () => {
-      it("returns REQUIRED_FIELD_MISSING for missing mandatory fields", async () => {
+    describe('REQUIRED_FIELD_MISSING', () => {
+      it('returns REQUIRED_FIELD_MISSING for missing mandatory fields', async () => {
         const { token } = await createAdminAndToken();
 
-        const response = await authenticatedAdminRequest(
-          `${baseURL}/api-v1/admin/ads`,
-          token,
-          {
-            method: "POST",
-            body: JSON.stringify({
-              name: "Test Ad"
-              // Missing required price field
-            })
-          }
-        );
+        const response = await authenticatedAdminRequest(`${baseURL}/api-v1/admin/ads`, token, {
+          method: 'POST',
+          body: JSON.stringify({
+            name: 'Test Ad',
+            // Missing required price field
+          }),
+        });
 
-        await expectError(response, 400, "REQUIRED_FIELD_MISSING");
+        await expectError(response, 400, 'REQUIRED_FIELD_MISSING');
       });
     });
 
-    describe("INVALID_FORMAT", () => {
-      it("returns INVALID_FORMAT for malformed data", async () => {
+    describe('INVALID_FORMAT', () => {
+      it('returns INVALID_FORMAT for malformed data', async () => {
         const { token } = await createAdminAndToken();
 
         const response = await authenticatedAdminRequest(
           `${baseURL}/api-v1/admin/analytics/users`,
           token,
           {
-            method: "GET",
+            method: 'GET',
             headers: {
               // Invalid query parameter format
-              ...{ "Content-Type": "application/json" }
-            }
+              ...{ 'Content-Type': 'application/json' },
+            },
           }
         );
 
@@ -210,14 +195,14 @@ describe("Admin Error Handling & Validation", () => {
           token
         );
 
-        await expectError(responseWithInvalidDate, 400, "INVALID_FORMAT");
+        await expectError(responseWithInvalidDate, 400, 'INVALID_FORMAT');
       });
     });
   });
 
-  describe("Resource Errors", () => {
-    describe("RESOURCE_NOT_FOUND", () => {
-      it("returns RESOURCE_NOT_FOUND for non-existent user", async () => {
+  describe('Resource Errors', () => {
+    describe('RESOURCE_NOT_FOUND', () => {
+      it('returns RESOURCE_NOT_FOUND for non-existent user', async () => {
         const { token } = await createAdminAndToken();
 
         const response = await authenticatedAdminRequest(
@@ -225,25 +210,25 @@ describe("Admin Error Handling & Validation", () => {
           token
         );
 
-        await expectError(response, 404, "RESOURCE_NOT_FOUND");
+        await expectError(response, 404, 'RESOURCE_NOT_FOUND');
       });
 
-      it("returns RESOURCE_NOT_FOUND for non-existent category", async () => {
+      it('returns RESOURCE_NOT_FOUND for non-existent category', async () => {
         const { token } = await createAdminAndToken();
 
         const response = await authenticatedAdminRequest(
           `${baseURL}/api-v1/admin/categories/00000000-0000-0000-0000-000000000000`,
           token,
           {
-            method: "PUT",
-            body: JSON.stringify({ name: "Updated Name" })
+            method: 'PUT',
+            body: JSON.stringify({ name: 'Updated Name' }),
           }
         );
 
-        await expectError(response, 404, "RESOURCE_NOT_FOUND");
+        await expectError(response, 404, 'RESOURCE_NOT_FOUND');
       });
 
-      it("returns RESOURCE_NOT_FOUND for non-existent support case", async () => {
+      it('returns RESOURCE_NOT_FOUND for non-existent support case', async () => {
         const { token } = await createAdminAndToken();
 
         const response = await authenticatedAdminRequest(
@@ -251,44 +236,40 @@ describe("Admin Error Handling & Validation", () => {
           token
         );
 
-        await expectError(response, 404, "RESOURCE_NOT_FOUND");
+        await expectError(response, 404, 'RESOURCE_NOT_FOUND');
       });
     });
 
-    describe("RESOURCE_ALREADY_EXISTS", () => {
-      it("returns RESOURCE_ALREADY_EXISTS for duplicate category name", async () => {
+    describe('RESOURCE_ALREADY_EXISTS', () => {
+      it('returns RESOURCE_ALREADY_EXISTS for duplicate category name', async () => {
         const { token } = await createAdminAndToken();
 
         // Create first category
-        await authenticatedAdminRequest(
-          `${baseURL}/api-v1/admin/categories`,
-          token,
-          {
-            method: "POST",
-            body: JSON.stringify({
-              name: "Electronics",
-              slug: "electronics"
-            })
-          }
-        );
+        await authenticatedAdminRequest(`${baseURL}/api-v1/admin/categories`, token, {
+          method: 'POST',
+          body: JSON.stringify({
+            name: 'Electronics',
+            slug: 'electronics',
+          }),
+        });
 
         // Try to create duplicate
         const response = await authenticatedAdminRequest(
           `${baseURL}/api-v1/admin/categories`,
           token,
           {
-            method: "POST",
+            method: 'POST',
             body: JSON.stringify({
-              name: "Electronics",
-              slug: "electronics-2" // Different slug but same name might cause conflict
-            })
+              name: 'Electronics',
+              slug: 'electronics-2', // Different slug but same name might cause conflict
+            }),
           }
         );
 
-        await expectError(response, 409, "RESOURCE_ALREADY_EXISTS");
+        await expectError(response, 409, 'RESOURCE_ALREADY_EXISTS');
       });
 
-      it("returns RESOURCE_ALREADY_EXISTS for duplicate admin username", async () => {
+      it('returns RESOURCE_ALREADY_EXISTS for duplicate admin username', async () => {
         const { token } = await createAdminAndToken();
 
         // Try to create admin with existing username
@@ -296,22 +277,22 @@ describe("Admin Error Handling & Validation", () => {
           `${baseURL}/api-v1/admin/users/admin/create`,
           token,
           {
-            method: "POST",
+            method: 'POST',
             body: JSON.stringify({
-              username: "admin", // Assuming this already exists
-              email: "newadmin@example.com",
-              password: "password123",
-              role: "staff"
-            })
+              username: 'admin', // Assuming this already exists
+              email: 'newadmin@example.com',
+              password: 'password123',
+              role: 'staff',
+            }),
           }
         );
 
-        await expectError(response, 409, "RESOURCE_ALREADY_EXISTS");
+        await expectError(response, 409, 'RESOURCE_ALREADY_EXISTS');
       });
     });
 
-    describe("RESOURCE_IN_USE", () => {
-      it("returns RESOURCE_IN_USE when trying to delete category with products", async () => {
+    describe('RESOURCE_IN_USE', () => {
+      it('returns RESOURCE_IN_USE when trying to delete category with products', async () => {
         const { token } = await createAdminAndToken();
 
         // Create category
@@ -319,11 +300,11 @@ describe("Admin Error Handling & Validation", () => {
           `${baseURL}/api-v1/admin/categories`,
           token,
           {
-            method: "POST",
+            method: 'POST',
             body: JSON.stringify({
-              name: "Test Category",
-              slug: "test-category"
-            })
+              name: 'Test Category',
+              slug: 'test-category',
+            }),
           }
         );
 
@@ -338,59 +319,59 @@ describe("Admin Error Handling & Validation", () => {
           `${baseURL}/api-v1/admin/categories/${categoryId}`,
           token,
           {
-            method: "DELETE",
-            body: JSON.stringify({ reason: "Test deletion" })
+            method: 'DELETE',
+            body: JSON.stringify({ reason: 'Test deletion' }),
           }
         );
 
-        await expectError(deleteResponse, 409, "RESOURCE_IN_USE");
+        await expectError(deleteResponse, 409, 'RESOURCE_IN_USE');
       });
     });
   });
 
-  describe("Business Logic Errors", () => {
-    describe("INVALID_STATUS_TRANSITION", () => {
-      it("returns INVALID_STATUS_TRANSITION for invalid ad status change", async () => {
+  describe('Business Logic Errors', () => {
+    describe('INVALID_STATUS_TRANSITION', () => {
+      it('returns INVALID_STATUS_TRANSITION for invalid ad status change', async () => {
         const { token } = await createAdminAndToken();
-        const product = await seedProduct({ status: "sold" });
+        const product = await seedProduct({ status: 'sold' });
 
         const response = await authenticatedAdminRequest(
           `${baseURL}/api-v1/admin/ads/${product.id}/status`,
           token,
           {
-            method: "PUT",
+            method: 'PUT',
             body: JSON.stringify({
-              status: "active", // Cannot activate a sold product
-              reason: "Invalid transition"
-            })
+              status: 'active', // Cannot activate a sold product
+              reason: 'Invalid transition',
+            }),
           }
         );
 
-        await expectError(response, 400, "INVALID_STATUS_TRANSITION");
+        await expectError(response, 400, 'INVALID_STATUS_TRANSITION');
       });
 
-      it("returns INVALID_STATUS_TRANSITION for invalid user verification change", async () => {
+      it('returns INVALID_STATUS_TRANSITION for invalid user verification change', async () => {
         const { token } = await createAdminAndToken();
-        const user = await seedUser({ verificationStatus: "verified" });
+        const user = await seedUser({ verificationStatus: 'verified' });
 
         const response = await authenticatedAdminRequest(
           `${baseURL}/api-v1/admin/users/${user.id}/verify`,
           token,
           {
-            method: "POST",
+            method: 'POST',
             body: JSON.stringify({
-              status: "verified", // Already verified
-              notes: "Attempting duplicate verification"
-            })
+              status: 'verified', // Already verified
+              notes: 'Attempting duplicate verification',
+            }),
           }
         );
 
-        await expectError(response, 400, "INVALID_STATUS_TRANSITION");
+        await expectError(response, 400, 'INVALID_STATUS_TRANSITION');
       });
     });
 
-    describe("QUOTA_EXCEEDED", () => {
-      it("returns QUOTA_EXCEEDED for export limit exceeded", async () => {
+    describe('QUOTA_EXCEEDED', () => {
+      it('returns QUOTA_EXCEEDED for export limit exceeded', async () => {
         const { token } = await createAdminAndToken();
 
         // Try to export too many records at once
@@ -399,70 +380,70 @@ describe("Admin Error Handling & Validation", () => {
           token
         );
 
-        await expectError(response, 429, "QUOTA_EXCEEDED");
+        await expectError(response, 429, 'QUOTA_EXCEEDED');
       });
 
-      it("returns QUOTA_EXCEEDED for bulk operation size limit", async () => {
+      it('returns QUOTA_EXCEEDED for bulk operation size limit', async () => {
         const { token } = await createAdminAndToken();
 
         const largeBulkOperation = {
           adIds: Array.from({ length: 1000 }, (_, i) => `ad-${i + 1}`), // Too many IDs
-          status: "active",
-          reason: "Bulk update"
+          status: 'active',
+          reason: 'Bulk update',
         };
 
         const response = await authenticatedAdminRequest(
           `${baseURL}/api-v1/admin/ads/bulk/status`,
           token,
           {
-            method: "POST",
-            body: JSON.stringify(largeBulkOperation)
+            method: 'POST',
+            body: JSON.stringify(largeBulkOperation),
           }
         );
 
-        await expectError(response, 429, "QUOTA_EXCEEDED");
+        await expectError(response, 429, 'QUOTA_EXCEEDED');
       });
     });
 
-    describe("OPERATION_NOT_ALLOWED", () => {
-      it("returns OPERATION_NOT_ALLOWED for deleting system categories", async () => {
+    describe('OPERATION_NOT_ALLOWED', () => {
+      it('returns OPERATION_NOT_ALLOWED for deleting system categories', async () => {
         const { token } = await createAdminAndToken();
 
         // Assume there's a system category that cannot be deleted
-        const systemCategoryId = "system-category-id";
+        const systemCategoryId = 'system-category-id';
 
         const response = await authenticatedAdminRequest(
           `${baseURL}/api-v1/admin/categories/${systemCategoryId}`,
           token,
           {
-            method: "DELETE",
-            body: JSON.stringify({ reason: "Attempt to delete system category" })
+            method: 'DELETE',
+            body: JSON.stringify({ reason: 'Attempt to delete system category' }),
           }
         );
 
-        await expectError(response, 403, "OPERATION_NOT_ALLOWED");
+        await expectError(response, 403, 'OPERATION_NOT_ALLOWED');
       });
 
-      it("returns OPERATION_NOT_ALLOWED for self-deletion", async () => {
+      it('returns OPERATION_NOT_ALLOWED for self-deletion', async () => {
         const { token, admin } = await createAdminAndToken();
 
         const response = await authenticatedAdminRequest(
           `${baseURL}/api-v1/admin/users/admin/${admin.id}`,
           token,
           {
-            method: "DELETE",
-            body: JSON.stringify({ reason: "Attempting self-deletion" })
+            method: 'DELETE',
+            body: JSON.stringify({ reason: 'Attempting self-deletion' }),
           }
         );
 
-        await expectError(response, 403, "OPERATION_NOT_ALLOWED");
+        await expectError(response, 403, 'OPERATION_NOT_ALLOWED');
       });
     });
   });
 
-  describe("System Errors", () => {
-    describe("INTERNAL_SERVER_ERROR", () => {
-      it("returns INTERNAL_SERVER_ERROR for database connection issues", async () => {
+  describe('System Errors', () => {
+    describe('INTERNAL_SERVER_ERROR', () => {
+      it('returns INTERNAL_SERVER_ERROR for database connection issues', async () => {
         const { token } = await createAdminAndToken();
 
         // This would require mocking database disconnection
@@ -477,8 +458,8 @@ describe("Admin Error Handling & Validation", () => {
       });
     });
 
-    describe("DATABASE_ERROR", () => {
-      it("returns DATABASE_ERROR for constraint violations", async () => {
+    describe('DATABASE_ERROR', () => {
+      it('returns DATABASE_ERROR for constraint violations', async () => {
         const { token } = await createAdminAndToken();
 
         // Try to create category with invalid foreign key
@@ -486,32 +467,32 @@ describe("Admin Error Handling & Validation", () => {
           `${baseURL}/api-v1/admin/categories/invalid-parent/subcategories`,
           token,
           {
-            method: "POST",
+            method: 'POST',
             body: JSON.stringify({
-              name: "Invalid Subcategory",
-              parentId: "00000000-0000-0000-0000-000000000000" // Non-existent parent
-            })
+              name: 'Invalid Subcategory',
+              parentId: '00000000-0000-0000-0000-000000000000', // Non-existent parent
+            }),
           }
         );
 
-        await expectError(response, 500, "DATABASE_ERROR");
+        await expectError(response, 500, 'DATABASE_ERROR');
       });
     });
 
-    describe("EXTERNAL_SERVICE_ERROR", () => {
-      it("returns EXTERNAL_SERVICE_ERROR for file upload failures", async () => {
+    describe('EXTERNAL_SERVICE_ERROR', () => {
+      it('returns EXTERNAL_SERVICE_ERROR for file upload failures', async () => {
         const { token } = await createAdminAndToken();
 
         // This would require mocking Cloudinary failures
         const formData = new FormData();
-        formData.append("file", new Blob(["test"], { type: "image/jpeg" }), "test.jpg");
+        formData.append('file', new Blob(['test'], { type: 'image/jpeg' }), 'test.jpg');
 
         const response = await authenticatedAdminRequest(
           `${baseURL}/api-v1/admin/uploads/profile-image`,
           token,
           {
-            method: "POST",
-            body: formData
+            method: 'POST',
+            body: formData,
           }
         );
 
@@ -519,7 +500,7 @@ describe("Admin Error Handling & Validation", () => {
         expect([200, 500]).toContain(response.status);
       });
 
-      it("returns EXTERNAL_SERVICE_ERROR for FCM notification failures", async () => {
+      it('returns EXTERNAL_SERVICE_ERROR for FCM notification failures', async () => {
         const { token } = await createAdminAndToken();
 
         // This would require mocking FCM service failures
@@ -529,13 +510,13 @@ describe("Admin Error Handling & Validation", () => {
           `${baseURL}/api-v1/admin/alerts/send`,
           token,
           {
-            method: "POST",
+            method: 'POST',
             body: JSON.stringify({
-              title: "Test Alert",
-              message: "Test message",
-              type: "info",
-              recipientIds: [user.id]
-            })
+              title: 'Test Alert',
+              message: 'Test message',
+              type: 'info',
+              recipientIds: [user.id],
+            }),
           }
         );
 
@@ -545,8 +526,8 @@ describe("Admin Error Handling & Validation", () => {
     });
   });
 
-  describe("Rate Limiting Errors", () => {
-    it("returns rate limit exceeded for too many requests", async () => {
+  describe('Rate Limiting Errors', () => {
+    it('returns rate limit exceeded for too many requests', async () => {
       const { token } = await createAdminAndToken();
 
       // Make multiple rapid requests to trigger rate limiting
@@ -557,17 +538,14 @@ describe("Admin Error Handling & Validation", () => {
       const responses = await Promise.all(requests);
 
       // Some requests should be rate limited
-      const rateLimitedResponses = responses.filter(r => r.status === 429);
+      const rateLimitedResponses = responses.filter((r) => r.status === 429);
       expect(rateLimitedResponses.length).toBeGreaterThan(0);
     });
 
-    it("includes rate limit headers in response", async () => {
+    it('includes rate limit headers in response', async () => {
       const { token } = await createAdminAndToken();
 
-      const response = await authenticatedAdminRequest(
-        `${baseURL}/api-v1/admin/users`,
-        token
-      );
+      const response = await authenticatedAdminRequest(`${baseURL}/api-v1/admin/users`, token);
 
       // Should include rate limiting headers
       const headers = response.headers;
@@ -577,41 +555,41 @@ describe("Admin Error Handling & Validation", () => {
     });
   });
 
-  describe("Input Validation Edge Cases", () => {
-    it("handles extremely long input strings", async () => {
+  describe('Input Validation Edge Cases', () => {
+    it('handles extremely long input strings', async () => {
       const { token } = await createAdminAndToken();
 
-      const longString = "a".repeat(10000); // 10k characters
+      const longString = 'a'.repeat(10000); // 10k characters
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/categories`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
             name: longString,
-            description: "Test category"
-          })
+            description: 'Test category',
+          }),
         }
       );
 
-      await expectError(response, 400, "VALIDATION_ERROR");
+      await expectError(response, 400, 'VALIDATION_ERROR');
     });
 
-    it("handles special characters in input", async () => {
+    it('handles special characters in input', async () => {
       const { token } = await createAdminAndToken();
 
-      const specialChars = "!@#$%^&*()_+-=[]{}|;:,.<>?";
+      const specialChars = '!@#$%^&*()_+-=[]{}|;:,.<>?';
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/categories`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
             name: `Test ${specialChars}`,
-            slug: `test-${specialChars.toLowerCase()}`
-          })
+            slug: `test-${specialChars.toLowerCase()}`,
+          }),
         }
       );
 
@@ -619,26 +597,22 @@ describe("Admin Error Handling & Validation", () => {
       expect([200, 400]).toContain(response.status);
     });
 
-    it("handles null and undefined values", async () => {
+    it('handles null and undefined values', async () => {
       const { token } = await createAdminAndToken();
 
-      const response = await authenticatedAdminRequest(
-        `${baseURL}/api-v1/admin/users`,
-        token,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            name: null, // Invalid null value
-            email: undefined, // Invalid undefined value
-            password: "password123"
-          })
-        }
-      );
+      const response = await authenticatedAdminRequest(`${baseURL}/api-v1/admin/users`, token, {
+        method: 'POST',
+        body: JSON.stringify({
+          name: null, // Invalid null value
+          email: undefined, // Invalid undefined value
+          password: 'password123',
+        }),
+      });
 
-      await expectError(response, 400, "VALIDATION_ERROR");
+      await expectError(response, 400, 'VALIDATION_ERROR');
     });
 
-    it("handles array size limits", async () => {
+    it('handles array size limits', async () => {
       const { token } = await createAdminAndToken();
 
       const largeArray = Array.from({ length: 1000 }, (_, i) => `item-${i}`);
@@ -647,20 +621,20 @@ describe("Admin Error Handling & Validation", () => {
         `${baseURL}/api-v1/admin/bulk/filter-update`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            entityType: "users",
-            operation: "update",
-            filters: [{ field: "id", operator: "in", value: largeArray }],
-            updateData: { status: "active" }
-          })
+            entityType: 'users',
+            operation: 'update',
+            filters: [{ field: 'id', operator: 'in', value: largeArray }],
+            updateData: { status: 'active' },
+          }),
         }
       );
 
-      await expectError(response, 400, "VALIDATION_ERROR");
+      await expectError(response, 400, 'VALIDATION_ERROR');
     });
 
-    it("handles deeply nested objects", async () => {
+    it('handles deeply nested objects', async () => {
       const { token } = await createAdminAndToken();
 
       const deeplyNested = {
@@ -668,24 +642,24 @@ describe("Admin Error Handling & Validation", () => {
           level2: {
             level3: {
               level4: {
-                level5: "deep value"
-              }
-            }
-          }
-        }
+                level5: 'deep value',
+              },
+            },
+          },
+        },
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/analytics/custom`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Deep Test",
-            entityType: "users",
-            format: "json",
-            config: deeplyNested
-          })
+            name: 'Deep Test',
+            entityType: 'users',
+            format: 'json',
+            config: deeplyNested,
+          }),
         }
       );
 
@@ -694,8 +668,8 @@ describe("Admin Error Handling & Validation", () => {
     });
   });
 
-  describe("Concurrent Operation Errors", () => {
-    it("handles optimistic locking conflicts", async () => {
+  describe('Concurrent Operation Errors', () => {
+    it('handles optimistic locking conflicts', async () => {
       const { token: token1 } = await createAdminAndToken();
       const { token: token2 } = await createAdminAndToken();
 
@@ -704,11 +678,11 @@ describe("Admin Error Handling & Validation", () => {
         `${baseURL}/api-v1/admin/categories`,
         token1,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Concurrent Test Category",
-            description: "Testing concurrent updates"
-          })
+            name: 'Concurrent Test Category',
+            description: 'Testing concurrent updates',
+          }),
         }
       );
 
@@ -720,8 +694,8 @@ describe("Admin Error Handling & Validation", () => {
         `${baseURL}/api-v1/admin/categories/${categoryId}`,
         token1,
         {
-          method: "PUT",
-          body: JSON.stringify({ name: "Updated by Admin 1" })
+          method: 'PUT',
+          body: JSON.stringify({ name: 'Updated by Admin 1' }),
         }
       );
 
@@ -729,24 +703,24 @@ describe("Admin Error Handling & Validation", () => {
         `${baseURL}/api-v1/admin/categories/${categoryId}`,
         token2,
         {
-          method: "PUT",
-          body: JSON.stringify({ name: "Updated by Admin 2" })
+          method: 'PUT',
+          body: JSON.stringify({ name: 'Updated by Admin 2' }),
         }
       );
 
       const [response1, response2] = await Promise.all([update1, update2]);
 
       // At least one should succeed, and if there are conflicts, one might fail
-      const successCount = [response1, response2].filter(r => r.status === 200).length;
-      const conflictCount = [response1, response2].filter(r => r.status === 409).length;
+      const successCount = [response1, response2].filter((r) => r.status === 200).length;
+      const conflictCount = [response1, response2].filter((r) => r.status === 409).length;
 
       expect(successCount + conflictCount).toBe(2);
       expect(successCount).toBeGreaterThanOrEqual(1);
     });
   });
 
-  describe("Security Validation", () => {
-    it("prevents SQL injection attempts", async () => {
+  describe('Security Validation', () => {
+    it('prevents SQL injection attempts', async () => {
       const { token } = await createAdminAndToken();
 
       const sqlInjection = "'; DROP TABLE users; --";
@@ -760,7 +734,7 @@ describe("Admin Error Handling & Validation", () => {
       expect([200, 400]).toContain(response.status);
     });
 
-    it("prevents XSS attempts in input fields", async () => {
+    it('prevents XSS attempts in input fields', async () => {
       const { token } = await createAdminAndToken();
 
       const xssAttempt = '<script>alert("XSS")</script>';
@@ -769,11 +743,11 @@ describe("Admin Error Handling & Validation", () => {
         `${baseURL}/api-v1/admin/categories`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
             name: xssAttempt,
-            description: "XSS test"
-          })
+            description: 'XSS test',
+          }),
         }
       );
 
@@ -781,30 +755,34 @@ describe("Admin Error Handling & Validation", () => {
       expect([200, 400]).toContain(response.status);
     });
 
-    it("validates file upload security", async () => {
+    it('validates file upload security', async () => {
       const { token } = await createAdminAndToken();
 
       // Try to upload executable file
       const formData = new FormData();
-      formData.append("file", new Blob(["malicious code"], { type: "application/x-executable" }), "malware.exe");
+      formData.append(
+        'file',
+        new Blob(['malicious code'], { type: 'application/x-executable' }),
+        'malware.exe'
+      );
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/uploads/support-file`,
         token,
         {
-          method: "POST",
-          body: formData
+          method: 'POST',
+          body: formData,
         }
       );
 
-      await expectError(response, 400, "VALIDATION_ERROR");
+      await expectError(response, 400, 'VALIDATION_ERROR');
     });
   });
 
-  describe("Error Response Format", () => {
-    it("returns consistent error response format", async () => {
+  describe('Error Response Format', () => {
+    it('returns consistent error response format', async () => {
       const response = await fetch(`${baseURL}/api-v1/admin/users`, {
-        method: "GET"
+        method: 'GET',
         // Missing auth token
       });
 
@@ -823,7 +801,7 @@ describe("Admin Error Handling & Validation", () => {
       expect(body.meta).toHaveProperty('requestId');
     });
 
-    it("includes request ID in all responses", async () => {
+    it('includes request ID in all responses', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -837,20 +815,16 @@ describe("Admin Error Handling & Validation", () => {
       expect(body.meta.requestId.length).toBeGreaterThan(0);
     });
 
-    it("includes error details when appropriate", async () => {
+    it('includes error details when appropriate', async () => {
       const { token } = await createAdminAndToken();
 
-      const response = await authenticatedAdminRequest(
-        `${baseURL}/api-v1/admin/users`,
-        token,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            // Invalid data to trigger validation error
-            invalidField: "invalid"
-          })
-        }
-      );
+      const response = await authenticatedAdminRequest(`${baseURL}/api-v1/admin/users`, token, {
+        method: 'POST',
+        body: JSON.stringify({
+          // Invalid data to trigger validation error
+          invalidField: 'invalid',
+        }),
+      });
 
       await expectError(response, 400);
 
@@ -863,4 +837,3 @@ describe("Admin Error Handling & Validation", () => {
     });
   });
 });
-

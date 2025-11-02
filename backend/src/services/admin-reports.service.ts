@@ -1,7 +1,7 @@
-import { AppDataSource } from "../config/database.js";
-import { UserReport } from "../entities/UserReport.js";
-import { Review } from "../entities/Review.js";
-import { NotFoundError } from "../utils/errors.js";
+import { AppDataSource } from '../config/database.js';
+import { Review } from '../entities/Review.js';
+import { UserReport } from '../entities/UserReport.js';
+import { NotFoundError } from '../utils/errors.js';
 
 export interface GetReportsOptions {
   page?: number;
@@ -28,36 +28,29 @@ export class AdminReportsService {
   }
 
   async getReports(options: GetReportsOptions = {}) {
-    const {
-      page = 1,
-      limit = 10,
-      status,
-      type,
-      dateFrom,
-      dateTo,
-    } = options;
+    const { page = 1, limit = 10, status, type, dateFrom, dateTo } = options;
 
     const queryBuilder = this.userReportRepository
-      .createQueryBuilder("report")
-      .leftJoinAndSelect("report.reporterUser", "reporter")
-      .leftJoinAndSelect("report.reportedUser", "reported")
-      .leftJoinAndSelect("report.adminUser", "admin")
-      .orderBy("report.createdAt", "DESC");
+      .createQueryBuilder('report')
+      .leftJoinAndSelect('report.reporterUser', 'reporter')
+      .leftJoinAndSelect('report.reportedUser', 'reported')
+      .leftJoinAndSelect('report.adminUser', 'admin')
+      .orderBy('report.createdAt', 'DESC');
 
     if (status) {
-      queryBuilder.andWhere("report.status = :status", { status });
+      queryBuilder.andWhere('report.status = :status', { status });
     }
 
     if (type) {
-      queryBuilder.andWhere("report.reportType = :type", { type });
+      queryBuilder.andWhere('report.reportType = :type', { type });
     }
 
     if (dateFrom) {
-      queryBuilder.andWhere("report.createdAt >= :dateFrom", { dateFrom });
+      queryBuilder.andWhere('report.createdAt >= :dateFrom', { dateFrom });
     }
 
     if (dateTo) {
-      queryBuilder.andWhere("report.createdAt <= :dateTo", { dateTo });
+      queryBuilder.andWhere('report.createdAt <= :dateTo', { dateTo });
     }
 
     const [reports, total] = await queryBuilder
@@ -69,20 +62,20 @@ export class AdminReportsService {
     const stats = {
       total: await this.userReportRepository.count(),
       pending: await this.userReportRepository.count({
-        where: { status: "pending" },
+        where: { status: 'pending' },
       }),
       resolved: await this.userReportRepository.count({
-        where: { status: "resolved" },
+        where: { status: 'resolved' },
       }),
       byType: {} as Record<string, number>,
     };
 
     // Get counts by type
     const typeCounts = await this.userReportRepository
-      .createQueryBuilder("report")
-      .select("report.reportType", "type")
-      .addSelect("COUNT(*)", "count")
-      .groupBy("report.reportType")
+      .createQueryBuilder('report')
+      .select('report.reportType', 'type')
+      .addSelect('COUNT(*)', 'count')
+      .groupBy('report.reportType')
       .getRawMany();
 
     typeCounts.forEach((item) => {
@@ -104,30 +97,26 @@ export class AdminReportsService {
   async getReport(reportId: number) {
     const report = await this.userReportRepository.findOne({
       where: { id: reportId },
-      relations: ["reporterUser", "reportedUser", "adminUser"],
+      relations: ['reporterUser', 'reportedUser', 'adminUser'],
     });
 
     if (!report) {
-      throw new NotFoundError("Report not found");
+      throw new NotFoundError('Report not found');
     }
 
     return report;
   }
 
-  async resolveReport(
-    reportId: number,
-    input: ResolveReportInput,
-    adminUserId: number
-  ) {
+  async resolveReport(reportId: number, input: ResolveReportInput, adminUserId: number) {
     const report = await this.userReportRepository.findOne({
       where: { id: reportId },
     });
 
     if (!report) {
-      throw new NotFoundError("Report not found");
+      throw new NotFoundError('Report not found');
     }
 
-    report.status = "resolved";
+    report.status = 'resolved';
     report.resolution = input.resolution;
     report.resolvedAt = new Date();
     report.adminUserId = adminUserId;
@@ -137,44 +126,39 @@ export class AdminReportsService {
     return report;
   }
 
-  async getFeedback(options: {
-    page?: number;
-    limit?: number;
-    rating?: number;
-    dateFrom?: string;
-    dateTo?: string;
-    search?: string;
-  } = {}) {
-    const {
-      page = 1,
-      limit = 10,
-      rating,
-      dateFrom,
-      dateTo,
-      search,
-    } = options;
+  async getFeedback(
+    options: {
+      page?: number;
+      limit?: number;
+      rating?: number;
+      dateFrom?: string;
+      dateTo?: string;
+      search?: string;
+    } = {}
+  ) {
+    const { page = 1, limit = 10, rating, dateFrom, dateTo, search } = options;
 
     const queryBuilder = this.reviewRepository
-      .createQueryBuilder("review")
-      .leftJoinAndSelect("review.user", "user")
-      .leftJoinAndSelect("review.product", "product")
-      .orderBy("review.createdAt", "DESC");
+      .createQueryBuilder('review')
+      .leftJoinAndSelect('review.user', 'user')
+      .leftJoinAndSelect('review.product', 'product')
+      .orderBy('review.createdAt', 'DESC');
 
     if (rating) {
-      queryBuilder.andWhere("review.rating = :rating", { rating });
+      queryBuilder.andWhere('review.rating = :rating', { rating });
     }
 
     if (dateFrom) {
-      queryBuilder.andWhere("review.createdAt >= :dateFrom", { dateFrom });
+      queryBuilder.andWhere('review.createdAt >= :dateFrom', { dateFrom });
     }
 
     if (dateTo) {
-      queryBuilder.andWhere("review.createdAt <= :dateTo", { dateTo });
+      queryBuilder.andWhere('review.createdAt <= :dateTo', { dateTo });
     }
 
     if (search) {
       queryBuilder.andWhere(
-        "(review.comment ILIKE :search OR user.name ILIKE :search OR product.name ILIKE :search)",
+        '(review.comment ILIKE :search OR user.name ILIKE :search OR product.name ILIKE :search)',
         { search: `%${search}%` }
       );
     }
@@ -212,5 +196,3 @@ export class AdminReportsService {
     };
   }
 }
-
-

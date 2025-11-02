@@ -1,23 +1,16 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-  beforeEach,
-} from "bun:test";
-import {
-  createTestServer,
-  closeTestServer,
-  resetDb,
-  seedUser,
-  createAdminAndToken,
   authenticatedAdminRequest,
+  closeTestServer,
+  createAdminAndToken,
+  createTestServer,
   expectError,
   expectSuccess,
-} from "../test-helpers";
+  resetDb,
+  seedUser,
+} from '../test-helpers';
 
-describe("Admin WebSocket Real-time Features", () => {
+describe('Admin WebSocket Real-time Features', () => {
   let server: unknown;
   let baseURL: string;
 
@@ -35,16 +28,16 @@ describe("Admin WebSocket Real-time Features", () => {
     await closeTestServer(server);
   });
 
-  describe("Support Chat WebSocket Events", () => {
-    it("handles admin joining support case", async () => {
+  describe('Support Chat WebSocket Events', () => {
+    it('handles admin joining support case', async () => {
       const { token, admin } = await createAdminAndToken();
-      const caseId = "mock-case-id";
+      const caseId = 'mock-case-id';
 
       // Test the join event (this would be tested with a WebSocket client in real implementation)
       const joinData = {
         caseId: caseId,
         adminId: admin.id,
-        action: "join"
+        action: 'join',
       };
 
       // In a real test, this would connect via WebSocket and emit events
@@ -53,8 +46,8 @@ describe("Admin WebSocket Real-time Features", () => {
         `${baseURL}/api-v1/admin/support/cases/${caseId}/join`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(joinData)
+          method: 'POST',
+          body: JSON.stringify(joinData),
         }
       );
 
@@ -62,15 +55,15 @@ describe("Admin WebSocket Real-time Features", () => {
       expect([200, 404]).toContain(response.status);
     });
 
-    it("handles admin sending support message", async () => {
+    it('handles admin sending support message', async () => {
       const { token, admin } = await createAdminAndToken();
-      const caseId = "mock-case-id";
+      const caseId = 'mock-case-id';
 
       const messageData = {
         caseId: caseId,
-        content: "Hello! How can I help you today?",
-        messageType: "text",
-        adminId: admin.id
+        content: 'Hello! How can I help you today?',
+        messageType: 'text',
+        adminId: admin.id,
       };
 
       // Test sending message (would trigger WebSocket event)
@@ -78,36 +71,36 @@ describe("Admin WebSocket Real-time Features", () => {
         `${baseURL}/api-v1/admin/support/cases/${caseId}/messages`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(messageData)
+          method: 'POST',
+          body: JSON.stringify(messageData),
         }
       );
 
       const body = await expectSuccess(response, 200);
       expect(body.data.message).toBeDefined();
-      expect(body.data.message.senderType).toBe("admin");
-      expect(body.data.message.content).toBe("Hello! How can I help you today?");
+      expect(body.data.message.senderType).toBe('admin');
+      expect(body.data.message.content).toBe('Hello! How can I help you today?');
       // In real implementation, this would trigger WebSocket events to other participants
     });
 
-    it("handles user joining/leaving chat", async () => {
+    it('handles user joining/leaving chat', async () => {
       const { token } = await createAdminAndToken();
       const user = await seedUser();
-      const caseId = "mock-case-id";
+      const caseId = 'mock-case-id';
 
       // Test user presence events
       const presenceData = {
         caseId: caseId,
         userId: user.id,
-        action: "join"
+        action: 'join',
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/support/cases/${caseId}/presence`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(presenceData)
+          method: 'POST',
+          body: JSON.stringify(presenceData),
         }
       );
 
@@ -115,23 +108,23 @@ describe("Admin WebSocket Real-time Features", () => {
       expect([200, 404]).toContain(response.status);
     });
 
-    it("handles typing indicators", async () => {
+    it('handles typing indicators', async () => {
       const { token, admin } = await createAdminAndToken();
-      const caseId = "mock-case-id";
+      const caseId = 'mock-case-id';
 
       const typingData = {
         caseId: caseId,
         userId: admin.id,
-        userType: "admin",
-        isTyping: true
+        userType: 'admin',
+        isTyping: true,
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/support/cases/${caseId}/typing`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(typingData)
+          method: 'POST',
+          body: JSON.stringify(typingData),
         }
       );
 
@@ -140,51 +133,47 @@ describe("Admin WebSocket Real-time Features", () => {
     });
   });
 
-  describe("Admin Notifications WebSocket Events", () => {
-    it("receives new ad pending notification", async () => {
+  describe('Admin Notifications WebSocket Events', () => {
+    it('receives new ad pending notification', async () => {
       const { token } = await createAdminAndToken();
 
       // Create a pending ad (would trigger WebSocket notification)
       const adData = {
-        title: "New Product",
-        description: "A new product for sale",
+        title: 'New Product',
+        description: 'A new product for sale',
         price: 99.99,
-        status: "pending"
+        status: 'pending',
       };
 
-      const response = await authenticatedAdminRequest(
-        `${baseURL}/api-v1/admin/ads`,
-        token,
-        {
-          method: "POST",
-          body: JSON.stringify(adData)
-        }
-      );
+      const response = await authenticatedAdminRequest(`${baseURL}/api-v1/admin/ads`, token, {
+        method: 'POST',
+        body: JSON.stringify(adData),
+      });
 
       // In real implementation, this would trigger WebSocket event:
       // socket.emit('new-ad-pending', { ad: newAd, adminIds: activeAdmins })
       expect([200, 404]).toContain(response.status);
     });
 
-    it("receives new support case notification", async () => {
+    it('receives new support case notification', async () => {
       const { token } = await createAdminAndToken();
       const user = await seedUser();
 
       // Create a new support case (would trigger WebSocket notification)
       const caseData = {
         userId: user.id,
-        subject: "Technical Issue",
-        category: "technical",
-        priority: "high",
-        description: "Unable to access account"
+        subject: 'Technical Issue',
+        category: 'technical',
+        priority: 'high',
+        description: 'Unable to access account',
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/support/cases`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(caseData)
+          method: 'POST',
+          body: JSON.stringify(caseData),
         }
       );
 
@@ -193,51 +182,47 @@ describe("Admin WebSocket Real-time Features", () => {
       expect([200, 404]).toContain(response.status);
     });
 
-    it("receives new user report notification", async () => {
+    it('receives new user report notification', async () => {
       const { token } = await createAdminAndToken();
-      const reporter = await seedUser({ email: "reporter@example.com" });
-      const reported = await seedUser({ email: "reported@example.com" });
+      const reporter = await seedUser({ email: 'reporter@example.com' });
+      const reported = await seedUser({ email: 'reported@example.com' });
 
       // Create a user report (would trigger WebSocket notification)
       const reportData = {
         reporterId: reporter.id,
         reportedUserId: reported.id,
-        reportType: "spam",
-        description: "User is posting spam content",
-        evidence: ["screenshot1.jpg", "screenshot2.jpg"]
+        reportType: 'spam',
+        description: 'User is posting spam content',
+        evidence: ['screenshot1.jpg', 'screenshot2.jpg'],
       };
 
-      const response = await authenticatedAdminRequest(
-        `${baseURL}/api-v1/admin/reports`,
-        token,
-        {
-          method: "POST",
-          body: JSON.stringify(reportData)
-        }
-      );
+      const response = await authenticatedAdminRequest(`${baseURL}/api-v1/admin/reports`, token, {
+        method: 'POST',
+        body: JSON.stringify(reportData),
+      });
 
       // In real implementation, this would trigger WebSocket event:
       // socket.emit('new-report', { report: newReport, adminIds: moderators })
       expect([200, 404]).toContain(response.status);
     });
 
-    it("receives user verification request notification", async () => {
+    it('receives user verification request notification', async () => {
       const { token } = await createAdminAndToken();
-      const user = await seedUser({ verificationStatus: "pending" });
+      const user = await seedUser({ verificationStatus: 'pending' });
 
       // Update user to request verification (would trigger WebSocket notification)
       const verificationData = {
         userId: user.id,
-        verificationLevel: "high",
-        documents: ["id_card.jpg", "proof_of_address.pdf"]
+        verificationLevel: 'high',
+        documents: ['id_card.jpg', 'proof_of_address.pdf'],
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/users/${user.id}/verification-request`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(verificationData)
+          method: 'POST',
+          body: JSON.stringify(verificationData),
         }
       );
 
@@ -247,8 +232,8 @@ describe("Admin WebSocket Real-time Features", () => {
     });
   });
 
-  describe("Live Dashboard Updates", () => {
-    it("receives dashboard stats updates", async () => {
+  describe('Live Dashboard Updates', () => {
+    it('receives dashboard stats updates', async () => {
       const { token } = await createAdminAndToken();
 
       // Request dashboard overview (would establish WebSocket connection for live updates)
@@ -264,23 +249,23 @@ describe("Admin WebSocket Real-time Features", () => {
       // socket.on('dashboard-update', (data) => { updateDashboard(data) })
     });
 
-    it("receives user online/offline status updates", async () => {
+    it('receives user online/offline status updates', async () => {
       const { token } = await createAdminAndToken();
       const user = await seedUser();
 
       // Update user online status (would trigger WebSocket event)
       const statusData = {
         userId: user.id,
-        status: "online",
-        lastSeen: new Date().toISOString()
+        status: 'online',
+        lastSeen: new Date().toISOString(),
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/users/${user.id}/status`,
         token,
         {
-          method: "PUT",
-          body: JSON.stringify(statusData)
+          method: 'PUT',
+          body: JSON.stringify(statusData),
         }
       );
 
@@ -290,7 +275,7 @@ describe("Admin WebSocket Real-time Features", () => {
       expect([200, 404]).toContain(response.status);
     });
 
-    it("receives real-time metrics updates", async () => {
+    it('receives real-time metrics updates', async () => {
       const { token } = await createAdminAndToken();
 
       // Request real-time analytics (would establish WebSocket connection)
@@ -309,30 +294,30 @@ describe("Admin WebSocket Real-time Features", () => {
     });
   });
 
-  describe("Admin Activity Broadcasting", () => {
-    it("broadcasts admin actions to other admins", async () => {
+  describe('Admin Activity Broadcasting', () => {
+    it('broadcasts admin actions to other admins', async () => {
       const { token: token1, admin: admin1 } = await createAdminAndToken();
       const { admin: admin2 } = await createAdminAndToken();
 
       // Admin1 performs an action (would trigger WebSocket broadcast)
       const actionData = {
-        action: "user_verified",
-        targetId: "user-123",
+        action: 'user_verified',
+        targetId: 'user-123',
         details: {
           adminId: admin1.id,
-          adminName: "Admin One",
-          targetType: "user",
-          targetName: "User 123",
-          timestamp: new Date().toISOString()
-        }
+          adminName: 'Admin One',
+          targetType: 'user',
+          targetName: 'User 123',
+          timestamp: new Date().toISOString(),
+        },
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/broadcast`,
         token1,
         {
-          method: "POST",
-          body: JSON.stringify(actionData)
+          method: 'POST',
+          body: JSON.stringify(actionData),
         }
       );
 
@@ -341,24 +326,20 @@ describe("Admin WebSocket Real-time Features", () => {
       expect([200, 404]).toContain(response.status);
     });
 
-    it("handles admin presence tracking", async () => {
+    it('handles admin presence tracking', async () => {
       const { token, admin } = await createAdminAndToken();
 
       // Admin connects (would trigger WebSocket presence event)
       const presenceData = {
         adminId: admin.id,
-        status: "online",
-        lastActivity: new Date().toISOString()
+        status: 'online',
+        lastActivity: new Date().toISOString(),
       };
 
-      const response = await authenticatedAdminRequest(
-        `${baseURL}/api-v1/admin/presence`,
-        token,
-        {
-          method: "POST",
-          body: JSON.stringify(presenceData)
-        }
-      );
+      const response = await authenticatedAdminRequest(`${baseURL}/api-v1/admin/presence`, token, {
+        method: 'POST',
+        body: JSON.stringify(presenceData),
+      });
 
       // In real implementation, this would broadcast admin presence:
       // socket.emit('admin-presence-changed', presenceData)
@@ -366,8 +347,8 @@ describe("Admin WebSocket Real-time Features", () => {
     });
   });
 
-  describe("Real-time Moderation Queue", () => {
-    it("updates moderation queue in real-time", async () => {
+  describe('Real-time Moderation Queue', () => {
+    it('updates moderation queue in real-time', async () => {
       const { token } = await createAdminAndToken();
 
       // Get current moderation queue (establishes WebSocket connection)
@@ -384,23 +365,23 @@ describe("Admin WebSocket Real-time Features", () => {
       // socket.on('new-ad-for-moderation', (ad) => { addToQueue(ad) })
     });
 
-    it("notifies when ad is claimed by another moderator", async () => {
+    it('notifies when ad is claimed by another moderator', async () => {
       const { token: token1, admin: admin1 } = await createAdminAndToken();
       const { token: token2, admin: admin2 } = await createAdminAndToken();
 
       // Admin1 claims an ad for moderation
       const claimData = {
-        adId: "ad-123",
+        adId: 'ad-123',
         adminId: admin1.id,
-        lockDuration: 30 // minutes
+        lockDuration: 30, // minutes
       };
 
       const response1 = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/ads/claim`,
         token1,
         {
-          method: "POST",
-          body: JSON.stringify(claimData)
+          method: 'POST',
+          body: JSON.stringify(claimData),
         }
       );
 
@@ -413,8 +394,8 @@ describe("Admin WebSocket Real-time Features", () => {
         `${baseURL}/api-v1/admin/ads/claim`,
         token2,
         {
-          method: "POST",
-          body: JSON.stringify(claimData)
+          method: 'POST',
+          body: JSON.stringify(claimData),
         }
       );
 
@@ -423,22 +404,22 @@ describe("Admin WebSocket Real-time Features", () => {
     });
   });
 
-  describe("WebSocket Connection Management", () => {
-    it("handles admin authentication via WebSocket", async () => {
+  describe('WebSocket Connection Management', () => {
+    it('handles admin authentication via WebSocket', async () => {
       const { token, admin } = await createAdminAndToken();
 
       // Test WebSocket authentication endpoint
       const authData = {
         token: token,
-        adminId: admin.id
+        adminId: admin.id,
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/websocket/auth`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(authData)
+          method: 'POST',
+          body: JSON.stringify(authData),
         }
       );
 
@@ -446,22 +427,22 @@ describe("Admin WebSocket Real-time Features", () => {
       expect([200, 404]).toContain(response.status);
     });
 
-    it("handles WebSocket reconnection", async () => {
+    it('handles WebSocket reconnection', async () => {
       const { token, admin } = await createAdminAndToken();
 
       // Test reconnection data retrieval
       const reconnectData = {
         adminId: admin.id,
-        lastEventId: "event-123",
-        subscriptions: ["dashboard", "moderation", "support"]
+        lastEventId: 'event-123',
+        subscriptions: ['dashboard', 'moderation', 'support'],
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/websocket/reconnect`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(reconnectData)
+          method: 'POST',
+          body: JSON.stringify(reconnectData),
         }
       );
 
@@ -469,7 +450,7 @@ describe("Admin WebSocket Real-time Features", () => {
       expect([200, 404]).toContain(response.status);
     });
 
-    it("manages admin notification preferences", async () => {
+    it('manages admin notification preferences', async () => {
       const { token, admin } = await createAdminAndToken();
 
       const preferences = {
@@ -478,18 +459,18 @@ describe("Admin WebSocket Real-time Features", () => {
           newAds: true,
           newReports: true,
           supportCases: false,
-          systemAlerts: true
+          systemAlerts: true,
         },
         soundEnabled: true,
-        desktopNotifications: false
+        desktopNotifications: false,
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/notifications/preferences`,
         token,
         {
-          method: "PUT",
-          body: JSON.stringify(preferences)
+          method: 'PUT',
+          body: JSON.stringify(preferences),
         }
       );
 
@@ -500,29 +481,29 @@ describe("Admin WebSocket Real-time Features", () => {
     });
   });
 
-  describe("Real-time Error Broadcasting", () => {
-    it("broadcasts system errors to admins", async () => {
+  describe('Real-time Error Broadcasting', () => {
+    it('broadcasts system errors to admins', async () => {
       const { token } = await createAdminAndToken();
 
       // Simulate system error (would trigger WebSocket broadcast)
       const errorData = {
-        type: "database_error",
-        severity: "high",
-        message: "Database connection lost",
+        type: 'database_error',
+        severity: 'high',
+        message: 'Database connection lost',
         details: {
           timestamp: new Date().toISOString(),
-          service: "postgresql",
-          errorCode: "ECONNREFUSED"
+          service: 'postgresql',
+          errorCode: 'ECONNREFUSED',
         },
-        affectedServices: ["user-service", "ads-service"]
+        affectedServices: ['user-service', 'ads-service'],
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/system/error`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(errorData)
+          method: 'POST',
+          body: JSON.stringify(errorData),
         }
       );
 
@@ -531,28 +512,28 @@ describe("Admin WebSocket Real-time Features", () => {
       expect([200, 404]).toContain(response.status);
     });
 
-    it("handles emergency broadcasts", async () => {
+    it('handles emergency broadcasts', async () => {
       const { token } = await createAdminAndToken();
 
       const emergencyData = {
-        level: "critical",
-        title: "System Under Attack",
-        message: "Security breach detected. All admins please respond immediately.",
+        level: 'critical',
+        title: 'System Under Attack',
+        message: 'Security breach detected. All admins please respond immediately.',
         actions: [
-          "Secure all admin accounts",
-          "Enable emergency protocols",
-          "Contact security team"
+          'Secure all admin accounts',
+          'Enable emergency protocols',
+          'Contact security team',
         ],
         autoLogout: true,
-        lockdownMode: true
+        lockdownMode: true,
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/emergency/broadcast`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(emergencyData)
+          method: 'POST',
+          body: JSON.stringify(emergencyData),
         }
       );
 
@@ -563,8 +544,8 @@ describe("Admin WebSocket Real-time Features", () => {
     });
   });
 
-  describe("WebSocket Performance Monitoring", () => {
-    it("tracks WebSocket connection metrics", async () => {
+  describe('WebSocket Performance Monitoring', () => {
+    it('tracks WebSocket connection metrics', async () => {
       const { token } = await createAdminAndToken();
 
       // Get WebSocket performance stats
@@ -581,24 +562,24 @@ describe("Admin WebSocket Real-time Features", () => {
       expect(body.data.metrics.averageLatency).toBeDefined();
     });
 
-    it("monitors admin activity via WebSocket", async () => {
+    it('monitors admin activity via WebSocket', async () => {
       const { token, admin } = await createAdminAndToken();
 
       // Track admin activity
       const activityData = {
         adminId: admin.id,
-        action: "page_view",
-        page: "/admin/users",
+        action: 'page_view',
+        page: '/admin/users',
         timestamp: new Date().toISOString(),
-        sessionDuration: 3600 // seconds
+        sessionDuration: 3600, // seconds
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/activity/track`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(activityData)
+          method: 'POST',
+          body: JSON.stringify(activityData),
         }
       );
 
@@ -608,4 +589,3 @@ describe("Admin WebSocket Real-time Features", () => {
     });
   });
 });
-

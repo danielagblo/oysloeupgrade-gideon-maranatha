@@ -1,5 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from "typeorm";
-import { SupportCase } from "./SupportCase.js";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { SupportCase } from './SupportCase.js';
 
 @Entity('support_messages')
 export class SupportMessage {
@@ -9,7 +16,10 @@ export class SupportMessage {
   @Column({ name: 'case_id' })
   caseId!: number;
 
-  @ManyToOne(() => SupportCase, (sc: any) => sc.messages)
+  @ManyToOne(
+    () => SupportCase,
+    (sc: any) => sc.messages
+  )
   @JoinColumn({ name: 'case_id' })
   supportCase?: any;
 

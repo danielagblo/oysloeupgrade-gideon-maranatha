@@ -1,5 +1,5 @@
-import type { INotification } from "./notification.port";
-import { logError, logInfo } from "../utils/logger.js";
+import { logError, logInfo } from '../utils/logger.js';
+import type { INotification } from './notification.port';
 
 export class FirebaseNotificationService implements INotification {
   private projectId: string;
@@ -12,7 +12,7 @@ export class FirebaseNotificationService implements INotification {
     clientEmail?: string;
   }) {
     if (!config.projectId || !config.privateKey || !config.clientEmail) {
-      throw new Error("Firebase configuration missing required fields");
+      throw new Error('Firebase configuration missing required fields');
     }
     this.projectId = config.projectId;
     this.privateKey = config.privateKey;
@@ -21,16 +21,14 @@ export class FirebaseNotificationService implements INotification {
 
   async send(to: string, payload: Record<string, unknown>): Promise<void> {
     try {
-      const { getMessaging } = await import("../config/firebase.js");
+      const { getMessaging } = await import('../config/firebase.js');
       const messaging = getMessaging();
 
       const data: Record<string, string> = {};
-      if (payload.data && typeof payload.data === "object") {
+      if (payload.data && typeof payload.data === 'object') {
         for (const [key, value] of Object.entries(payload.data)) {
-          if (typeof value !== "string") {
-            throw new Error(
-              `Data field "${key}" must be a string, got ${typeof value}`
-            );
+          if (typeof value !== 'string') {
+            throw new Error(`Data field "${key}" must be a string, got ${typeof value}`);
           }
           data[key] = value;
         }
@@ -38,8 +36,8 @@ export class FirebaseNotificationService implements INotification {
 
       const message = {
         notification: {
-          title: (payload.title as string) || "Notification",
-          body: (payload.body as string) || "You have a new notification",
+          title: (payload.title as string) || 'Notification',
+          body: (payload.body as string) || 'You have a new notification',
         },
         data,
         token: to,

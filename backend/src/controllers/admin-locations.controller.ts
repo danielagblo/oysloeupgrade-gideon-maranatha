@@ -1,10 +1,6 @@
-import type { Request, Response, NextFunction } from "express";
-import { AdminLocationsService } from "../services/admin-locations.service.js";
-import {
-  CreateRegionSchema,
-  AddTownSchema,
-  UpdateTownSchema,
-} from "../schemas/admin.js";
+import type { NextFunction, Request, Response } from 'express';
+import { AddTownSchema, CreateRegionSchema, UpdateTownSchema } from '../schemas/admin.js';
+import { AdminLocationsService } from '../services/admin-locations.service.js';
 
 type CreateRegionRequest = Zod.infer<typeof CreateRegionSchema>;
 type AddTownRequest = Zod.infer<typeof AddTownSchema>;
@@ -12,11 +8,7 @@ type UpdateTownRequest = Zod.infer<typeof UpdateTownSchema>;
 
 const locationsService = new AdminLocationsService();
 
-export const getLocations = async (
-  _req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const getLocations = async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await locationsService.getLocations();
 
@@ -29,11 +21,7 @@ export const getLocations = async (
   }
 };
 
-export const createRegion = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const createRegion = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body: CreateRegionRequest = CreateRegionSchema.parse(req.body);
     const region = await locationsService.createRegion(body);
@@ -47,11 +35,7 @@ export const createRegion = async (
   }
 };
 
-export const addTown = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const addTown = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const regionId = req.params.regionId;
     const body: AddTownRequest = AddTownSchema.parse(req.body);
@@ -66,11 +50,7 @@ export const addTown = async (
   }
 };
 
-export const updateTown = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const updateTown = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const regionId = req.params.regionId;
     const townId = req.params.townId;

@@ -1,6 +1,6 @@
-import type { Request, Response } from "express";
-import { logError, logInfo } from "@utils/logger.js";
-import { NotificationService } from "../services/notification.service.js";
+import { logError, logInfo } from '@utils/logger.js';
+import type { Request, Response } from 'express';
+import { NotificationService } from '../services/notification.service.js';
 
 export class NotificationController {
   private notificationService = new NotificationService();
@@ -11,7 +11,7 @@ export class NotificationController {
       if (!userId) {
         return res.status(401).json({
           success: false,
-          message: "User not authenticated",
+          message: 'User not authenticated',
         });
       }
 
@@ -23,19 +23,16 @@ export class NotificationController {
 
       const rawQuery = req.query as Partial<Record<string, string>>;
       const pageNum = page ?? (rawQuery.page ? parseInt(rawQuery.page, 10) : 1);
-      const limitNum =
-        limit ?? (rawQuery.limit ? parseInt(rawQuery.limit, 10) : 20);
+      const limitNum = limit ?? (rawQuery.limit ? parseInt(rawQuery.limit, 10) : 20);
 
       if (pageNum < 1 || limitNum < 1 || limitNum > 100) {
         return res.status(400).json({
           success: false,
-          message:
-            "Invalid pagination parameters. Page must be >= 1, limit must be 1-100.",
+          message: 'Invalid pagination parameters. Page must be >= 1, limit must be 1-100.',
         });
       }
 
-      const unreadOnlyFlag =
-        unreadOnly === true || String(rawQuery.unreadOnly) === "true";
+      const unreadOnlyFlag = unreadOnly === true || String(rawQuery.unreadOnly) === 'true';
 
       const result = await this.notificationService.getNotificationHistory(
         userId,
@@ -53,11 +50,11 @@ export class NotificationController {
         },
       });
     } catch (error) {
-      logError("Failed to get notification history", error as Error);
+      logError('Failed to get notification history', error as Error);
       res.status(500).json({
         success: false,
-        message: "Failed to get notification history",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to get notification history',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -68,35 +65,33 @@ export class NotificationController {
       if (!userId) {
         return res.status(401).json({
           success: false,
-          message: "User not authenticated",
+          message: 'User not authenticated',
         });
       }
 
-      const { id: notificationId } = (req.validated?.params ||
-        req.params) as Partial<Record<string, string>>;
+      const { id: notificationId } = (req.validated?.params || req.params) as Partial<
+        Record<string, string>
+      >;
 
-      const success = await this.notificationService.markAsRead(
-        userId,
-        notificationId as string
-      );
+      const success = await this.notificationService.markAsRead(userId, notificationId as string);
 
       if (!success) {
         return res.status(404).json({
           success: false,
-          message: "Notification not found or access denied",
+          message: 'Notification not found or access denied',
         });
       }
 
       res.json({
         success: true,
-        message: "Notification marked as read",
+        message: 'Notification marked as read',
       });
     } catch (error) {
-      logError("Failed to mark notification as read", error as Error);
+      logError('Failed to mark notification as read', error as Error);
       res.status(500).json({
         success: false,
-        message: "Failed to mark notification as read",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to mark notification as read',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -107,7 +102,7 @@ export class NotificationController {
       if (!userId) {
         return res.status(401).json({
           success: false,
-          message: "User not authenticated",
+          message: 'User not authenticated',
         });
       }
 
@@ -118,11 +113,11 @@ export class NotificationController {
         data: { unreadCount },
       });
     } catch (error) {
-      logError("Failed to get unread count", error as Error);
+      logError('Failed to get unread count', error as Error);
       res.status(500).json({
         success: false,
-        message: "Failed to get unread count",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to get unread count',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -133,7 +128,7 @@ export class NotificationController {
       if (!userId) {
         return res.status(401).json({
           success: false,
-          message: "User not authenticated",
+          message: 'User not authenticated',
         });
       }
 
@@ -145,11 +140,11 @@ export class NotificationController {
         data: { markedCount },
       });
     } catch (error) {
-      logError("Failed to mark all notifications as read", error as Error);
+      logError('Failed to mark all notifications as read', error as Error);
       res.status(500).json({
         success: false,
-        message: "Failed to mark all notifications as read",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to mark all notifications as read',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -160,7 +155,7 @@ export class NotificationController {
       if (!userId) {
         return res.status(401).json({
           success: false,
-          message: "User not authenticated",
+          message: 'User not authenticated',
         });
       }
 
@@ -182,11 +177,11 @@ export class NotificationController {
         data: settings,
       });
     } catch (error) {
-      logError("Failed to get notification settings", error as Error);
+      logError('Failed to get notification settings', error as Error);
       res.status(500).json({
         success: false,
-        message: "Failed to get notification settings",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to get notification settings',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -197,7 +192,7 @@ export class NotificationController {
       if (!userId) {
         return res.status(401).json({
           success: false,
-          message: "User not authenticated",
+          message: 'User not authenticated',
         });
       }
 
@@ -207,15 +202,15 @@ export class NotificationController {
 
       res.json({
         success: true,
-        message: "Notification settings updated",
+        message: 'Notification settings updated',
         data: settings,
       });
     } catch (error) {
-      logError("Failed to update notification settings", error as Error);
+      logError('Failed to update notification settings', error as Error);
       res.status(500).json({
         success: false,
-        message: "Failed to update notification settings",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to update notification settings',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }

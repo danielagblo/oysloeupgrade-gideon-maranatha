@@ -1,10 +1,10 @@
-import { AppDataSource } from "../config/database.js";
-import { SupportCase } from "../entities/SupportCase.js";
-import { SupportMessage } from "../entities/SupportMessage.js";
-import { SupportCaseAssignment } from "../entities/SupportCaseAssignment.js";
-import { User } from "../entities/User.js";
-import { AdminUser } from "../entities/AdminUser.js";
-import { NotFoundError } from "../utils/errors.js";
+import { AppDataSource } from '../config/database.js';
+import { AdminUser } from '../entities/AdminUser.js';
+import { SupportCase } from '../entities/SupportCase.js';
+import { SupportCaseAssignment } from '../entities/SupportCaseAssignment.js';
+import { SupportMessage } from '../entities/SupportMessage.js';
+import { User } from '../entities/User.js';
+import { NotFoundError } from '../utils/errors.js';
 
 export interface GetCasesOptions {
   page?: number;
@@ -61,44 +61,44 @@ export class AdminSupportService {
     } = options;
 
     const queryBuilder = this.supportCaseRepository
-      .createQueryBuilder("case")
-      .leftJoinAndSelect("case.user", "user")
-      .leftJoinAndSelect("case.assignedAdmin", "assignedAdmin")
-      .orderBy("case.lastMessageAt", "DESC");
+      .createQueryBuilder('case')
+      .leftJoinAndSelect('case.user', 'user')
+      .leftJoinAndSelect('case.assignedAdmin', 'assignedAdmin')
+      .orderBy('case.lastMessageAt', 'DESC');
 
     if (status) {
-      queryBuilder.andWhere("case.status = :status", { status });
+      queryBuilder.andWhere('case.status = :status', { status });
     }
 
     if (priority) {
-      queryBuilder.andWhere("case.priority = :priority", { priority });
+      queryBuilder.andWhere('case.priority = :priority', { priority });
     }
 
     if (assignedTo) {
-      queryBuilder.andWhere("case.assignedAdminId = :assignedTo", {
+      queryBuilder.andWhere('case.assignedAdminId = :assignedTo', {
         assignedTo,
       });
     }
 
     if (userId) {
-      queryBuilder.andWhere("case.userId = :userId", { userId });
+      queryBuilder.andWhere('case.userId = :userId', { userId });
     }
 
     if (category) {
-      queryBuilder.andWhere("case.category = :category", { category });
+      queryBuilder.andWhere('case.category = :category', { category });
     }
 
     if (dateFrom) {
-      queryBuilder.andWhere("case.createdAt >= :dateFrom", { dateFrom });
+      queryBuilder.andWhere('case.createdAt >= :dateFrom', { dateFrom });
     }
 
     if (dateTo) {
-      queryBuilder.andWhere("case.createdAt <= :dateTo", { dateTo });
+      queryBuilder.andWhere('case.createdAt <= :dateTo', { dateTo });
     }
 
     if (search) {
       queryBuilder.andWhere(
-        "(case.subject ILIKE :search OR user.name ILIKE :search OR user.email ILIKE :search)",
+        '(case.subject ILIKE :search OR user.name ILIKE :search OR user.email ILIKE :search)',
         { search: `%${search}%` }
       );
     }
@@ -122,24 +122,24 @@ export class AdminSupportService {
   async getCase(caseId: number) {
     const supportCase = await this.supportCaseRepository.findOne({
       where: { id: caseId },
-      relations: ["user", "assignedAdmin"],
+      relations: ['user', 'assignedAdmin'],
     });
 
     if (!supportCase) {
-      throw new NotFoundError("Support case not found");
+      throw new NotFoundError('Support case not found');
     }
 
     // Get messages
     const messages = await this.supportMessageRepository.find({
       where: { caseId },
-      order: { createdAt: "ASC" },
+      order: { createdAt: 'ASC' },
     });
 
     // Get assignment history
     const assignments = await this.supportCaseAssignmentRepository.find({
       where: { caseId },
-      relations: ["adminUser"],
-      order: { assignedAt: "DESC" },
+      relations: ['adminUser'],
+      order: { assignedAt: 'DESC' },
     });
 
     return {
@@ -150,7 +150,15 @@ export class AdminSupportService {
   }
 
   async sendMessage(input: SendMessageInput) {
-    const { caseId, adminUserId, content, messageType = "text", fileUrl, fileName, fileSize } = input;
+    const {
+      caseId,
+      adminUserId,
+      content,
+      messageType = 'text',
+      fileUrl,
+      fileName,
+      fileSize,
+    } = input;
 
     // Verify case exists
     const supportCase = await this.supportCaseRepository.findOne({
@@ -158,14 +166,14 @@ export class AdminSupportService {
     });
 
     if (!supportCase) {
-      throw new NotFoundError("Support case not found");
+      throw new NotFoundError('Support case not found');
     }
 
     // Create message
     const message = this.supportMessageRepository.create({
       caseId,
       senderId: adminUserId.toString(),
-      senderType: "admin",
+      senderType: 'admin',
       messageType,
       content,
       fileUrl,
@@ -189,11 +197,11 @@ export class AdminSupportService {
     });
 
     if (!supportCase) {
-      throw new NotFoundError("Support case not found");
+      throw new NotFoundError('Support case not found');
     }
 
     supportCase.status = status;
-    if (status === "resolved" || status === "closed") {
+    if (status === 'resolved' || status === 'closed') {
       supportCase.resolvedAt = new Date();
     }
     await this.supportCaseRepository.save(supportCase);
@@ -207,7 +215,7 @@ export class AdminSupportService {
     });
 
     if (!supportCase) {
-      throw new NotFoundError("Support case not found");
+      throw new NotFoundError('Support case not found');
     }
 
     // Unassign previous assignment if exists
@@ -244,15 +252,10 @@ export class AdminSupportService {
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
 
     const onlineUsers = await this.userRepository
-      .createQueryBuilder("user")
-      .where("user.lastLogin >= :fiveMinutesAgo", { fiveMinutesAgo })
-      .andWhere("user.isActive = :isActive", { isActive: true })
-      .select([
-        "user.id",
-        "user.name",
-        "user.avatarUrl",
-        "user.lastLogin",
-      ])
+      .createQueryBuilder('user')
+      .where('user.lastLogin >= :fiveMinutesAgo', { fiveMinutesAgo })
+      .andWhere('user.isActive = :isActive', { isActive: true })
+      .select(['user.id', 'user.name', 'user.avatarUrl', 'user.lastLogin'])
       .getMany();
 
     // Get active cases count for each user
@@ -261,7 +264,7 @@ export class AdminSupportService {
         const activeCases = await this.supportCaseRepository.count({
           where: {
             userId: user.id,
-            status: "open",
+            status: 'open',
           },
         });
 
@@ -278,5 +281,3 @@ export class AdminSupportService {
     return usersWithCases;
   }
 }
-
-

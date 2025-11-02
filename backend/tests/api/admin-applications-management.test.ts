@@ -1,23 +1,16 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-  beforeEach,
-} from "bun:test";
-import {
-  createTestServer,
-  closeTestServer,
-  resetDb,
-  seedUser,
-  createAdminAndToken,
   authenticatedAdminRequest,
+  closeTestServer,
+  createAdminAndToken,
+  createTestServer,
   expectError,
   expectSuccess,
-} from "../test-helpers";
+  resetDb,
+  seedUser,
+} from '../test-helpers';
 
-describe("Admin Applications Management API", () => {
+describe('Admin Applications Management API', () => {
   let server: unknown;
   let baseURL: string;
 
@@ -35,8 +28,8 @@ describe("Admin Applications Management API", () => {
     await closeTestServer(server);
   });
 
-  describe("GET /api-v1/admin/applications", () => {
-    it("returns paginated applications list", async () => {
+  describe('GET /api-v1/admin/applications', () => {
+    it('returns paginated applications list', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -54,7 +47,7 @@ describe("Admin Applications Management API", () => {
       expect(body.data.filters.timePeriods).toBeInstanceOf(Array);
     });
 
-    it("filters applications by status", async () => {
+    it('filters applications by status', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -64,10 +57,10 @@ describe("Admin Applications Management API", () => {
 
       const body = await expectSuccess(response, 200);
       expect(body.data.applications).toBeInstanceOf(Array);
-      expect(body.data.applications.every((app: any) => app.status === "pending")).toBe(true);
+      expect(body.data.applications.every((app: any) => app.status === 'pending')).toBe(true);
     });
 
-    it("filters applications by time period", async () => {
+    it('filters applications by time period', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -80,7 +73,7 @@ describe("Admin Applications Management API", () => {
       // All applications should be from today
     });
 
-    it("searches applications by applicant name", async () => {
+    it('searches applications by applicant name', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -92,23 +85,23 @@ describe("Admin Applications Management API", () => {
       expect(body.data.applications).toBeInstanceOf(Array);
       // Should only return applications with "john" in applicant name
       body.data.applications.forEach((app: any) => {
-        expect(app.applicantName.toLowerCase()).toContain("john");
+        expect(app.applicantName.toLowerCase()).toContain('john');
       });
     });
 
-    it("rejects unauthenticated requests", async () => {
+    it('rejects unauthenticated requests', async () => {
       const response = await fetch(`${baseURL}/api-v1/admin/applications`);
 
       await expectError(response, 401);
     });
   });
 
-  describe("GET /api-v1/admin/applications/:id", () => {
-    it("returns detailed application information", async () => {
+  describe('GET /api-v1/admin/applications/:id', () => {
+    it('returns detailed application information', async () => {
       const { token } = await createAdminAndToken();
 
       // This would need a real application ID in implementation
-      const applicationId = "mock-app-id";
+      const applicationId = 'mock-app-id';
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/applications/${applicationId}`,
@@ -125,9 +118,9 @@ describe("Admin Applications Management API", () => {
       expect(body.data.application.position).toBeDefined();
     });
 
-    it("includes application documents", async () => {
+    it('includes application documents', async () => {
       const { token } = await createAdminAndToken();
-      const applicationId = "mock-app-id";
+      const applicationId = 'mock-app-id';
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/applications/${applicationId}`,
@@ -145,9 +138,9 @@ describe("Admin Applications Management API", () => {
       });
     });
 
-    it("includes review history", async () => {
+    it('includes review history', async () => {
       const { token } = await createAdminAndToken();
-      const applicationId = "mock-app-id";
+      const applicationId = 'mock-app-id';
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/applications/${applicationId}`,
@@ -166,7 +159,7 @@ describe("Admin Applications Management API", () => {
       });
     });
 
-    it("returns 404 for non-existent application", async () => {
+    it('returns 404 for non-existent application', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -178,99 +171,99 @@ describe("Admin Applications Management API", () => {
     });
   });
 
-  describe("POST /api-v1/admin/applications/:id/download", () => {
-    it("generates download URL for CV", async () => {
+  describe('POST /api-v1/admin/applications/:id/download', () => {
+    it('generates download URL for CV', async () => {
       const { token } = await createAdminAndToken();
-      const applicationId = "mock-app-id";
+      const applicationId = 'mock-app-id';
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/applications/${applicationId}/download`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            documentType: "cv"
-          })
+            documentType: 'cv',
+          }),
         }
       );
 
       const body = await expectSuccess(response, 200);
       expect(body.data.downloadUrl).toBeDefined();
       expect(body.data.expiresAt).toBeDefined();
-      expect(body.data.documentType).toBe("cv");
+      expect(body.data.documentType).toBe('cv');
     });
 
-    it("generates download URL for cover letter", async () => {
+    it('generates download URL for cover letter', async () => {
       const { token } = await createAdminAndToken();
-      const applicationId = "mock-app-id";
+      const applicationId = 'mock-app-id';
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/applications/${applicationId}/download`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            documentType: "cover_letter"
-          })
+            documentType: 'cover_letter',
+          }),
         }
       );
 
       const body = await expectSuccess(response, 200);
       expect(body.data.downloadUrl).toBeDefined();
-      expect(body.data.documentType).toBe("cover_letter");
+      expect(body.data.documentType).toBe('cover_letter');
     });
 
-    it("generates download URL for portfolio", async () => {
+    it('generates download URL for portfolio', async () => {
       const { token } = await createAdminAndToken();
-      const applicationId = "mock-app-id";
+      const applicationId = 'mock-app-id';
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/applications/${applicationId}/download`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            documentType: "portfolio"
-          })
+            documentType: 'portfolio',
+          }),
         }
       );
 
       const body = await expectSuccess(response, 200);
       expect(body.data.downloadUrl).toBeDefined();
-      expect(body.data.documentType).toBe("portfolio");
+      expect(body.data.documentType).toBe('portfolio');
     });
 
-    it("validates document type", async () => {
+    it('validates document type', async () => {
       const { token } = await createAdminAndToken();
-      const applicationId = "mock-app-id";
+      const applicationId = 'mock-app-id';
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/applications/${applicationId}/download`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            documentType: "invalid-type"
-          })
+            documentType: 'invalid-type',
+          }),
         }
       );
 
       await expectError(response, 400);
     });
 
-    it("returns 404 when document not found", async () => {
+    it('returns 404 when document not found', async () => {
       const { token } = await createAdminAndToken();
-      const applicationId = "mock-app-id";
+      const applicationId = 'mock-app-id';
 
       // Mock scenario where document doesn't exist
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/applications/${applicationId}/download`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            documentType: "cv"
-          })
+            documentType: 'cv',
+          }),
         }
       );
 
@@ -279,87 +272,92 @@ describe("Admin Applications Management API", () => {
     });
   });
 
-  describe("PUT /api-v1/admin/applications/:id/status", () => {
-    it("updates application status to reviewed", async () => {
+  describe('PUT /api-v1/admin/applications/:id/status', () => {
+    it('updates application status to reviewed', async () => {
       const { token, admin } = await createAdminAndToken();
-      const applicationId = "mock-app-id";
+      const applicationId = 'mock-app-id';
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/applications/${applicationId}/status`,
         token,
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify({
-            status: "reviewed",
-            notes: "Application has been reviewed and is under consideration"
-          })
+            status: 'reviewed',
+            notes: 'Application has been reviewed and is under consideration',
+          }),
         }
       );
 
       const body = await expectSuccess(response, 200);
       expect(body.data.application).toBeDefined();
-      expect(body.data.application.status).toBe("reviewed");
+      expect(body.data.application.status).toBe('reviewed');
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("accepts application with feedback", async () => {
+    it('accepts application with feedback', async () => {
       const { token, admin } = await createAdminAndToken();
-      const applicationId = "mock-app-id";
+      const applicationId = 'mock-app-id';
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/applications/${applicationId}/status`,
         token,
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify({
-            status: "accepted",
-            notes: "Congratulations! Your application has been accepted.",
-            feedback: "We were impressed by your experience and skills. Welcome to the team!"
-          })
+            status: 'accepted',
+            notes: 'Congratulations! Your application has been accepted.',
+            feedback: 'We were impressed by your experience and skills. Welcome to the team!',
+          }),
         }
       );
 
       const body = await expectSuccess(response, 200);
-      expect(body.data.application.status).toBe("accepted");
-      expect(body.data.application.feedback).toBe("We were impressed by your experience and skills. Welcome to the team!");
+      expect(body.data.application.status).toBe('accepted');
+      expect(body.data.application.feedback).toBe(
+        'We were impressed by your experience and skills. Welcome to the team!'
+      );
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("rejects application with feedback", async () => {
+    it('rejects application with feedback', async () => {
       const { token, admin } = await createAdminAndToken();
-      const applicationId = "mock-app-id";
+      const applicationId = 'mock-app-id';
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/applications/${applicationId}/status`,
         token,
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify({
-            status: "rejected",
-            notes: "Application decision made",
-            feedback: "Thank you for your interest. Unfortunately, we have decided to pursue other candidates at this time."
-          })
+            status: 'rejected',
+            notes: 'Application decision made',
+            feedback:
+              'Thank you for your interest. Unfortunately, we have decided to pursue other candidates at this time.',
+          }),
         }
       );
 
       const body = await expectSuccess(response, 200);
-      expect(body.data.application.status).toBe("rejected");
-      expect(body.data.application.feedback).toBe("Thank you for your interest. Unfortunately, we have decided to pursue other candidates at this time.");
+      expect(body.data.application.status).toBe('rejected');
+      expect(body.data.application.feedback).toBe(
+        'Thank you for your interest. Unfortunately, we have decided to pursue other candidates at this time.'
+      );
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("validates status transitions", async () => {
+    it('validates status transitions', async () => {
       const { token } = await createAdminAndToken();
-      const applicationId = "mock-app-id";
+      const applicationId = 'mock-app-id';
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/applications/${applicationId}/status`,
         token,
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify({
-            status: "invalid-status"
-          })
+            status: 'invalid-status',
+          }),
         }
       );
 
@@ -367,26 +365,26 @@ describe("Admin Applications Management API", () => {
     });
   });
 
-  describe("POST /api-v1/admin/applications/:id/review", () => {
-    it("adds review notes to application", async () => {
+  describe('POST /api-v1/admin/applications/:id/review', () => {
+    it('adds review notes to application', async () => {
       const { token, admin } = await createAdminAndToken();
-      const applicationId = "mock-app-id";
+      const applicationId = 'mock-app-id';
 
       const reviewData = {
         rating: 4,
-        strengths: "Strong technical skills, good communication",
-        weaknesses: "Limited experience with certain technologies",
-        recommendation: "hire",
-        internalNotes: "Good candidate, recommend for technical interview",
-        nextSteps: "Schedule technical interview for next week"
+        strengths: 'Strong technical skills, good communication',
+        weaknesses: 'Limited experience with certain technologies',
+        recommendation: 'hire',
+        internalNotes: 'Good candidate, recommend for technical interview',
+        nextSteps: 'Schedule technical interview for next week',
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/applications/${applicationId}/review`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(reviewData)
+          method: 'POST',
+          body: JSON.stringify(reviewData),
         }
       );
 
@@ -394,45 +392,45 @@ describe("Admin Applications Management API", () => {
       expect(body.data.review).toBeDefined();
       expect(body.data.review.rating).toBe(4);
       expect(body.data.review.reviewerId).toBe(admin.id);
-      expect(body.data.review.recommendation).toBe("hire");
+      expect(body.data.review.recommendation).toBe('hire');
       expect(body.data.application).toBeDefined();
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("validates rating range", async () => {
+    it('validates rating range', async () => {
       const { token } = await createAdminAndToken();
-      const applicationId = "mock-app-id";
+      const applicationId = 'mock-app-id';
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/applications/${applicationId}/review`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
             rating: 6, // Invalid rating (> 5)
-            strengths: "Good skills",
-            recommendation: "consider"
-          })
+            strengths: 'Good skills',
+            recommendation: 'consider',
+          }),
         }
       );
 
       await expectError(response, 400);
     });
 
-    it("validates recommendation value", async () => {
+    it('validates recommendation value', async () => {
       const { token } = await createAdminAndToken();
-      const applicationId = "mock-app-id";
+      const applicationId = 'mock-app-id';
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/applications/${applicationId}/review`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
             rating: 3,
-            strengths: "Decent skills",
-            recommendation: "invalid-recommendation"
-          })
+            strengths: 'Decent skills',
+            recommendation: 'invalid-recommendation',
+          }),
         }
       );
 
@@ -440,8 +438,8 @@ describe("Admin Applications Management API", () => {
     });
   });
 
-  describe("GET /api-v1/admin/applications/stats", () => {
-    it("returns application statistics", async () => {
+  describe('GET /api-v1/admin/applications/stats', () => {
+    it('returns application statistics', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -451,17 +449,17 @@ describe("Admin Applications Management API", () => {
 
       const body = await expectSuccess(response, 200);
       expect(body.data.stats).toBeDefined();
-      expect(typeof body.data.stats.totalApplications).toBe("number");
-      expect(typeof body.data.stats.pending).toBe("number");
-      expect(typeof body.data.stats.reviewed).toBe("number");
-      expect(typeof body.data.stats.accepted).toBe("number");
-      expect(typeof body.data.stats.rejected).toBe("number");
+      expect(typeof body.data.stats.totalApplications).toBe('number');
+      expect(typeof body.data.stats.pending).toBe('number');
+      expect(typeof body.data.stats.reviewed).toBe('number');
+      expect(typeof body.data.stats.accepted).toBe('number');
+      expect(typeof body.data.stats.rejected).toBe('number');
       expect(body.data.stats.byPosition).toBeDefined();
       expect(body.data.stats.bySource).toBeDefined();
       expect(body.data.stats.avgReviewTime).toBeDefined();
     });
 
-    it("includes time-based metrics", async () => {
+    it('includes time-based metrics', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -472,27 +470,27 @@ describe("Admin Applications Management API", () => {
       const body = await expectSuccess(response, 200);
       expect(body.data.stats.trends).toBeInstanceOf(Array);
       expect(body.data.stats.conversionRates).toBeDefined();
-      expect(typeof body.data.stats.conversionRates.reviewToAccept).toBe("number");
+      expect(typeof body.data.stats.conversionRates.reviewToAccept).toBe('number');
     });
   });
 
-  describe("Additional Application Management Endpoints", () => {
-    it("POST /api-v1/admin/applications/bulk/status updates multiple applications", async () => {
+  describe('Additional Application Management Endpoints', () => {
+    it('POST /api-v1/admin/applications/bulk/status updates multiple applications', async () => {
       const { token } = await createAdminAndToken();
 
       const bulkData = {
-        applicationIds: ["app-1", "app-2", "app-3"],
-        status: "reviewed",
-        notes: "Bulk status update for weekly review",
-        feedback: "Thank you for your application. We will be in touch soon."
+        applicationIds: ['app-1', 'app-2', 'app-3'],
+        status: 'reviewed',
+        notes: 'Bulk status update for weekly review',
+        feedback: 'Thank you for your application. We will be in touch soon.',
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/applications/bulk/status`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(bulkData)
+          method: 'POST',
+          body: JSON.stringify(bulkData),
         }
       );
 
@@ -503,7 +501,7 @@ describe("Admin Applications Management API", () => {
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("GET /api-v1/admin/applications/export exports applications data", async () => {
+    it('GET /api-v1/admin/applications/export exports applications data', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -514,43 +512,43 @@ describe("Admin Applications Management API", () => {
       const body = await expectSuccess(response, 200);
       expect(body.data.downloadUrl).toBeDefined();
       expect(body.data.expiresAt).toBeDefined();
-      expect(typeof body.data.recordCount).toBe("number");
-      expect(body.data.format).toBe("csv");
+      expect(typeof body.data.recordCount).toBe('number');
+      expect(body.data.format).toBe('csv');
     });
 
-    it("POST /api-v1/admin/applications/:id/interview schedules interview", async () => {
+    it('POST /api-v1/admin/applications/:id/interview schedules interview', async () => {
       const { token, admin } = await createAdminAndToken();
-      const applicationId = "mock-app-id";
+      const applicationId = 'mock-app-id';
 
       const interviewData = {
-        type: "technical",
+        type: 'technical',
         scheduledFor: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // Next week
         duration: 60, // minutes
-        interviewers: ["John Manager", "Jane Tech Lead"],
-        location: "Virtual - Zoom",
-        notes: "Technical assessment interview",
-        preparation: "Please review system design principles and prepare for coding challenges"
+        interviewers: ['John Manager', 'Jane Tech Lead'],
+        location: 'Virtual - Zoom',
+        notes: 'Technical assessment interview',
+        preparation: 'Please review system design principles and prepare for coding challenges',
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/applications/${applicationId}/interview`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(interviewData)
+          method: 'POST',
+          body: JSON.stringify(interviewData),
         }
       );
 
       const body = await expectSuccess(response, 200);
       expect(body.data.interview).toBeDefined();
-      expect(body.data.interview.type).toBe("technical");
+      expect(body.data.interview.type).toBe('technical');
       expect(body.data.interview.scheduledFor).toBe(interviewData.scheduledFor);
       expect(body.data.interview.duration).toBe(60);
       expect(body.data.application).toBeDefined();
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("GET /api-v1/admin/applications/pipeline returns hiring pipeline", async () => {
+    it('GET /api-v1/admin/applications/pipeline returns hiring pipeline', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -568,56 +566,56 @@ describe("Admin Applications Management API", () => {
 
       // Each stage should have count and applications
       Object.values(body.data.pipeline).forEach((stage: any) => {
-        expect(typeof stage.count).toBe("number");
+        expect(typeof stage.count).toBe('number');
         expect(stage.applications).toBeInstanceOf(Array);
       });
     });
 
-    it("POST /api-v1/admin/applications/:id/offer extends job offer", async () => {
+    it('POST /api-v1/admin/applications/:id/offer extends job offer', async () => {
       const { token, admin } = await createAdminAndToken();
-      const applicationId = "mock-app-id";
+      const applicationId = 'mock-app-id';
 
       const offerData = {
-        position: "Senior Software Engineer",
+        position: 'Senior Software Engineer',
         salary: 120000,
-        currency: "USD",
+        currency: 'USD',
         startDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
-        benefits: ["Health Insurance", "401k Matching", "Remote Work"],
-        conditions: "Background check required",
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days to respond
+        benefits: ['Health Insurance', '401k Matching', 'Remote Work'],
+        conditions: 'Background check required',
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days to respond
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/applications/${applicationId}/offer`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(offerData)
+          method: 'POST',
+          body: JSON.stringify(offerData),
         }
       );
 
       const body = await expectSuccess(response, 200);
       expect(body.data.offer).toBeDefined();
-      expect(body.data.offer.position).toBe("Senior Software Engineer");
+      expect(body.data.offer.position).toBe('Senior Software Engineer');
       expect(body.data.offer.salary).toBe(120000);
-      expect(body.data.offer.currency).toBe("USD");
+      expect(body.data.offer.currency).toBe('USD');
       expect(body.data.application).toBeDefined();
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("DELETE /api-v1/admin/applications/:id deletes application", async () => {
+    it('DELETE /api-v1/admin/applications/:id deletes application', async () => {
       const { token } = await createAdminAndToken();
-      const applicationId = "mock-app-id";
+      const applicationId = 'mock-app-id';
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/applications/${applicationId}`,
         token,
         {
-          method: "DELETE",
+          method: 'DELETE',
           body: JSON.stringify({
-            reason: "Application withdrawn by candidate",
-            permanent: false
-          })
+            reason: 'Application withdrawn by candidate',
+            permanent: false,
+          }),
         }
       );
 
@@ -627,4 +625,3 @@ describe("Admin Applications Management API", () => {
     });
   });
 });
-

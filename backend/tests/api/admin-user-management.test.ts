@@ -1,23 +1,16 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-  beforeEach,
-} from "bun:test";
-import {
-  createTestServer,
-  closeTestServer,
-  resetDb,
-  seedUser,
-  createAdminAndToken,
   authenticatedAdminRequest,
+  closeTestServer,
+  createAdminAndToken,
+  createTestServer,
   expectError,
   expectSuccess,
-} from "../test-helpers";
+  resetDb,
+  seedUser,
+} from '../test-helpers';
 
-describe("Admin User Management API", () => {
+describe('Admin User Management API', () => {
   let server: unknown;
   let baseURL: string;
 
@@ -35,14 +28,14 @@ describe("Admin User Management API", () => {
     await closeTestServer(server);
   });
 
-  describe("GET /api-v1/admin/users", () => {
-    it("returns paginated users list", async () => {
+  describe('GET /api-v1/admin/users', () => {
+    it('returns paginated users list', async () => {
       const { token } = await createAdminAndToken();
 
       // Create some test users
-      await seedUser({ email: "user1@example.com", name: "User One" });
-      await seedUser({ email: "user2@example.com", name: "User Two" });
-      await seedUser({ email: "user3@example.com", name: "User Three" });
+      await seedUser({ email: 'user1@example.com', name: 'User One' });
+      await seedUser({ email: 'user2@example.com', name: 'User Two' });
+      await seedUser({ email: 'user3@example.com', name: 'User Three' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/users?page=1&limit=10`,
@@ -62,17 +55,17 @@ describe("Admin User Management API", () => {
       expect(body.data.filters.role).toBeInstanceOf(Array);
     });
 
-    it("filters users by status", async () => {
+    it('filters users by status', async () => {
       const { token } = await createAdminAndToken();
 
       // Create users with different verification statuses
       await seedUser({
-        email: "verified@example.com",
-        verificationStatus: "verified",
+        email: 'verified@example.com',
+        verificationStatus: 'verified',
       });
       await seedUser({
-        email: "unverified@example.com",
-        verificationStatus: "unverified",
+        email: 'unverified@example.com',
+        verificationStatus: 'unverified',
       });
 
       const response = await authenticatedAdminRequest(
@@ -83,14 +76,14 @@ describe("Admin User Management API", () => {
       const body = await expectSuccess(response, 200);
       expect(body.data.users).toBeInstanceOf(Array);
       expect(body.data.users.length).toBe(1);
-      expect(body.data.users[0].verificationStatus).toBe("verified");
+      expect(body.data.users[0].verificationStatus).toBe('verified');
     });
 
-    it("searches users by email", async () => {
+    it('searches users by email', async () => {
       const { token } = await createAdminAndToken();
 
-      await seedUser({ email: "john.doe@example.com", name: "John Doe" });
-      await seedUser({ email: "jane.smith@example.com", name: "Jane Smith" });
+      await seedUser({ email: 'john.doe@example.com', name: 'John Doe' });
+      await seedUser({ email: 'jane.smith@example.com', name: 'Jane Smith' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/users?search=john`,
@@ -100,14 +93,14 @@ describe("Admin User Management API", () => {
       const body = await expectSuccess(response, 200);
       expect(body.data.users).toBeInstanceOf(Array);
       expect(body.data.users.length).toBe(1);
-      expect(body.data.users[0].name).toBe("John Doe");
+      expect(body.data.users[0].name).toBe('John Doe');
     });
 
-    it("sorts users by specified field", async () => {
+    it('sorts users by specified field', async () => {
       const { token } = await createAdminAndToken();
 
-      await seedUser({ email: "a@example.com", name: "A User" });
-      await seedUser({ email: "z@example.com", name: "Z User" });
+      await seedUser({ email: 'a@example.com', name: 'A User' });
+      await seedUser({ email: 'z@example.com', name: 'Z User' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/users?sortBy=name&sortOrder=asc`,
@@ -118,28 +111,24 @@ describe("Admin User Management API", () => {
       expect(body.data.users).toBeInstanceOf(Array);
       expect(body.data.users.length).toBeGreaterThanOrEqual(2);
       // First user should be A User if sorted ascending
-      const aUserIndex = body.data.users.findIndex(
-        (u: any) => u.name === "A User"
-      );
-      const zUserIndex = body.data.users.findIndex(
-        (u: any) => u.name === "Z User"
-      );
+      const aUserIndex = body.data.users.findIndex((u: any) => u.name === 'A User');
+      const zUserIndex = body.data.users.findIndex((u: any) => u.name === 'Z User');
       expect(aUserIndex).toBeLessThan(zUserIndex);
     });
 
-    it("rejects unauthenticated requests", async () => {
+    it('rejects unauthenticated requests', async () => {
       const response = await fetch(`${baseURL}/api-v1/admin/users`);
 
       await expectError(response, 401);
     });
   });
 
-  describe("GET /api-v1/admin/users/:id", () => {
-    it("returns detailed user information", async () => {
+  describe('GET /api-v1/admin/users/:id', () => {
+    it('returns detailed user information', async () => {
       const { token } = await createAdminAndToken();
       const user = await seedUser({
-        name: "Test User",
-        email: "test@example.com",
+        name: 'Test User',
+        email: 'test@example.com',
       });
 
       const response = await authenticatedAdminRequest(
@@ -150,15 +139,15 @@ describe("Admin User Management API", () => {
       const body = await expectSuccess(response, 200);
       expect(body.data.user).toBeDefined();
       expect(body.data.user.id).toBe(user.id);
-      expect(body.data.user.name).toBe("Test User");
-      expect(body.data.user.email).toBe("test@example.com");
+      expect(body.data.user.name).toBe('Test User');
+      expect(body.data.user.email).toBe('test@example.com');
       expect(body.data.user.adminNotes).toBeDefined();
       expect(body.data.user.verificationHistory).toBeInstanceOf(Array);
       expect(body.data.user.moderationHistory).toBeInstanceOf(Array);
       expect(body.data.user.activityStats).toBeDefined();
     });
 
-    it("returns 404 for non-existent user", async () => {
+    it('returns 404 for non-existent user', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -169,7 +158,7 @@ describe("Admin User Management API", () => {
       await expectError(response, 404);
     });
 
-    it("rejects invalid user ID", async () => {
+    it('rejects invalid user ID', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -181,51 +170,51 @@ describe("Admin User Management API", () => {
     });
   });
 
-  describe("POST /api-v1/admin/users/:id/verify", () => {
-    it("verifies user successfully", async () => {
+  describe('POST /api-v1/admin/users/:id/verify', () => {
+    it('verifies user successfully', async () => {
       const { token } = await createAdminAndToken();
-      const user = await seedUser({ verificationStatus: "unverified" });
+      const user = await seedUser({ verificationStatus: 'unverified' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/users/${user.id}/verify`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            status: "verified",
-            notes: "Verified via admin panel",
+            status: 'verified',
+            notes: 'Verified via admin panel',
           }),
         }
       );
 
       const body = await expectSuccess(response, 200);
       expect(body.data.user).toBeDefined();
-      expect(body.data.user.verificationStatus).toBe("verified");
+      expect(body.data.user.verificationStatus).toBe('verified');
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("unverifies user successfully", async () => {
+    it('unverifies user successfully', async () => {
       const { token } = await createAdminAndToken();
-      const user = await seedUser({ verificationStatus: "verified" });
+      const user = await seedUser({ verificationStatus: 'verified' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/users/${user.id}/verify`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            status: "unverified",
-            notes: "Unverified due to suspicious activity",
+            status: 'unverified',
+            notes: 'Unverified due to suspicious activity',
           }),
         }
       );
 
       const body = await expectSuccess(response, 200);
-      expect(body.data.user.verificationStatus).toBe("unverified");
+      expect(body.data.user.verificationStatus).toBe('unverified');
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("validates status field", async () => {
+    it('validates status field', async () => {
       const { token } = await createAdminAndToken();
       const user = await seedUser();
 
@@ -233,9 +222,9 @@ describe("Admin User Management API", () => {
         `${baseURL}/api-v1/admin/users/${user.id}/verify`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            status: "invalid-status",
+            status: 'invalid-status',
           }),
         }
       );
@@ -244,29 +233,29 @@ describe("Admin User Management API", () => {
     });
   });
 
-  describe("PUT /api-v1/admin/users/:id/level", () => {
-    it("updates user level successfully", async () => {
+  describe('PUT /api-v1/admin/users/:id/level', () => {
+    it('updates user level successfully', async () => {
       const { token } = await createAdminAndToken();
-      const user = await seedUser({ verificationLevel: "basic" });
+      const user = await seedUser({ verificationLevel: 'basic' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/users/${user.id}/level`,
         token,
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify({
-            level: "high",
-            notes: "Upgraded to high level",
+            level: 'high',
+            notes: 'Upgraded to high level',
           }),
         }
       );
 
       const body = await expectSuccess(response, 200);
-      expect(body.data.user.verificationLevel).toBe("high");
+      expect(body.data.user.verificationLevel).toBe('high');
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("validates level field", async () => {
+    it('validates level field', async () => {
       const { token } = await createAdminAndToken();
       const user = await seedUser();
 
@@ -274,9 +263,9 @@ describe("Admin User Management API", () => {
         `${baseURL}/api-v1/admin/users/${user.id}/level`,
         token,
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify({
-            level: "invalid-level",
+            level: 'invalid-level',
           }),
         }
       );
@@ -285,8 +274,8 @@ describe("Admin User Management API", () => {
     });
   });
 
-  describe("POST /api-v1/admin/users/:id/mute", () => {
-    it("mutes user successfully", async () => {
+  describe('POST /api-v1/admin/users/:id/mute', () => {
+    it('mutes user successfully', async () => {
       const { token } = await createAdminAndToken();
       const user = await seedUser({ isMuted: false });
 
@@ -294,10 +283,10 @@ describe("Admin User Management API", () => {
         `${baseURL}/api-v1/admin/users/${user.id}/mute`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            action: "mute",
-            reason: "Violation of community guidelines",
+            action: 'mute',
+            reason: 'Violation of community guidelines',
             duration: 24, // hours
           }),
         }
@@ -306,13 +295,11 @@ describe("Admin User Management API", () => {
       const body = await expectSuccess(response, 200);
       expect(body.data.user.isMuted).toBe(true);
       expect(body.data.muteRecord).toBeDefined();
-      expect(body.data.muteRecord.reason).toBe(
-        "Violation of community guidelines"
-      );
+      expect(body.data.muteRecord.reason).toBe('Violation of community guidelines');
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("unmutes user successfully", async () => {
+    it('unmutes user successfully', async () => {
       const { token } = await createAdminAndToken();
       const user = await seedUser({ isMuted: true });
 
@@ -320,10 +307,10 @@ describe("Admin User Management API", () => {
         `${baseURL}/api-v1/admin/users/${user.id}/mute`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            action: "unmute",
-            reason: "Appealed successfully",
+            action: 'unmute',
+            reason: 'Appealed successfully',
           }),
         }
       );
@@ -333,7 +320,7 @@ describe("Admin User Management API", () => {
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("validates action field", async () => {
+    it('validates action field', async () => {
       const { token } = await createAdminAndToken();
       const user = await seedUser();
 
@@ -341,9 +328,9 @@ describe("Admin User Management API", () => {
         `${baseURL}/api-v1/admin/users/${user.id}/mute`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            action: "invalid-action",
+            action: 'invalid-action',
           }),
         }
       );
@@ -352,8 +339,8 @@ describe("Admin User Management API", () => {
     });
   });
 
-  describe("DELETE /api-v1/admin/users/:id", () => {
-    it("soft deletes user successfully", async () => {
+  describe('DELETE /api-v1/admin/users/:id', () => {
+    it('soft deletes user successfully', async () => {
       const { token } = await createAdminAndToken();
       const user = await seedUser();
 
@@ -361,9 +348,9 @@ describe("Admin User Management API", () => {
         `${baseURL}/api-v1/admin/users/${user.id}`,
         token,
         {
-          method: "DELETE",
+          method: 'DELETE',
           body: JSON.stringify({
-            reason: "User requested account deletion",
+            reason: 'User requested account deletion',
             permanent: false,
           }),
         }
@@ -374,7 +361,7 @@ describe("Admin User Management API", () => {
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("hard deletes user when permanent is true", async () => {
+    it('hard deletes user when permanent is true', async () => {
       const { token } = await createAdminAndToken();
       const user = await seedUser();
 
@@ -382,9 +369,9 @@ describe("Admin User Management API", () => {
         `${baseURL}/api-v1/admin/users/${user.id}`,
         token,
         {
-          method: "DELETE",
+          method: 'DELETE',
           body: JSON.stringify({
-            reason: "Violation of terms of service",
+            reason: 'Violation of terms of service',
             permanent: true,
           }),
         }
@@ -395,7 +382,7 @@ describe("Admin User Management API", () => {
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("validates required reason field", async () => {
+    it('validates required reason field', async () => {
       const { token } = await createAdminAndToken();
       const user = await seedUser();
 
@@ -403,7 +390,7 @@ describe("Admin User Management API", () => {
         `${baseURL}/api-v1/admin/users/${user.id}`,
         token,
         {
-          method: "DELETE",
+          method: 'DELETE',
           body: JSON.stringify({}),
         }
       );
@@ -412,44 +399,44 @@ describe("Admin User Management API", () => {
     });
   });
 
-  describe("POST /api-v1/admin/users/admin/create", () => {
-    it("creates admin user successfully", async () => {
-      const { token } = await createAdminAndToken({ role: "super-admin" });
+  describe('POST /api-v1/admin/users/admin/create', () => {
+    it('creates admin user successfully', async () => {
+      const { token } = await createAdminAndToken({ role: 'super-admin' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/users/admin/create`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            username: "newadmin",
-            email: "newadmin@example.com",
-            password: "SecurePass123!",
-            role: "staff",
-            businessName: "New Business",
+            username: 'newadmin',
+            email: 'newadmin@example.com',
+            password: 'SecurePass123!',
+            role: 'staff',
+            businessName: 'New Business',
           }),
         }
       );
 
       const body = await expectSuccess(response, 201);
       expect(body.data.admin).toBeDefined();
-      expect(body.data.admin.username).toBe("newadmin");
-      expect(body.data.admin.email).toBe("newadmin@example.com");
-      expect(body.data.admin.role).toBe("staff");
-      expect(body.data.admin.businessName).toBe("New Business");
+      expect(body.data.admin.username).toBe('newadmin');
+      expect(body.data.admin.email).toBe('newadmin@example.com');
+      expect(body.data.admin.role).toBe('staff');
+      expect(body.data.admin.businessName).toBe('New Business');
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("validates required fields", async () => {
-      const { token } = await createAdminAndToken({ role: "super-admin" });
+    it('validates required fields', async () => {
+      const { token } = await createAdminAndToken({ role: 'super-admin' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/users/admin/create`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            username: "newadmin",
+            username: 'newadmin',
             // Missing required fields
           }),
         }
@@ -458,35 +445,31 @@ describe("Admin User Management API", () => {
       await expectError(response, 400);
     });
 
-    it("validates unique username", async () => {
-      const { token } = await createAdminAndToken({ role: "super-admin" });
+    it('validates unique username', async () => {
+      const { token } = await createAdminAndToken({ role: 'super-admin' });
 
       // Create first admin
-      await authenticatedAdminRequest(
-        `${baseURL}/api-v1/admin/users/admin/create`,
-        token,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            username: "testadmin",
-            email: "admin1@example.com",
-            password: "SecurePass123!",
-            role: "staff",
-          }),
-        }
-      );
+      await authenticatedAdminRequest(`${baseURL}/api-v1/admin/users/admin/create`, token, {
+        method: 'POST',
+        body: JSON.stringify({
+          username: 'testadmin',
+          email: 'admin1@example.com',
+          password: 'SecurePass123!',
+          role: 'staff',
+        }),
+      });
 
       // Try to create duplicate username
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/users/admin/create`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            username: "testadmin", // duplicate
-            email: "admin2@example.com",
-            password: "SecurePass123!",
-            role: "staff",
+            username: 'testadmin', // duplicate
+            email: 'admin2@example.com',
+            password: 'SecurePass123!',
+            role: 'staff',
           }),
         }
       );
@@ -495,22 +478,22 @@ describe("Admin User Management API", () => {
     });
   });
 
-  describe("PUT /api-v1/admin/users/admin/:id", () => {
-    it("updates admin user successfully", async () => {
-      const { token } = await createAdminAndToken({ role: "super-admin" });
+  describe('PUT /api-v1/admin/users/admin/:id', () => {
+    it('updates admin user successfully', async () => {
+      const { token } = await createAdminAndToken({ role: 'super-admin' });
 
       // First create an admin
       const createResponse = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/users/admin/create`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            username: "updateadmin",
-            email: "update@example.com",
-            password: "SecurePass123!",
-            role: "staff",
-            businessName: "Old Business",
+            username: 'updateadmin',
+            email: 'update@example.com',
+            password: 'SecurePass123!',
+            role: 'staff',
+            businessName: 'Old Business',
           }),
         }
       );
@@ -523,30 +506,30 @@ describe("Admin User Management API", () => {
         `${baseURL}/api-v1/admin/users/admin/${adminId}`,
         token,
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify({
-            role: "admin",
-            businessName: "Updated Business",
+            role: 'admin',
+            businessName: 'Updated Business',
             isActive: true,
           }),
         }
       );
 
       const updateBody = await expectSuccess(updateResponse, 200);
-      expect(updateBody.data.admin.role).toBe("admin");
-      expect(updateBody.data.admin.businessName).toBe("Updated Business");
+      expect(updateBody.data.admin.role).toBe('admin');
+      expect(updateBody.data.admin.businessName).toBe('Updated Business');
       expect(updateBody.data.auditLogId).toBeDefined();
     });
   });
 
-  describe("GET /api-v1/admin/users/stats", () => {
-    it("returns comprehensive user statistics", async () => {
+  describe('GET /api-v1/admin/users/stats', () => {
+    it('returns comprehensive user statistics', async () => {
       const { token } = await createAdminAndToken();
 
       // Create users with different statuses
-      await seedUser({ verificationStatus: "verified" });
-      await seedUser({ verificationStatus: "verified" });
-      await seedUser({ verificationStatus: "unverified" });
+      await seedUser({ verificationStatus: 'verified' });
+      await seedUser({ verificationStatus: 'verified' });
+      await seedUser({ verificationStatus: 'unverified' });
       await seedUser({ isMuted: true });
 
       const response = await authenticatedAdminRequest(
@@ -569,12 +552,12 @@ describe("Admin User Management API", () => {
     });
   });
 
-  describe("GET /api-v1/admin/users/export", () => {
-    it("initiates user export successfully", async () => {
+  describe('GET /api-v1/admin/users/export', () => {
+    it('initiates user export successfully', async () => {
       const { token } = await createAdminAndToken();
 
-      await seedUser({ email: "export1@example.com" });
-      await seedUser({ email: "export2@example.com" });
+      await seedUser({ email: 'export1@example.com' });
+      await seedUser({ email: 'export2@example.com' });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/users/export?format=csv&fields=email,name`,
@@ -588,10 +571,10 @@ describe("Admin User Management API", () => {
       expect(body.data.recordCount).toBeGreaterThanOrEqual(2);
     });
 
-    it("supports different export formats", async () => {
+    it('supports different export formats', async () => {
       const { token } = await createAdminAndToken();
 
-      const formats = ["csv", "xlsx", "pdf"];
+      const formats = ['csv', 'xlsx', 'pdf'];
 
       for (const format of formats) {
         const response = await authenticatedAdminRequest(
@@ -604,7 +587,7 @@ describe("Admin User Management API", () => {
       }
     });
 
-    it("validates export format", async () => {
+    it('validates export format', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -616,4 +599,3 @@ describe("Admin User Management API", () => {
     });
   });
 });
-

@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeAll, afterAll } from "bun:test";
-import { createTestServer, closeTestServer } from "../test-helpers";
+import { afterAll, beforeAll, describe, expect, it } from 'bun:test';
+import { closeTestServer, createTestServer } from '../test-helpers';
 
-describe("Health API", () => {
+describe('Health API', () => {
   let server: unknown;
   let baseURL: string;
 
@@ -15,19 +15,19 @@ describe("Health API", () => {
     await closeTestServer(server);
   });
 
-  describe("GET /health", () => {
-    it("returns 200 with health status", async () => {
+  describe('GET /health', () => {
+    it('returns 200 with health status', async () => {
       const response = await fetch(`${baseURL}/health`);
 
       expect(response.status).toBe(200);
       const body = await response.json();
-      expect(body.status).toBe("ok");
+      expect(body.status).toBe('ok');
       expect(body.timestamp).toBeDefined();
     });
   });
 
-  describe("GET /", () => {
-    it("returns 404 for root endpoint (no route defined)", async () => {
+  describe('GET /', () => {
+    it('returns 404 for root endpoint (no route defined)', async () => {
       const response = await fetch(`${baseURL}/`);
 
       expect(response.status).toBe(404);

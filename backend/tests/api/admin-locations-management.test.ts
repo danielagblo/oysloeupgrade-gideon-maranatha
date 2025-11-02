@@ -1,22 +1,15 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-  beforeEach,
-} from "bun:test";
-import {
-  createTestServer,
-  closeTestServer,
-  resetDb,
-  createAdminAndToken,
   authenticatedAdminRequest,
+  closeTestServer,
+  createAdminAndToken,
+  createTestServer,
   expectError,
   expectSuccess,
-} from "../test-helpers";
+  resetDb,
+} from '../test-helpers';
 
-describe("Admin Locations Management API", () => {
+describe('Admin Locations Management API', () => {
   let server: unknown;
   let baseURL: string;
 
@@ -34,14 +27,11 @@ describe("Admin Locations Management API", () => {
     await closeTestServer(server);
   });
 
-  describe("GET /api-v1/admin/locations", () => {
-    it("returns all regions with towns", async () => {
+  describe('GET /api-v1/admin/locations', () => {
+    it('returns all regions with towns', async () => {
       const { token } = await createAdminAndToken();
 
-      const response = await authenticatedAdminRequest(
-        `${baseURL}/api-v1/admin/locations`,
-        token
-      );
+      const response = await authenticatedAdminRequest(`${baseURL}/api-v1/admin/locations`, token);
 
       const body = await expectSuccess(response, 200);
       expect(body.data.regions).toBeInstanceOf(Array);
@@ -55,13 +45,10 @@ describe("Admin Locations Management API", () => {
       });
     });
 
-    it("includes town details in regions", async () => {
+    it('includes town details in regions', async () => {
       const { token } = await createAdminAndToken();
 
-      const response = await authenticatedAdminRequest(
-        `${baseURL}/api-v1/admin/locations`,
-        token
-      );
+      const response = await authenticatedAdminRequest(`${baseURL}/api-v1/admin/locations`, token);
 
       const body = await expectSuccess(response, 200);
 
@@ -76,85 +63,81 @@ describe("Admin Locations Management API", () => {
       }
     });
 
-    it("rejects unauthenticated requests", async () => {
+    it('rejects unauthenticated requests', async () => {
       const response = await fetch(`${baseURL}/api-v1/admin/locations`);
 
       await expectError(response, 401);
     });
   });
 
-  describe("POST /api-v1/admin/locations/regions", () => {
-    it("creates new region successfully", async () => {
+  describe('POST /api-v1/admin/locations/regions', () => {
+    it('creates new region successfully', async () => {
       const { token, admin } = await createAdminAndToken();
 
       const regionData = {
-        name: "Greater Accra",
-        code: "GAR",
-        towns: ["Accra", "Tema", "Takoradi"]
+        name: 'Greater Accra',
+        code: 'GAR',
+        towns: ['Accra', 'Tema', 'Takoradi'],
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/locations/regions`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(regionData)
+          method: 'POST',
+          body: JSON.stringify(regionData),
         }
       );
 
       const body = await expectSuccess(response, 201);
       expect(body.data.region).toBeDefined();
-      expect(body.data.region.name).toBe("Greater Accra");
-      expect(body.data.region.code).toBe("GAR");
+      expect(body.data.region.name).toBe('Greater Accra');
+      expect(body.data.region.code).toBe('GAR');
       expect(body.data.region.towns).toBeInstanceOf(Array);
       expect(body.data.region.towns.length).toBe(3);
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("validates required fields", async () => {
+    it('validates required fields', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/locations/regions`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Test Region"
+            name: 'Test Region',
             // Missing code
-          })
+          }),
         }
       );
 
       await expectError(response, 400);
     });
 
-    it("validates unique region code", async () => {
+    it('validates unique region code', async () => {
       const { token } = await createAdminAndToken();
 
       // Create first region
-      await authenticatedAdminRequest(
-        `${baseURL}/api-v1/admin/locations/regions`,
-        token,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            name: "First Region",
-            code: "FRG"
-          })
-        }
-      );
+      await authenticatedAdminRequest(`${baseURL}/api-v1/admin/locations/regions`, token, {
+        method: 'POST',
+        body: JSON.stringify({
+          name: 'First Region',
+          code: 'FRG',
+        }),
+      });
 
       // Try to create duplicate code
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/locations/regions`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Second Region",
-            code: "FRG" // duplicate
-          })
+            name: 'Second Region',
+            code: 'FRG', // duplicate
+          }),
         }
       );
 
@@ -162,8 +145,8 @@ describe("Admin Locations Management API", () => {
     });
   });
 
-  describe("POST /api-v1/admin/locations/regions/:regionId/towns", () => {
-    it("adds town to region successfully", async () => {
+  describe('POST /api-v1/admin/locations/regions/:regionId/towns', () => {
+    it('adds town to region successfully', async () => {
       const { token, admin } = await createAdminAndToken();
 
       // First create a region
@@ -171,11 +154,11 @@ describe("Admin Locations Management API", () => {
         `${baseURL}/api-v1/admin/locations/regions`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Ashanti Region",
-            code: "ASR"
-          })
+            name: 'Ashanti Region',
+            code: 'ASR',
+          }),
         }
       );
 
@@ -184,49 +167,49 @@ describe("Admin Locations Management API", () => {
 
       // Add town to region
       const townData = {
-        name: "Kumasi",
+        name: 'Kumasi',
         coordinates: {
           lat: 6.6666,
-          lng: -1.6163
-        }
+          lng: -1.6163,
+        },
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/locations/regions/${regionId}/towns`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(townData)
+          method: 'POST',
+          body: JSON.stringify(townData),
         }
       );
 
       const body = await expectSuccess(response, 201);
       expect(body.data.town).toBeDefined();
-      expect(body.data.town.name).toBe("Kumasi");
+      expect(body.data.town.name).toBe('Kumasi');
       expect(body.data.town.regionId).toBe(regionId);
       expect(body.data.town.coordinates.lat).toBe(6.6666);
       expect(body.data.town.coordinates.lng).toBe(-1.6163);
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("validates region exists", async () => {
+    it('validates region exists', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/locations/regions/99999/towns`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Non-existent Town"
-          })
+            name: 'Non-existent Town',
+          }),
         }
       );
 
       await expectError(response, 404);
     });
 
-    it("validates town coordinates", async () => {
+    it('validates town coordinates', async () => {
       const { token } = await createAdminAndToken();
 
       // Create region first
@@ -234,11 +217,11 @@ describe("Admin Locations Management API", () => {
         `${baseURL}/api-v1/admin/locations/regions`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Test Region",
-            code: "TRG"
-          })
+            name: 'Test Region',
+            code: 'TRG',
+          }),
         }
       );
 
@@ -249,14 +232,14 @@ describe("Admin Locations Management API", () => {
         `${baseURL}/api-v1/admin/locations/regions/${regionId}/towns`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Test Town",
+            name: 'Test Town',
             coordinates: {
               lat: 91, // Invalid latitude (> 90)
-              lng: -200 // Invalid longitude (< -180)
-            }
-          })
+              lng: -200, // Invalid longitude (< -180)
+            },
+          }),
         }
       );
 
@@ -264,8 +247,8 @@ describe("Admin Locations Management API", () => {
     });
   });
 
-  describe("PUT /api-v1/admin/locations/regions/:regionId/towns/:townId", () => {
-    it("updates town successfully", async () => {
+  describe('PUT /api-v1/admin/locations/regions/:regionId/towns/:townId', () => {
+    it('updates town successfully', async () => {
       const { token, admin } = await createAdminAndToken();
 
       // Create region and town first
@@ -273,11 +256,11 @@ describe("Admin Locations Management API", () => {
         `${baseURL}/api-v1/admin/locations/regions`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Volta Region",
-            code: "VTR"
-          })
+            name: 'Volta Region',
+            code: 'VTR',
+          }),
         }
       );
 
@@ -288,14 +271,14 @@ describe("Admin Locations Management API", () => {
         `${baseURL}/api-v1/admin/locations/regions/${regionId}/towns`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Ho",
+            name: 'Ho',
             coordinates: {
-              lat: 6.6000,
-              lng: 0.4667
-            }
-          })
+              lat: 6.6,
+              lng: 0.4667,
+            },
+          }),
         }
       );
 
@@ -307,26 +290,26 @@ describe("Admin Locations Management API", () => {
         `${baseURL}/api-v1/admin/locations/regions/${regionId}/towns/${townId}`,
         token,
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify({
-            name: "Ho Municipal",
+            name: 'Ho Municipal',
             coordinates: {
               lat: 6.6111,
-              lng: 0.4667
+              lng: 0.4667,
             },
-            isActive: true
-          })
+            isActive: true,
+          }),
         }
       );
 
       const updateBody = await expectSuccess(updateResponse, 200);
-      expect(updateBody.data.town.name).toBe("Ho Municipal");
+      expect(updateBody.data.town.name).toBe('Ho Municipal');
       expect(updateBody.data.town.coordinates.lat).toBe(6.6111);
       expect(updateBody.data.town.regionId).toBe(regionId);
       expect(updateBody.data.auditLogId).toBeDefined();
     });
 
-    it("returns 404 for non-existent town", async () => {
+    it('returns 404 for non-existent town', async () => {
       const { token } = await createAdminAndToken();
 
       // Create region first
@@ -334,11 +317,11 @@ describe("Admin Locations Management API", () => {
         `${baseURL}/api-v1/admin/locations/regions`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Test Region",
-            code: "TRG"
-          })
+            name: 'Test Region',
+            code: 'TRG',
+          }),
         }
       );
 
@@ -349,10 +332,10 @@ describe("Admin Locations Management API", () => {
         `${baseURL}/api-v1/admin/locations/regions/${regionId}/towns/99999`,
         token,
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify({
-            name: "Non-existent Town"
-          })
+            name: 'Non-existent Town',
+          }),
         }
       );
 
@@ -360,8 +343,8 @@ describe("Admin Locations Management API", () => {
     });
   });
 
-  describe("DELETE /api-v1/admin/locations/regions/:regionId/towns/:townId", () => {
-    it("deletes town successfully", async () => {
+  describe('DELETE /api-v1/admin/locations/regions/:regionId/towns/:townId', () => {
+    it('deletes town successfully', async () => {
       const { token } = await createAdminAndToken();
 
       // Create region and town first
@@ -369,11 +352,11 @@ describe("Admin Locations Management API", () => {
         `${baseURL}/api-v1/admin/locations/regions`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Delete Test Region",
-            code: "DTR"
-          })
+            name: 'Delete Test Region',
+            code: 'DTR',
+          }),
         }
       );
 
@@ -384,10 +367,10 @@ describe("Admin Locations Management API", () => {
         `${baseURL}/api-v1/admin/locations/regions/${regionId}/towns`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Town to Delete"
-          })
+            name: 'Town to Delete',
+          }),
         }
       );
 
@@ -399,10 +382,10 @@ describe("Admin Locations Management API", () => {
         `${baseURL}/api-v1/admin/locations/regions/${regionId}/towns/${townId}`,
         token,
         {
-          method: "DELETE",
+          method: 'DELETE',
           body: JSON.stringify({
-            reason: "Town no longer exists"
-          })
+            reason: 'Town no longer exists',
+          }),
         }
       );
 
@@ -412,8 +395,8 @@ describe("Admin Locations Management API", () => {
     });
   });
 
-  describe("GET /api-v1/admin/locations/stats", () => {
-    it("returns location statistics", async () => {
+  describe('GET /api-v1/admin/locations/stats', () => {
+    it('returns location statistics', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -423,14 +406,14 @@ describe("Admin Locations Management API", () => {
 
       const body = await expectSuccess(response, 200);
       expect(body.data.stats).toBeDefined();
-      expect(typeof body.data.stats.totalRegions).toBe("number");
-      expect(typeof body.data.stats.totalTowns).toBe("number");
+      expect(typeof body.data.stats.totalRegions).toBe('number');
+      expect(typeof body.data.stats.totalTowns).toBe('number');
       expect(body.data.stats.regionsByActivity).toBeDefined();
       expect(body.data.stats.mostActiveRegions).toBeInstanceOf(Array);
       expect(body.data.stats.townDistribution).toBeDefined();
     });
 
-    it("includes region activity metrics", async () => {
+    it('includes region activity metrics', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -446,7 +429,7 @@ describe("Admin Locations Management API", () => {
       expect(body.data.stats.regionsByActivity.inactive).toBeDefined();
     });
 
-    it("includes most active regions", async () => {
+    it('includes most active regions', async () => {
       const { token } = await createAdminAndToken();
 
       const response = await authenticatedAdminRequest(
@@ -461,14 +444,14 @@ describe("Admin Locations Management API", () => {
       body.data.stats.mostActiveRegions.forEach((region: any) => {
         expect(region.regionId).toBeDefined();
         expect(region.regionName).toBeDefined();
-        expect(typeof region.userCount).toBe("number");
-        expect(typeof region.adCount).toBe("number");
+        expect(typeof region.userCount).toBe('number');
+        expect(typeof region.adCount).toBe('number');
       });
     });
   });
 
-  describe("Additional Location Endpoints", () => {
-    it("PUT /api-v1/admin/locations/regions/:id updates region", async () => {
+  describe('Additional Location Endpoints', () => {
+    it('PUT /api-v1/admin/locations/regions/:id updates region', async () => {
       const { token, admin } = await createAdminAndToken();
 
       // Create region first
@@ -476,11 +459,11 @@ describe("Admin Locations Management API", () => {
         `${baseURL}/api-v1/admin/locations/regions`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Update Test Region",
-            code: "UTR"
-          })
+            name: 'Update Test Region',
+            code: 'UTR',
+          }),
         }
       );
 
@@ -492,22 +475,22 @@ describe("Admin Locations Management API", () => {
         `${baseURL}/api-v1/admin/locations/regions/${regionId}`,
         token,
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify({
-            name: "Updated Test Region",
-            code: "UTR",
-            isActive: false
-          })
+            name: 'Updated Test Region',
+            code: 'UTR',
+            isActive: false,
+          }),
         }
       );
 
       const updateBody = await expectSuccess(updateResponse, 200);
-      expect(updateBody.data.region.name).toBe("Updated Test Region");
+      expect(updateBody.data.region.name).toBe('Updated Test Region');
       expect(updateBody.data.region.isActive).toBe(false);
       expect(updateBody.data.auditLogId).toBeDefined();
     });
 
-    it("DELETE /api-v1/admin/locations/regions/:id deletes region", async () => {
+    it('DELETE /api-v1/admin/locations/regions/:id deletes region', async () => {
       const { token } = await createAdminAndToken();
 
       // Create region first
@@ -515,11 +498,11 @@ describe("Admin Locations Management API", () => {
         `${baseURL}/api-v1/admin/locations/regions`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Region to Delete",
-            code: "RTD"
-          })
+            name: 'Region to Delete',
+            code: 'RTD',
+          }),
         }
       );
 
@@ -531,10 +514,10 @@ describe("Admin Locations Management API", () => {
         `${baseURL}/api-v1/admin/locations/regions/${regionId}`,
         token,
         {
-          method: "DELETE",
+          method: 'DELETE',
           body: JSON.stringify({
-            reason: "Region reorganization"
-          })
+            reason: 'Region reorganization',
+          }),
         }
       );
 
@@ -543,30 +526,30 @@ describe("Admin Locations Management API", () => {
       expect(deleteBody.data.auditLogId).toBeDefined();
     });
 
-    it("POST /api-v1/admin/locations/bulk-import imports locations", async () => {
+    it('POST /api-v1/admin/locations/bulk-import imports locations', async () => {
       const { token } = await createAdminAndToken();
 
       const importData = {
         regions: [
           {
-            name: "Northern Region",
-            code: "NTR",
-            towns: ["Tamale", "Yendi", "Walewale"]
+            name: 'Northern Region',
+            code: 'NTR',
+            towns: ['Tamale', 'Yendi', 'Walewale'],
           },
           {
-            name: "Upper East Region",
-            code: "UER",
-            towns: ["Bolgatanga", "Navrongo"]
-          }
-        ]
+            name: 'Upper East Region',
+            code: 'UER',
+            towns: ['Bolgatanga', 'Navrongo'],
+          },
+        ],
       };
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/locations/bulk-import`,
         token,
         {
-          method: "POST",
-          body: JSON.stringify(importData)
+          method: 'POST',
+          body: JSON.stringify(importData),
         }
       );
 
@@ -578,22 +561,18 @@ describe("Admin Locations Management API", () => {
       expect(body.data.auditLogId).toBeDefined();
     });
 
-    it("GET /api-v1/admin/locations/search searches locations", async () => {
+    it('GET /api-v1/admin/locations/search searches locations', async () => {
       const { token } = await createAdminAndToken();
 
       // Create some locations first
-      await authenticatedAdminRequest(
-        `${baseURL}/api-v1/admin/locations/regions`,
-        token,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            name: "Search Test Region",
-            code: "STR",
-            towns: ["Search Town", "Another Town"]
-          })
-        }
-      );
+      await authenticatedAdminRequest(`${baseURL}/api-v1/admin/locations/regions`, token, {
+        method: 'POST',
+        body: JSON.stringify({
+          name: 'Search Test Region',
+          code: 'STR',
+          towns: ['Search Town', 'Another Town'],
+        }),
+      });
 
       const response = await authenticatedAdminRequest(
         `${baseURL}/api-v1/admin/locations/search?q=search&type=region`,
@@ -605,11 +584,11 @@ describe("Admin Locations Management API", () => {
       expect(body.data.results.length).toBeGreaterThan(0);
 
       // Should find the region with "Search" in name
-      const searchRegion = body.data.results.find((r: any) => r.name.includes("Search"));
+      const searchRegion = body.data.results.find((r: any) => r.name.includes('Search'));
       expect(searchRegion).toBeDefined();
     });
 
-    it("POST /api-v1/admin/locations/regions/:id/activate activates region", async () => {
+    it('POST /api-v1/admin/locations/regions/:id/activate activates region', async () => {
       const { token } = await createAdminAndToken();
 
       // Create inactive region
@@ -617,12 +596,12 @@ describe("Admin Locations Management API", () => {
         `${baseURL}/api-v1/admin/locations/regions`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Inactive Region",
-            code: "INR",
-            isActive: false
-          })
+            name: 'Inactive Region',
+            code: 'INR',
+            isActive: false,
+          }),
         }
       );
 
@@ -634,10 +613,10 @@ describe("Admin Locations Management API", () => {
         `${baseURL}/api-v1/admin/locations/regions/${regionId}/activate`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            reason: "Region now operational"
-          })
+            reason: 'Region now operational',
+          }),
         }
       );
 
@@ -646,7 +625,7 @@ describe("Admin Locations Management API", () => {
       expect(activateBody.data.auditLogId).toBeDefined();
     });
 
-    it("POST /api-v1/admin/locations/regions/:id/deactivate deactivates region", async () => {
+    it('POST /api-v1/admin/locations/regions/:id/deactivate deactivates region', async () => {
       const { token } = await createAdminAndToken();
 
       // Create active region
@@ -654,12 +633,12 @@ describe("Admin Locations Management API", () => {
         `${baseURL}/api-v1/admin/locations/regions`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            name: "Active Region",
-            code: "ACR",
-            isActive: true
-          })
+            name: 'Active Region',
+            code: 'ACR',
+            isActive: true,
+          }),
         }
       );
 
@@ -671,10 +650,10 @@ describe("Admin Locations Management API", () => {
         `${baseURL}/api-v1/admin/locations/regions/${regionId}/deactivate`,
         token,
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({
-            reason: "Temporary maintenance"
-          })
+            reason: 'Temporary maintenance',
+          }),
         }
       );
 
@@ -684,4 +663,3 @@ describe("Admin Locations Management API", () => {
     });
   });
 });
-

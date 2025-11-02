@@ -1,40 +1,43 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
-  ManyToOne,
-  JoinColumn,
   CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
-} from "typeorm";
+} from 'typeorm';
 
-import { AdminUser } from "./AdminUser.js";
+import { AdminUser } from './AdminUser.js';
 
-@Entity("system_settings")
+@Entity('system_settings')
 export class SystemSettings {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ type: "varchar", length: 100, unique: true })
+  @Column({ type: 'varchar', length: 100, unique: true })
   key!: string;
 
-  @Column({ type: "jsonb", nullable: true })
+  @Column({ type: 'jsonb', nullable: true })
   value?: any;
 
-  @Column({ type: "text", nullable: true })
+  @Column({ type: 'text', nullable: true })
   description?: string;
 
-  @Column({ type: "varchar", length: 50, nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   category?: string;
 
-  @Column({ type: "boolean", default: false })
+  @Column({ type: 'boolean', default: false })
   isPublic!: boolean;
 
-  @Column({ name: "updated_by", nullable: true })
+  @Column({ name: 'updated_by', nullable: true })
   updatedBy?: number;
 
-  @ManyToOne(() => AdminUser, (admin: any) => admin.updatedSettings)
-  @JoinColumn({ name: "updated_by" })
+  @ManyToOne(
+    () => AdminUser,
+    (admin: any) => admin.updatedSettings
+  )
+  @JoinColumn({ name: 'updated_by' })
   updatedByAdmin?: any;
 
   @CreateDateColumn()

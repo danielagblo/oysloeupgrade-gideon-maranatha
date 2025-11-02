@@ -6,77 +6,80 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-} from "typeorm";
-import { CouponRedemption } from "./CouponRedemption.js";
+} from 'typeorm';
+import { CouponRedemption } from './CouponRedemption.js';
 
-export type DiscountType = "percent" | "fixed";
+export type DiscountType = 'percent' | 'fixed';
 
-@Entity("coupons")
+@Entity('coupons')
 export class Coupon {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ type: "varchar", length: 50, unique: true })
+  @Column({ type: 'varchar', length: 50, unique: true })
   @Index()
   code!: string;
 
-  @Column({ type: "text", nullable: true })
+  @Column({ type: 'text', nullable: true })
   description?: string;
 
-  @Column({ type: "varchar", length: 10, name: "discount_type" })
+  @Column({ type: 'varchar', length: 10, name: 'discount_type' })
   discountType!: DiscountType;
 
-  @Column({ type: "decimal", precision: 10, scale: 2, name: "discount_value" })
+  @Column({ type: 'decimal', precision: 10, scale: 2, name: 'discount_value' })
   discountValue!: number;
 
-  @Column({ type: "bigint", nullable: true, name: "max_uses" })
+  @Column({ type: 'bigint', nullable: true, name: 'max_uses' })
   maxUses?: number;
 
-  @Column({ type: "integer", default: 0, name: "used_count" })
+  @Column({ type: 'integer', default: 0, name: 'used_count' })
   usedCount!: number;
 
-  @Column({ type: "integer", default: 1, name: "per_user_limit" })
+  @Column({ type: 'integer', default: 1, name: 'per_user_limit' })
   perUserLimit!: number;
 
-  @Column({ type: "timestamp", nullable: true, name: "valid_from" })
+  @Column({ type: 'timestamp', nullable: true, name: 'valid_from' })
   validFrom?: Date;
 
-  @Column({ type: "timestamp", nullable: true, name: "valid_until" })
+  @Column({ type: 'timestamp', nullable: true, name: 'valid_until' })
   validUntil?: Date;
 
-  @Column({ type: "boolean", default: true, name: "is_active" })
+  @Column({ type: 'boolean', default: true, name: 'is_active' })
   isActive!: boolean;
 
-  @Column({ type: "uuid", nullable: true, name: "created_by" })
+  @Column({ type: 'uuid', nullable: true, name: 'created_by' })
   createdBy?: string;
 
   @Column({
-    type: "decimal",
+    type: 'decimal',
     precision: 10,
     scale: 2,
     nullable: true,
-    name: "min_order_amount",
+    name: 'min_order_amount',
   })
   minOrderAmount?: number;
 
-  @Column({ type: "integer", nullable: true, name: "usage_limit" })
+  @Column({ type: 'integer', nullable: true, name: 'usage_limit' })
   usageLimit?: number;
 
   @Column({
-    type: "decimal",
+    type: 'decimal',
     precision: 10,
     scale: 2,
     nullable: true,
-    name: "max_discount_amount",
+    name: 'max_discount_amount',
   })
   maxDiscountAmount?: number;
 
-  @CreateDateColumn({ type: "timestamp", name: "created_at" })
+  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt!: Date;
 
-  @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
+  @UpdateDateColumn({ type: 'timestamp', name: 'updated_at' })
   updatedAt!: Date;
 
-  @OneToMany(() => CouponRedemption, (cr: CouponRedemption) => cr.coupon)
+  @OneToMany(
+    () => CouponRedemption,
+    (cr: CouponRedemption) => cr.coupon
+  )
   redemptions?: CouponRedemption[];
 }

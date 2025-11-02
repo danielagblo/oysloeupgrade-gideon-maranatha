@@ -1,17 +1,21 @@
-import type { Request, Response, NextFunction } from "express";
+import type { NextFunction, Request, Response } from "express";
+// biome-ignore lint/style/useImportType: z.infer requires runtime import
 import { z } from "zod";
-import { AdminSupportService } from "../services/admin-support.service.js";
 import {
+  AssignCaseSchema,
   GetSupportCasesQuerySchema,
   SendSupportMessageSchema,
   UpdateCaseStatusSchema,
-  AssignCaseSchema,
 } from "../schemas/admin.js";
+import { AdminSupportService } from "../services/admin-support.service.js";
+import { requireAdminId } from "../utils/guards.js";
 
 type GetSupportCasesQuery = z.infer<typeof GetSupportCasesQuerySchema>;
 type SendSupportMessageRequest = z.infer<typeof SendSupportMessageSchema>;
 type UpdateCaseStatusRequest = z.infer<typeof UpdateCaseStatusSchema>;
 type AssignCaseRequest = z.infer<typeof AssignCaseSchema>;
+
+type IdParam = { id: string };
 
 const supportService = new AdminSupportService();
 
@@ -39,12 +43,12 @@ export const getCases = async (
 };
 
 export const getCase = async (
-  req: Request,
+  req: Request<IdParam>,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const caseId = parseInt(req.params.id!, 10);
+    const caseId = Number.parseInt(req.params.id, 10);
     const result = await supportService.getCase(caseId);
 
     res.json({
@@ -57,12 +61,12 @@ export const getCase = async (
 };
 
 export const sendMessage = async (
-  req: Request,
+  req: Request<IdParam>,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const caseId = parseInt(req.params.id!, 10);
+    const caseId = Number.parseInt(req.params.id, 10);
     const body: SendSupportMessageRequest = SendSupportMessageSchema.parse(
       req.body
     );
@@ -73,7 +77,7 @@ export const sendMessage = async (
         error: { code: "UNAUTHORIZED" },
       });
     }
-    const adminUserId = req.admin.id!;
+    const adminUserId = requireAdminId(req);
 
     const message = await supportService.sendMessage({
       caseId,
@@ -100,12 +104,12 @@ export const sendMessage = async (
 };
 
 export const updateStatus = async (
-  req: Request,
+  req: Request<IdParam>,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const caseId = parseInt(req.params.id!, 10);
+    const caseId = Number.parseInt(req.params.id, 10);
     const body: UpdateCaseStatusRequest = UpdateCaseStatusSchema.parse(
       req.body
     );
@@ -128,12 +132,12 @@ export const updateStatus = async (
 };
 
 export const assignCase = async (
-  req: Request,
+  req: Request<IdParam>,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const caseId = parseInt(req.params.id!, 10);
+    const caseId = Number.parseInt(req.params.id, 10);
     const body: AssignCaseRequest = AssignCaseSchema.parse(req.body);
     const adminUserId = body.adminUserId || null;
 

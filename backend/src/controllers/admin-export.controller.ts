@@ -1,16 +1,12 @@
-import type { Request, Response, NextFunction } from "express";
-import { AdminExportService } from "../services/admin-export.service.js";
-import { ExportRequestSchema } from "../schemas/admin.js";
+import type { NextFunction, Request, Response } from 'express';
+import { ExportRequestSchema } from '../schemas/admin.js';
+import { AdminExportService } from '../services/admin-export.service.js';
 
 type ExportRequest = Zod.infer<typeof ExportRequestSchema>;
 
 const exportService = new AdminExportService();
 
-export const exportUsers = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const exportUsers = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body: ExportRequest = ExportRequestSchema.parse(req.body);
     const result = await exportService.exportUsers(body);
@@ -29,11 +25,7 @@ export const exportUsers = async (
   }
 };
 
-export const exportAds = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const exportAds = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body: ExportRequest = ExportRequestSchema.parse(req.body);
     const result = await exportService.exportAds(body);
@@ -52,11 +44,7 @@ export const exportAds = async (
   }
 };
 
-export const exportSupport = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const exportSupport = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body: ExportRequest = ExportRequestSchema.parse(req.body);
     const result = await exportService.exportSupport(body);
@@ -75,11 +63,7 @@ export const exportSupport = async (
   }
 };
 
-export const exportReports = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const exportReports = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body: ExportRequest = ExportRequestSchema.parse(req.body);
     const result = await exportService.exportReports(body);
@@ -97,5 +81,3 @@ export const exportReports = async (
     next(error);
   }
 };
-
-
