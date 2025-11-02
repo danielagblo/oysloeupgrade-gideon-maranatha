@@ -131,6 +131,10 @@ uploads/*
 # Test coverage
 coverage/
 
+# Firebase service account credentials
+*-firebase-adminsdk-*.json
+oysloeupgrade-firebase-adminsdk-*.json
+
 # Misc
 *.tgz
 *.tar.gz
