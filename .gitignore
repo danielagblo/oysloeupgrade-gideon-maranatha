@@ -135,6 +135,10 @@ coverage/
 *-firebase-adminsdk-*.json
 oysloeupgrade-firebase-adminsdk-*.json
 
+# Environment files (both with and without dot prefix)
+env
+.env*
+
 # Misc
 *.tgz
 *.tar.gz
