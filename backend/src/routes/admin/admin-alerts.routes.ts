@@ -28,3 +28,4 @@ router.post(
 router.get('/history', requireAdminPermissions('system:reports'), getAlertsHistory);
 
 export default router;
+

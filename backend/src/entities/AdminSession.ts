@@ -38,3 +38,4 @@ export class AdminSession {
   @CreateDateColumn()
   createdAt!: Date;
 }
+

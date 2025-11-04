@@ -8,45 +8,38 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-} from 'typeorm';
-import { ProductFeature } from './ProductFeature.js';
-import { Subcategory } from './Subcategory.js';
+} from "typeorm";
+import { ProductFeature } from "./ProductFeature.js";
+import type { Subcategory } from "./Subcategory.js";
 
-@Entity('features')
+@Entity("features")
 export class Feature {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column({ type: 'uuid', name: 'subcategory_id' })
+  @Column({ type: "uuid", name: "subcategory_id" })
   @Index()
   subcategoryId!: string;
 
-  @Column({ type: 'varchar', length: 100 })
+  @Column({ type: "varchar", length: 100 })
   name!: string;
 
-  @Column({ type: 'text' })
+  @Column({ type: "text" })
   description!: string;
 
-  @Column({ type: 'varchar', length: 50, nullable: true })
+  @Column({ type: "varchar", length: 50, nullable: true })
   key?: string;
 
-  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
+  @CreateDateColumn({ type: "timestamp", name: "created_at" })
   createdAt!: Date;
 
-  @UpdateDateColumn({ type: 'timestamp', name: 'updated_at' })
+  @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @ManyToOne(
-    () => Subcategory,
-    (s: Subcategory) => s.features,
-    { onDelete: 'CASCADE' }
-  )
-  @JoinColumn({ name: 'subcategory_id' })
+  @ManyToOne("Subcategory", (s: any) => s.features, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "subcategory_id" })
   subcategory?: Subcategory;
 
-  @OneToMany(
-    () => ProductFeature,
-    (pf: ProductFeature) => pf.feature
-  )
+  @OneToMany(() => ProductFeature, (pf: ProductFeature) => pf.feature)
   productFeatures?: ProductFeature[];
 }

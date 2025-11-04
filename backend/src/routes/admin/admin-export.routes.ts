@@ -22,3 +22,4 @@ router.get('/support', requireAdminPermissions('system:reports'), exportSupport)
 router.get('/reports', requireAdminPermissions('system:reports'), exportReports);
 
 export default router;
+

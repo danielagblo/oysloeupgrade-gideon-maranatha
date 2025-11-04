@@ -625,3 +625,4 @@ describe('Admin Applications Management API', () => {
     });
   });
 });
+

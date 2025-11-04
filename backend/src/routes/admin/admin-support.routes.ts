@@ -45,3 +45,4 @@ router.post(
 router.get('/users/online', requireAdminPermissions('support:read'), getOnlineUsers);
 
 export default router;
+

@@ -27,3 +27,4 @@ router.put(
 router.get('/feedback/list', requireAdminPermissions('system:reports'), getFeedback);
 
 export default router;
+

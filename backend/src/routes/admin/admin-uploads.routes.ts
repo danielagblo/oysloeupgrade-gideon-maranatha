@@ -29,3 +29,4 @@ router.post('/confirm', requireAdminPermissions('system:config'), confirm);
 router.delete('/:publicId', requireAdminPermissions('system:config'), destroy);
 
 export default router;
+

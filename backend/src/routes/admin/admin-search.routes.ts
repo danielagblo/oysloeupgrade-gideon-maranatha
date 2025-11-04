@@ -11,3 +11,4 @@ router.get('/', requireAdminPermissions('system:reports'), globalSearch);
 router.post('/filter', requireAdminPermissions('system:reports'), advancedFilter);
 
 export default router;
+

@@ -10,7 +10,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { Category } from './Category.js';
+import type { Category } from './Category.js';
 
 import { Feature } from './Feature.js';
 
@@ -46,11 +46,7 @@ export class Subcategory {
   @UpdateDateColumn({ type: 'timestamp', name: 'updated_at' })
   updatedAt!: Date;
 
-  @ManyToOne(
-    () => Category,
-    (c: Category) => c.subcategories,
-    { onDelete: 'RESTRICT' }
-  )
+  @ManyToOne('Category', (c: any) => c.subcategories, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'category_id' })
   category?: Category;
 
