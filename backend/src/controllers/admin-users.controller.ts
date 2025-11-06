@@ -1,18 +1,22 @@
-import type { NextFunction, Request, Response } from 'express';
-import type { z } from 'zod';
-import { AppDataSource } from '../config/database.js';
-import { AdminAuditLog } from '../entities/AdminAuditLog.js';
-import { User } from '../entities/User.js';
-import { ExportUsersSchema } from '../schemas/admin.js';
-import { AdminExportService } from '../services/admin-export.service.js';
-import { requireAdminId } from '../utils/guards.js';
+import type { NextFunction, Request, Response } from "express";
+import type { z } from "zod";
+import { AppDataSource } from "../config/database.js";
+import { AdminAuditLog } from "../entities/AdminAuditLog.js";
+import { User } from "../entities/User.js";
+import { ExportUsersSchema } from "../schemas/admin.js";
+import { AdminExportService } from "../services/admin-export.service.js";
+import { requireAdminId } from "../utils/guards.js";
 
 type ExportUsersRequest = z.infer<typeof ExportUsersSchema>;
 type IdParam = { id: string };
 
 const adminExportService = new AdminExportService();
 
-export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
+export const getUsers = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const {
       page = 1,
@@ -21,36 +25,36 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
       status,
       level,
       role,
-      sortBy = 'createdAt',
-      sortOrder = 'desc',
+      sortBy = "createdAt",
+      sortOrder = "desc",
     } = req.query;
 
     const userRepository = AppDataSource.getRepository(User);
     const queryBuilder = userRepository
-      .createQueryBuilder('u')
-      .leftJoinAndSelect('u.wallet', 'w')
-      .where('u.deleted = :deleted', { deleted: false });
+      .createQueryBuilder("u")
+      .leftJoinAndSelect("u.wallet", "w")
+      .where("u.deleted = :deleted", { deleted: false });
 
     if (search) {
       queryBuilder.andWhere(
-        '(u.email ILIKE :search OR u.name ILIKE :search OR u.phone ILIKE :search)',
+        "(u.email ILIKE :search OR u.name ILIKE :search OR u.phone ILIKE :search)",
         { search: `%${search}%` }
       );
     }
 
     if (status) {
-      queryBuilder.andWhere('u.verificationStatus = :status', { status });
+      queryBuilder.andWhere("u.verificationStatus = :status", { status });
     }
 
     if (level) {
-      queryBuilder.andWhere('u.level = :level', { level });
+      queryBuilder.andWhere("u.level = :level", { level });
     }
 
     if (role) {
-      queryBuilder.andWhere('u.level = :role', { role });
+      queryBuilder.andWhere("u.level = :role", { role });
     }
 
-    const order = sortOrder === 'asc' ? 'ASC' : 'DESC';
+    const order = sortOrder === "asc" ? "ASC" : "DESC";
     queryBuilder.orderBy(`u.${sortBy}`, order);
 
     const offset = (Number(page) - 1) * Number(limit);
@@ -59,19 +63,19 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
     const [users, total] = await queryBuilder.getManyAndCount();
 
     const statusFilters = await userRepository
-      .createQueryBuilder('u')
-      .select('u.verificationStatus', 'status')
-      .addSelect('COUNT(*)', 'count')
-      .where('u.deleted = :deleted', { deleted: false })
-      .groupBy('u.verificationStatus')
+      .createQueryBuilder("u")
+      .select("u.verificationStatus", "status")
+      .addSelect("COUNT(*)", "count")
+      .where("u.deleted = :deleted", { deleted: false })
+      .groupBy("u.verificationStatus")
       .getRawMany();
 
     const levelFilters = await userRepository
-      .createQueryBuilder('u')
-      .select('u.level', 'level')
-      .addSelect('COUNT(*)', 'count')
-      .where('u.deleted = :deleted', { deleted: false })
-      .groupBy('u.level')
+      .createQueryBuilder("u")
+      .select("u.level", "level")
+      .addSelect("COUNT(*)", "count")
+      .where("u.deleted = :deleted", { deleted: false })
+      .groupBy("u.level")
       .getRawMany();
 
     res.json({
@@ -107,32 +111,38 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
   }
 };
 
-export const getUser = async (req: Request<IdParam>, res: Response, next: NextFunction) => {
+export const getUser = async (
+  req: Request<IdParam>,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { id } = req.params;
     const userRepository = AppDataSource.getRepository(User);
 
     const user = await userRepository.findOne({
       where: { id, deleted: false },
-      relations: ['wallet', 'products', 'reviews'],
+      relations: ["wallet", "products", "reviews"],
     });
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found',
-        error: { code: 'USER_NOT_FOUND' },
+        message: "User not found",
+        error: { code: "USER_NOT_FOUND" },
       });
     }
 
-    const verificationHistory = await AppDataSource.getRepository(AdminAuditLog).find({
+    const verificationHistory = await AppDataSource.getRepository(
+      AdminAuditLog
+    ).find({
       where: {
-        resourceType: 'user',
+        resourceType: "user",
         resourceId: id,
-        action: 'verify_user',
+        action: "verify_user",
       },
-      relations: ['adminUser'],
-      order: { createdAt: 'DESC' },
+      relations: ["adminUser"],
+      order: { createdAt: "DESC" },
       take: 10,
     });
 
@@ -147,7 +157,8 @@ export const getUser = async (req: Request<IdParam>, res: Response, next: NextFu
       joinedAt: user.createdAt,
       lastLogin: user.lastLogin,
       isActiveToday:
-        user.lastLogin && user.lastLogin >= new Date(now.getTime() - 24 * 60 * 60 * 1000),
+        user.lastLogin &&
+        user.lastLogin >= new Date(now.getTime() - 24 * 60 * 60 * 1000),
       isActiveWeek: user.lastLogin && user.lastLogin >= weekAgo,
       isActiveMonth: user.lastLogin && user.lastLogin >= monthAgo,
     };
@@ -158,7 +169,7 @@ export const getUser = async (req: Request<IdParam>, res: Response, next: NextFu
         user,
         adminNotes: user.adminNotes,
         verificationHistory,
-        moderationHistory: []
+        moderationHistory: [],
         activityStats,
       },
     });
@@ -167,7 +178,11 @@ export const getUser = async (req: Request<IdParam>, res: Response, next: NextFu
   }
 };
 
-export const verifyUser = async (req: Request<IdParam>, res: Response, next: NextFunction) => {
+export const verifyUser = async (
+  req: Request<IdParam>,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { id } = req.params;
     const { status, notes } = req.body;
@@ -181,8 +196,8 @@ export const verifyUser = async (req: Request<IdParam>, res: Response, next: Nex
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found',
-        error: { code: 'USER_NOT_FOUND' },
+        message: "User not found",
+        error: { code: "USER_NOT_FOUND" },
       });
     }
 
@@ -198,7 +213,9 @@ export const verifyUser = async (req: Request<IdParam>, res: Response, next: Nex
 
     if (notes) {
       user.adminNotes = user.adminNotes
-        ? `${user.adminNotes}\n[${new Date().toISOString()}] Verification ${status}: ${notes}`
+        ? `${
+            user.adminNotes
+          }\n[${new Date().toISOString()}] Verification ${status}: ${notes}`
         : `[${new Date().toISOString()}] Verification ${status}: ${notes}`;
     }
 
@@ -220,7 +237,11 @@ export const verifyUser = async (req: Request<IdParam>, res: Response, next: Nex
   }
 };
 
-export const updateUserLevel = async (req: Request<IdParam>, res: Response, next: NextFunction) => {
+export const updateUserLevel = async (
+  req: Request<IdParam>,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { id } = req.params;
     const { level, notes } = req.body;
@@ -233,8 +254,8 @@ export const updateUserLevel = async (req: Request<IdParam>, res: Response, next
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found',
-        error: { code: 'USER_NOT_FOUND' },
+        message: "User not found",
+        error: { code: "USER_NOT_FOUND" },
       });
     }
 
@@ -244,7 +265,9 @@ export const updateUserLevel = async (req: Request<IdParam>, res: Response, next
 
     if (notes) {
       user.adminNotes = user.adminNotes
-        ? `${user.adminNotes}\n[${new Date().toISOString()}] Level changed to ${level}: ${notes}`
+        ? `${
+            user.adminNotes
+          }\n[${new Date().toISOString()}] Level changed to ${level}: ${notes}`
         : `[${new Date().toISOString()}] Level changed to ${level}: ${notes}`;
     }
 
@@ -262,7 +285,11 @@ export const updateUserLevel = async (req: Request<IdParam>, res: Response, next
   }
 };
 
-export const muteUser = async (req: Request<IdParam>, res: Response, next: NextFunction) => {
+export const muteUser = async (
+  req: Request<IdParam>,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { id } = req.params;
     const { action, reason, duration } = req.body;
@@ -276,8 +303,8 @@ export const muteUser = async (req: Request<IdParam>, res: Response, next: NextF
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found',
-        error: { code: 'USER_NOT_FOUND' },
+        message: "User not found",
+        error: { code: "USER_NOT_FOUND" },
       });
     }
 
@@ -288,7 +315,7 @@ export const muteUser = async (req: Request<IdParam>, res: Response, next: NextF
       muteReason: user.muteReason,
     };
 
-    if (action === 'mute') {
+    if (action === "mute") {
       user.isMuted = true;
       user.mutedBy = adminId;
       user.mutedAt = new Date();
@@ -296,7 +323,7 @@ export const muteUser = async (req: Request<IdParam>, res: Response, next: NextF
 
       if (duration) {
       }
-    } else if (action === 'unmute') {
+    } else if (action === "unmute") {
       user.isMuted = false;
       user.mutedBy = null;
       user.mutedAt = null;
@@ -335,7 +362,11 @@ export const muteUser = async (req: Request<IdParam>, res: Response, next: NextF
   }
 };
 
-export const deleteUser = async (req: Request<IdParam>, res: Response, next: NextFunction) => {
+export const deleteUser = async (
+  req: Request<IdParam>,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { id } = req.params;
     const { reason, permanent = false } = req.body;
@@ -350,8 +381,8 @@ export const deleteUser = async (req: Request<IdParam>, res: Response, next: Nex
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found',
-        error: { code: 'USER_NOT_FOUND' },
+        message: "User not found",
+        error: { code: "USER_NOT_FOUND" },
       });
     }
 
@@ -365,23 +396,29 @@ export const deleteUser = async (req: Request<IdParam>, res: Response, next: Nex
 
     res.json({
       success: true,
-      message: `User ${permanent ? 'permanently deleted' : 'soft deleted'} successfully`,
+      message: `User ${
+        permanent ? "permanently deleted" : "soft deleted"
+      } successfully`,
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const getUserStats = async (_req: Request, res: Response, next: NextFunction) => {
+export const getUserStats = async (
+  _req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const userRepository = AppDataSource.getRepository(User);
 
     const total = await userRepository.count({ where: { deleted: false } });
     const verified = await userRepository.count({
-      where: { verificationStatus: 'verified', deleted: false },
+      where: { verificationStatus: "verified", deleted: false },
     });
     const unverified = await userRepository.count({
-      where: { verificationStatus: 'unverified', deleted: false },
+      where: { verificationStatus: "unverified", deleted: false },
     });
     const muted = await userRepository.count({
       where: { isMuted: true, deleted: false },
@@ -392,15 +429,15 @@ export const getUserStats = async (_req: Request, res: Response, next: NextFunct
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
     const activeToday = await userRepository
-      .createQueryBuilder('u')
-      .where('u.lastLogin >= :dayAgo', { dayAgo })
-      .andWhere('u.deleted = :deleted', { deleted: false })
+      .createQueryBuilder("u")
+      .where("u.lastLogin >= :dayAgo", { dayAgo })
+      .andWhere("u.deleted = :deleted", { deleted: false })
       .getCount();
 
     const activeWeek = await userRepository
-      .createQueryBuilder('u')
-      .where('u.lastLogin >= :weekAgo', { weekAgo })
-      .andWhere('u.deleted = :deleted', { deleted: false })
+      .createQueryBuilder("u")
+      .where("u.lastLogin >= :weekAgo", { weekAgo })
+      .andWhere("u.deleted = :deleted", { deleted: false })
       .getCount();
 
     const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -408,29 +445,29 @@ export const getUserStats = async (_req: Request, res: Response, next: NextFunct
     const lastMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
     const newToday = await userRepository
-      .createQueryBuilder('u')
-      .where('u.createdAt >= :yesterday', { yesterday })
-      .andWhere('u.deleted = :deleted', { deleted: false })
+      .createQueryBuilder("u")
+      .where("u.createdAt >= :yesterday", { yesterday })
+      .andWhere("u.deleted = :deleted", { deleted: false })
       .getCount();
 
     const newWeek = await userRepository
-      .createQueryBuilder('u')
-      .where('u.createdAt >= :lastWeek', { lastWeek })
-      .andWhere('u.deleted = :deleted', { deleted: false })
+      .createQueryBuilder("u")
+      .where("u.createdAt >= :lastWeek", { lastWeek })
+      .andWhere("u.deleted = :deleted", { deleted: false })
       .getCount();
 
     const newMonth = await userRepository
-      .createQueryBuilder('u')
-      .where('u.createdAt >= :lastMonth', { lastMonth })
-      .andWhere('u.deleted = :deleted', { deleted: false })
+      .createQueryBuilder("u")
+      .where("u.createdAt >= :lastMonth", { lastMonth })
+      .andWhere("u.deleted = :deleted", { deleted: false })
       .getCount();
 
     const byLevel = await userRepository
-      .createQueryBuilder('u')
-      .select('u.level', 'level')
-      .addSelect('COUNT(*)', 'count')
-      .where('u.deleted = :deleted', { deleted: false })
-      .groupBy('u.level')
+      .createQueryBuilder("u")
+      .select("u.level", "level")
+      .addSelect("COUNT(*)", "count")
+      .where("u.deleted = :deleted", { deleted: false })
+      .groupBy("u.level")
       .getRawMany();
 
     const levelStats = byLevel.reduce(
@@ -466,15 +503,19 @@ export const getUserStats = async (_req: Request, res: Response, next: NextFunct
   }
 };
 
-export const exportUsers = async (req: Request, res: Response, next: NextFunction) => {
+export const exportUsers = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const parsed: ExportUsersRequest = ExportUsersSchema.parse(req.body);
     const { format, filters, fields } = parsed;
 
-    const exportFormat = format === 'excel' ? 'xlsx' : format;
+    const exportFormat = format === "excel" ? "xlsx" : format;
 
     const exportOptions = {
-      format: exportFormat as 'csv' | 'xlsx' | 'pdf',
+      format: exportFormat as "csv" | "xlsx" | "pdf",
       filters: filters
         ? {
             search: filters.search,
