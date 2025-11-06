@@ -10,10 +10,13 @@ import swaggerUi from "swagger-ui-express";
 
 import { config } from "./config/env.js";
 import "./config/passport.js";
+import "./config/cloudinary.js";
 import {
   errorHandler,
   notFoundHandler,
 } from "./middlewares/error.middleware.js";
+import uploadRoutes from "./modules/uploads/routes.js";
+import adminRoutes from "./routes/admin.routes.js";
 import analyticsRoutes from "./routes/analytics.routes.js";
 import { createAuthRoutes } from "./routes/auth.routes.js";
 import chatRoutes from "./routes/chat.routes.js";
@@ -22,7 +25,6 @@ import fcmRoutes from "./routes/fcm.routes.js";
 import fcmTestRoutes from "./routes/fcm-test.routes.js";
 import googleRoutes from "./routes/google.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
-import uploadRoutes from "./modules/uploads/routes.js";
 import productRoutes from "./routes/product.routes.js";
 import referralRoutes from "./routes/referral.routes.js";
 import reviewRoutes from "./routes/review.routes.js";
@@ -140,6 +142,8 @@ export const createApp = (): Application => {
   app.use(`${apiPrefix}/analytics`, analyticsRoutes);
   app.use(`${apiPrefix}/notifications`, notificationRoutes);
   app.use(`${apiPrefix}/uploads`, uploadRoutes);
+
+  app.use(`${apiPrefix}/admin`, adminRoutes);
 
   app.use(`${apiPrefix}/fcm/test`, fcmTestRoutes);
   app.use(`${apiPrefix}/fcm`, fcmRoutes);

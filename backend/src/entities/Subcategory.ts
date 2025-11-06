@@ -8,49 +8,57 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-} from "typeorm";
+} from 'typeorm';
 
-import { Category } from "./Category.js";
-import { Feature } from "./Feature.js";
-import { Product } from "./Product.js";
+import type { Category } from './Category.js';
 
-@Entity("subcategories")
+import { Feature } from './Feature.js';
+
+import { Product } from './Product.js';
+
+@Entity('subcategories')
 export class Subcategory {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ type: "uuid", name: "category_id" })
+  @Column({ type: 'uuid', name: 'category_id' })
   @Index()
   categoryId!: string;
 
-  @Column({ type: "varchar", length: 100 })
+  @Column({ type: 'varchar', length: 100 })
   name!: string;
 
-  @Column({ type: "text", nullable: true })
+  @Column({ type: 'text', nullable: true })
   description?: string;
 
-  @Column({ type: "varchar", length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   slug?: string;
 
-  @Column({ type: "integer", default: 0, name: "display_order" })
+  @Column({ type: 'integer', default: 0, name: 'display_order' })
   displayOrder!: number;
 
-  @Column({ type: "boolean", default: false })
+  @Column({ type: 'boolean', default: false })
   archived!: boolean;
 
-  @CreateDateColumn({ type: "timestamp", name: "created_at" })
+  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt!: Date;
 
-  @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
+  @UpdateDateColumn({ type: 'timestamp', name: 'updated_at' })
   updatedAt!: Date;
 
-  @ManyToOne(() => Category, (c) => c.subcategories, { onDelete: "RESTRICT" })
-  @JoinColumn({ name: "category_id" })
+  @ManyToOne('Category', (c: any) => c.subcategories, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'category_id' })
   category?: Category;
 
-  @OneToMany(() => Feature, (f) => f.subcategory)
+  @OneToMany(
+    () => Feature,
+    (f: Feature) => f.subcategory
+  )
   features?: Feature[];
 
-  @OneToMany(() => Product, (p) => p.subcategory)
+  @OneToMany(
+    () => Product,
+    (p: Product) => p.subcategory
+  )
   products?: Product[];
 }

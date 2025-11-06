@@ -1,21 +1,15 @@
-import { Router } from "express";
-import { z } from "zod";
-import { authenticate } from "../middlewares/auth.middleware.js";
-import { validateRequest } from "../middlewares/validation.middleware.js";
-import { NotificationController } from "../controllers/notification.controller.js";
+import { Router } from 'express';
+import { z } from 'zod';
+import { NotificationController } from '../controllers/notification.controller.js';
+import { authenticate } from '../middlewares/auth.middleware.js';
+import { validateRequest } from '../middlewares/validation.middleware.js';
 
 const router = Router();
 const notificationController = new NotificationController();
 
 const getNotificationHistorySchema = z.object({
   query: z.object({
-    page: z.coerce
-      .number()
-      .int()
-      .positive()
-      .optional()
-      .default(1)
-      .describe("Page number"),
+    page: z.coerce.number().int().positive().optional().default(1).describe('Page number'),
     limit: z.coerce
       .number()
       .int()
@@ -23,18 +17,18 @@ const getNotificationHistorySchema = z.object({
       .max(100)
       .optional()
       .default(20)
-      .describe("Number of notifications per page"),
+      .describe('Number of notifications per page'),
     unreadOnly: z
-      .enum(["true", "false"])
+      .enum(['true', 'false'])
       .optional()
-      .transform((val) => val === "true")
-      .describe("Filter to unread notifications only"),
+      .transform((val) => val === 'true')
+      .describe('Filter to unread notifications only'),
   }),
 });
 
 const markAsReadSchema = z.object({
   params: z.object({
-    id: z.string().uuid().describe("Notification ID"),
+    id: z.string().uuid().describe('Notification ID'),
   }),
 });
 
@@ -55,39 +49,39 @@ const updateNotificationSettingsSchema = z.object({
 });
 
 router.get(
-  "/history",
+  '/history',
   authenticate,
   validateRequest(getNotificationHistorySchema),
   notificationController.getNotificationHistory.bind(notificationController)
 );
 
 router.put(
-  "/:id/read",
+  '/:id/read',
   authenticate,
   validateRequest(markAsReadSchema),
   notificationController.markAsRead.bind(notificationController)
 );
 
 router.get(
-  "/unread-count",
+  '/unread-count',
   authenticate,
   notificationController.getUnreadCount.bind(notificationController)
 );
 
 router.put(
-  "/mark-all-read",
+  '/mark-all-read',
   authenticate,
   notificationController.markAllAsRead.bind(notificationController)
 );
 
 router.get(
-  "/settings",
+  '/settings',
   authenticate,
   notificationController.getNotificationSettings.bind(notificationController)
 );
 
 router.put(
-  "/settings",
+  '/settings',
   authenticate,
   validateRequest(updateNotificationSettingsSchema),
   notificationController.updateNotificationSettings.bind(notificationController)

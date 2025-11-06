@@ -1,18 +1,18 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export const notificationHistoryItemSchema = z.object({
   id: z.string().uuid(),
   userId: z.string().uuid(),
   type: z.enum([
-    "chat_message",
-    "wallet_credit",
-    "wallet_debit",
-    "welcome",
-    "account_created",
-    "coupon_redemption",
-    "referral_bonus",
-    "referral_redemption",
-    "product_review",
+    'chat_message',
+    'wallet_credit',
+    'wallet_debit',
+    'welcome',
+    'account_created',
+    'coupon_redemption',
+    'referral_bonus',
+    'referral_redemption',
+    'product_review',
   ]),
   title: z.string(),
   body: z.string(),
@@ -24,18 +24,15 @@ export const notificationHistoryItemSchema = z.object({
 
 export const getNotificationHistorySchema = z.object({
   query: z.object({
-    page: z.string().optional().describe("Page number"),
-    limit: z.string().optional().describe("Number of notifications per page"),
-    unreadOnly: z
-      .string()
-      .optional()
-      .describe("Filter to unread notifications only"),
+    page: z.string().optional().describe('Page number'),
+    limit: z.string().optional().describe('Number of notifications per page'),
+    unreadOnly: z.string().optional().describe('Filter to unread notifications only'),
   }),
 });
 
 export const markAsReadSchema = z.object({
   params: z.object({
-    id: z.string().uuid().describe("Notification ID"),
+    id: z.string().uuid().describe('Notification ID'),
   }),
 });
 

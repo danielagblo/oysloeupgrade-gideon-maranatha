@@ -404,7 +404,7 @@ export class AuthService {
       logInfo(
         `OTP notification failed for ${phone}, falling back to console log: ${error}`
       );
-      console.log(`\nOTP CODE: ${code}\n`);
+      logInfo(`OTP code generated for ${phone}: ${code}`);
     }
   }
 

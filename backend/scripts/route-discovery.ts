@@ -66,7 +66,6 @@ export class RouteDiscovery {
           discovered.push({ method, path, file: relative(this.rootDir, file) });
         }
       } catch (_) {
-        // ignore
       }
     }
 

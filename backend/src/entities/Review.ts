@@ -10,8 +10,8 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 
-import { Product } from "./Product.js";
-import { User } from "./User.js";
+import type { Product } from "./Product.js";
+import type { User } from "./User.js";
 
 @Entity("reviews")
 @Unique(["productId", "userId"])
@@ -41,11 +41,11 @@ export class Review {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @ManyToOne(() => Product, (p) => p.reviews, { onDelete: "CASCADE" })
+  @ManyToOne("Product", (p: any) => p.reviews, { onDelete: "CASCADE" })
   @JoinColumn({ name: "product_id" })
   product?: Product;
 
-  @ManyToOne(() => User, (u) => u.reviews, { onDelete: "CASCADE" })
+  @ManyToOne("User", (u: any) => u.reviews, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user?: User;
 }

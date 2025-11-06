@@ -1,22 +1,15 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-  beforeEach,
-} from "bun:test";
-import {
-  createTestServer,
   closeTestServer,
-  resetDb,
+  createTestServer,
   createUserAndToken,
-  seedCoupon,
   expectError,
   expectSuccess,
-} from "../test-helpers";
+  resetDb,
+  seedCoupon,
+} from '../test-helpers';
 
-describe("Coupons API", () => {
+describe('Coupons API', () => {
   let server: unknown;
   let baseURL: string;
 
@@ -34,12 +27,12 @@ describe("Coupons API", () => {
     await closeTestServer(server);
   });
 
-  describe("GET /api-v1/coupons/", () => {
-    it("returns empty list when no coupons exist", async () => {
+  describe('GET /api-v1/coupons/', () => {
+    it('returns empty list when no coupons exist', async () => {
       const { token } = await createUserAndToken({}, baseURL);
 
       const response = await fetch(`${baseURL}/api-v1/coupons/`, {
-        method: "GET",
+        method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -49,30 +42,30 @@ describe("Coupons API", () => {
       expect(body.data.coupons).toEqual([]);
     });
 
-    it("returns list of active coupons", async () => {
+    it('returns list of active coupons', async () => {
       const { token } = await createUserAndToken({}, baseURL);
 
       await seedCoupon({
-        code: "SAVE10",
-        discountType: "percentage",
+        code: 'SAVE10',
+        discountType: 'percentage',
         discountValue: 10,
         isActive: true,
       });
       await seedCoupon({
-        code: "SAVE20",
-        discountType: "fixed",
+        code: 'SAVE20',
+        discountType: 'fixed',
         discountValue: 20,
         isActive: true,
       });
       await seedCoupon({
-        code: "EXPIRED",
-        discountType: "percentage",
+        code: 'EXPIRED',
+        discountType: 'percentage',
         discountValue: 15,
         isActive: false,
       });
 
       const response = await fetch(`${baseURL}/api-v1/coupons/?isActive=true`, {
-        method: "GET",
+        method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -80,37 +73,28 @@ describe("Coupons API", () => {
 
       const body = await expectSuccess(response, 200);
       expect(body.data.coupons).toHaveLength(2);
-      expect(
-        body.data.coupons.find((c: { code: string }) => c.code === "SAVE10")
-      ).toBeDefined();
-      expect(
-        body.data.coupons.find((c: { code: string }) => c.code === "SAVE20")
-      ).toBeDefined();
-      expect(
-        body.data.coupons.find((c: { code: string }) => c.code === "EXPIRED")
-      ).toBeUndefined();
+      expect(body.data.coupons.find((c: { code: string }) => c.code === 'SAVE10')).toBeDefined();
+      expect(body.data.coupons.find((c: { code: string }) => c.code === 'SAVE20')).toBeDefined();
+      expect(body.data.coupons.find((c: { code: string }) => c.code === 'EXPIRED')).toBeUndefined();
     });
 
-    it("supports pagination", async () => {
+    it('supports pagination', async () => {
       const { token } = await createUserAndToken({}, baseURL);
 
       for (let i = 1; i <= 5; i++) {
         await seedCoupon({
           code: `COUPON${i}`,
-          discountType: "percentage",
+          discountType: 'percentage',
           discountValue: 10 + i,
         });
       }
 
-      const response = await fetch(
-        `${baseURL}/api-v1/coupons/?page=1&limit=2&isActive=true`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${baseURL}/api-v1/coupons/?page=1&limit=2&isActive=true`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const body = await expectSuccess(response, 200);
       expect(body.data.coupons).toHaveLength(2);
@@ -120,112 +104,112 @@ describe("Coupons API", () => {
     });
   });
 
-  describe("POST /api-v1/coupons/redeem", () => {
-    it("applies valid coupon", async () => {
+  describe('POST /api-v1/coupons/redeem', () => {
+    it('applies valid coupon', async () => {
       const { token } = await createUserAndToken({}, baseURL);
       await seedCoupon({
-        code: "SAVE10",
-        discountType: "percentage",
+        code: 'SAVE10',
+        discountType: 'percentage',
         discountValue: 10,
         minOrderAmount: 50,
         isActive: true,
       });
 
       const response = await fetch(`${baseURL}/api-v1/coupons/redeem`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          code: "SAVE10",
+          code: 'SAVE10',
           orderAmount: 100,
-          orderId: "00000000-0000-0000-0000-000000000000",
+          orderId: '00000000-0000-0000-0000-000000000000',
         }),
       });
 
       const body = await expectSuccess(response, 200);
       expect(body.data.discountAmount).toBeDefined();
-      expect(body.data.coupon.code).toBe("SAVE10");
+      expect(body.data.coupon.code).toBe('SAVE10');
     });
 
-    it("rejects invalid coupon code", async () => {
+    it('rejects invalid coupon code', async () => {
       const { token } = await createUserAndToken({}, baseURL);
 
       const response = await fetch(`${baseURL}/api-v1/coupons/redeem`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          code: "INVALID",
+          code: 'INVALID',
           orderAmount: 100,
-          orderId: "00000000-0000-0000-0000-000000000000",
+          orderId: '00000000-0000-0000-0000-000000000000',
         }),
       });
 
       await expectError(response, 404);
     });
 
-    it("rejects inactive coupon", async () => {
+    it('rejects inactive coupon', async () => {
       const { token } = await createUserAndToken({}, baseURL);
       await seedCoupon({
-        code: "INACTIVE",
-        discountType: "percentage",
+        code: 'INACTIVE',
+        discountType: 'percentage',
         discountValue: 10,
         isActive: false,
       });
 
       const response = await fetch(`${baseURL}/api-v1/coupons/redeem`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          code: "INACTIVE",
+          code: 'INACTIVE',
           orderAmount: 100,
-          orderId: "00000000-0000-0000-0000-000000000000",
+          orderId: '00000000-0000-0000-0000-000000000000',
         }),
       });
 
       await expectError(response, 400);
     });
 
-    it("rejects coupon when order amount is below minimum", async () => {
+    it('rejects coupon when order amount is below minimum', async () => {
       const { token } = await createUserAndToken({}, baseURL);
       await seedCoupon({
-        code: "SAVE10",
-        discountType: "percentage",
+        code: 'SAVE10',
+        discountType: 'percentage',
         discountValue: 10,
         minOrderAmount: 100,
         isActive: true,
       });
 
       const response = await fetch(`${baseURL}/api-v1/coupons/redeem`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          code: "SAVE10",
+          code: 'SAVE10',
           orderAmount: 50,
-          orderId: "00000000-0000-0000-0000-000000000000",
+          orderId: '00000000-0000-0000-0000-000000000000',
         }),
       });
 
       await expectError(response, 400);
     });
 
-    it("validates required fields", async () => {
+    it('validates required fields', async () => {
       const { token } = await createUserAndToken({}, baseURL);
 
       const response = await fetch(`${baseURL}/api-v1/coupons/redeem`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({}),
@@ -234,12 +218,12 @@ describe("Coupons API", () => {
       await expectError(response, 400);
     });
 
-    it("rejects application without authentication", async () => {
+    it('rejects application without authentication', async () => {
       const response = await fetch(`${baseURL}/api-v1/coupons/redeem`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          code: "SAVE10",
+          code: 'SAVE10',
           orderAmount: 100,
         }),
       });
@@ -248,46 +232,44 @@ describe("Coupons API", () => {
     });
   });
 
-  describe("POST /api-v1/coupons/", () => {
-    it("creates coupon with valid data", async () => {
+  describe('POST /api-v1/coupons/', () => {
+    it('creates coupon with valid data', async () => {
       const { token } = await createUserAndToken({}, baseURL);
 
       const response = await fetch(`${baseURL}/api-v1/coupons/`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          code: "NEWCOUPON",
-          description: "A new test coupon",
-          discountType: "percent",
+          code: 'NEWCOUPON',
+          description: 'A new test coupon',
+          discountType: 'percent',
           discountValue: 15,
           minOrderAmount: 75,
           maxDiscountAmount: 50,
           usageLimit: 100,
           validFrom: new Date().toISOString(),
-          validUntil: new Date(
-            Date.now() + 30 * 24 * 60 * 60 * 1000
-          ).toISOString(),
+          validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           isActive: true,
         }),
       });
 
       const body = await expectSuccess(response, 201);
-      expect(body.data.coupon.code).toBe("NEWCOUPON");
-      expect(body.data.coupon.discountType).toBe("percent");
+      expect(body.data.coupon.code).toBe('NEWCOUPON');
+      expect(body.data.coupon.discountType).toBe('percent');
       expect(body.data.coupon.discountValue).toBe(15);
       expect(body.data.coupon.minOrderAmount).toBe(75);
     });
 
-    it("validates required fields", async () => {
+    it('validates required fields', async () => {
       const { token } = await createUserAndToken({}, baseURL);
 
       const response = await fetch(`${baseURL}/api-v1/coupons/`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({}),
@@ -296,18 +278,18 @@ describe("Coupons API", () => {
       await expectError(response, 400);
     });
 
-    it("validates discount value is positive", async () => {
+    it('validates discount value is positive', async () => {
       const { token } = await createUserAndToken({}, baseURL);
 
       const response = await fetch(`${baseURL}/api-v1/coupons/`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          code: "BADCOUPON",
-          discountType: "percentage",
+          code: 'BADCOUPON',
+          discountType: 'percentage',
           discountValue: -10,
         }),
       });
@@ -315,13 +297,13 @@ describe("Coupons API", () => {
       await expectError(response, 400);
     });
 
-    it("rejects creation without authentication", async () => {
+    it('rejects creation without authentication', async () => {
       const response = await fetch(`${baseURL}/api-v1/coupons/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          code: "NEWCOUPON",
-          discountType: "percentage",
+          code: 'NEWCOUPON',
+          discountType: 'percentage',
           discountValue: 15,
         }),
       });

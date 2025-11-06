@@ -6,34 +6,40 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-} from "typeorm";
-import { ChatroomMember } from "./ChatroomMember.js";
-import { Message } from "./Message.js";
+} from 'typeorm';
+import { ChatroomMember } from './ChatroomMember.js';
+import { Message } from './Message.js';
 
-@Entity("chatrooms")
+@Entity('chatrooms')
 export class Chatroom {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ type: "varchar", length: 200, unique: true, name: "room_id" })
+  @Column({ type: 'varchar', length: 200, unique: true, name: 'room_id' })
   @Index()
   roomId!: string;
 
-  @Column({ type: "varchar", length: 100 })
+  @Column({ type: 'varchar', length: 100 })
   name!: string;
 
-  @Column({ type: "boolean", default: false, name: "is_group" })
+  @Column({ type: 'boolean', default: false, name: 'is_group' })
   isGroup!: boolean;
 
-  @CreateDateColumn({ type: "timestamp", name: "created_at" })
+  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt!: Date;
 
-  @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
+  @UpdateDateColumn({ type: 'timestamp', name: 'updated_at' })
   updatedAt!: Date;
 
-  @OneToMany(() => ChatroomMember, (cm) => cm.chatroom)
-  members?: ChatroomMember[];
-
-  @OneToMany(() => Message, (m) => m.room)
+  @OneToMany(
+    () => Message,
+    (m: Message) => m.room
+  )
   messages?: Message[];
+
+  @OneToMany(
+    () => ChatroomMember,
+    (cm: ChatroomMember) => cm.chatroom
+  )
+  members?: ChatroomMember[];
 }

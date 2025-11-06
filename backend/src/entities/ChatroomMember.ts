@@ -1,13 +1,15 @@
 import {
-  Column,
-  CreateDateColumn,
   Entity,
-  JoinColumn,
-  ManyToOne,
   PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
 } from "typeorm";
-import { Chatroom } from "./Chatroom.js";
-import { User } from "./User.js";
+
+import type { Chatroom } from "./Chatroom.js";
+
+import type { User } from "./User.js";
 
 @Entity("chatroom_members")
 export class ChatroomMember {
@@ -29,13 +31,11 @@ export class ChatroomMember {
   @CreateDateColumn({ name: "joined_at" })
   joinedAt!: Date;
 
-  @ManyToOne(() => Chatroom, (room) => room.members, { onDelete: "CASCADE" })
+  @ManyToOne("Chatroom", "members", { onDelete: "CASCADE" })
   @JoinColumn({ name: "chatroom_id" })
   chatroom?: Chatroom;
 
-  @ManyToOne(() => User, (user) => user.chatroomMembers, {
-    onDelete: "CASCADE",
-  })
+  @ManyToOne("User", "chatroomMembers", { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user?: User;
 }

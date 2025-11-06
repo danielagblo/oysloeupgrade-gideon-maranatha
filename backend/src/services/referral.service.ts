@@ -1,16 +1,11 @@
-import { AppDataSource } from "../config/database.js";
-import { Referral } from "../entities/Referral.js";
-import { ReferralRedemption } from "../entities/ReferralRedemption.js";
-import { User } from "../entities/User.js";
-import {
-  BadRequestError,
-  ConflictError,
-  ForbiddenError,
-  NotFoundError,
-} from "../utils/errors.js";
-import { logInfo } from "../utils/logger.js";
-import { notificationHelper } from "../utils/notification-helper.js";
-import { WalletService } from "./wallet.service.js";
+import { AppDataSource } from '../config/database.js';
+import { Referral } from '../entities/Referral.js';
+import { ReferralRedemption } from '../entities/ReferralRedemption.js';
+import { User } from '../entities/User.js';
+import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from '../utils/errors.js';
+import { logInfo } from '../utils/logger.js';
+import { notificationHelper } from '../utils/notification-helper.js';
+import { WalletService } from './wallet.service.js';
 
 export interface CreateReferralInput {
   referrerId: string;
@@ -53,18 +48,18 @@ export class ReferralService {
     });
 
     if (!referrer) {
-      throw new NotFoundError("Referrer not found");
+      throw new NotFoundError('Referrer not found');
     }
     if (!referredUser) {
-      throw new NotFoundError("Referred user not found");
+      throw new NotFoundError('Referred user not found');
     }
 
     if (referrerId === referredUserId) {
-      throw new BadRequestError("Cannot refer yourself");
+      throw new BadRequestError('Cannot refer yourself');
     }
 
     if (referrer.referralCode !== referralCode) {
-      throw new BadRequestError("Invalid referral code");
+      throw new BadRequestError('Invalid referral code');
     }
 
     const existingReferral = await this.referralRepository.findOne({
@@ -72,7 +67,7 @@ export class ReferralService {
     });
 
     if (existingReferral) {
-      throw new ConflictError("User has already been referred");
+      throw new ConflictError('User has already been referred');
     }
 
     const reverseReferral = await this.referralRepository.findOne({
@@ -80,13 +75,13 @@ export class ReferralService {
     });
 
     if (reverseReferral) {
-      throw new BadRequestError("Cannot refer someone who referred you");
+      throw new BadRequestError('Cannot refer someone who referred you');
     }
 
     const referral = new Referral();
     referral.referrerId = referrerId;
     referral.referredUserId = referredUserId;
-    referral.status = "pending";
+    referral.status = 'pending';
 
     const savedReferral = await this.referralRepository.save(referral);
 
@@ -100,15 +95,15 @@ export class ReferralService {
     bonusPoints: number;
   }> {
     const referral = await this.referralRepository.findOne({
-      where: { referredUserId, status: "pending" },
+      where: { referredUserId, status: 'pending' },
     });
 
     if (!referral) {
-      throw new NotFoundError("Pending referral not found");
+      throw new NotFoundError('Pending referral not found');
     }
 
     return await AppDataSource.transaction(async (manager) => {
-      referral.status = "confirmed";
+      referral.status = 'confirmed';
       referral.confirmedAt = new Date();
       await manager.save(referral);
 
@@ -123,11 +118,11 @@ export class ReferralService {
         await this.walletService.creditWallet(
           referral.referrerId,
           this.REFERRAL_BONUS_POINTS,
-          "referral_bonus",
+          'referral_bonus',
           referral.id,
           {
             referredUserId,
-            bonusType: "referral_confirmation",
+            bonusType: 'referral_confirmation',
             points: this.REFERRAL_BONUS_POINTS,
           }
         );
@@ -169,17 +164,16 @@ export class ReferralService {
 
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
-      throw new NotFoundError("User not found");
+      throw new NotFoundError('User not found');
     }
 
     if (user.referralPoints < points) {
-      throw new BadRequestError("Insufficient referral points");
+      throw new BadRequestError('Insufficient referral points');
     }
 
     return await AppDataSource.transaction(async (manager) => {
       const walletCredit = Math.floor(points / this.REDEMPTION_RATE) * 100;
-      const actualPointsUsed =
-        Math.floor(points / this.REDEMPTION_RATE) * this.REDEMPTION_RATE;
+      const actualPointsUsed = Math.floor(points / this.REDEMPTION_RATE) * this.REDEMPTION_RATE;
 
       user.referralPoints -= actualPointsUsed;
       await manager.save(user);
@@ -196,7 +190,7 @@ export class ReferralService {
       await this.walletService.creditWallet(
         userId,
         walletCredit,
-        "referral_redemption",
+        'referral_redemption',
         savedRedemption.id,
         {
           redemptionId: savedRedemption.id,
@@ -245,17 +239,11 @@ export class ReferralService {
       this.userRepository.findOne({ where: { id: userId } }),
     ]);
 
-    const confirmedReferrals = referrals.filter(
-      (r) => r.status === "confirmed"
-    );
-    const pendingReferrals = referrals.filter((r) => r.status === "pending");
+    const confirmedReferrals = referrals.filter((r) => r.status === 'confirmed');
+    const pendingReferrals = referrals.filter((r) => r.status === 'pending');
 
-    const totalPointsEarned =
-      confirmedReferrals.length * this.REFERRAL_BONUS_POINTS;
-    const totalPointsRedeemed = redemptions.reduce(
-      (sum, r) => sum + Number(r.redeemedPoints),
-      0
-    );
+    const totalPointsEarned = confirmedReferrals.length * this.REFERRAL_BONUS_POINTS;
+    const totalPointsRedeemed = redemptions.reduce((sum, r) => sum + Number(r.redeemedPoints), 0);
     const availablePoints = user?.referralPoints || 0;
 
     return {
@@ -277,8 +265,8 @@ export class ReferralService {
 
     const [referrals, total] = await this.referralRepository.findAndCount({
       where: { referrerId: userId },
-      relations: ["referredUser"],
-      order: { createdAt: "DESC" },
+      relations: ['referredUser'],
+      order: { createdAt: 'DESC' },
       skip: offset,
       take: limit,
     });
@@ -295,7 +283,7 @@ export class ReferralService {
 
     const [redemptions, total] = await this.redemptionRepository.findAndCount({
       where: { userId },
-      order: { createdAt: "DESC" },
+      order: { createdAt: 'DESC' },
       skip: offset,
       take: limit,
     });
@@ -306,38 +294,32 @@ export class ReferralService {
   async getAllReferrals(
     page: number = 1,
     limit: number = 20,
-    status?: "pending" | "confirmed" | "cancelled"
+    status?: 'pending' | 'confirmed' | 'cancelled'
   ): Promise<{ referrals: Referral[]; total: number }> {
     const offset = (page - 1) * limit;
 
     const queryBuilder = this.referralRepository
-      .createQueryBuilder("referral")
-      .leftJoinAndSelect("referral.referrer", "referrer")
-      .leftJoinAndSelect("referral.referredUser", "referredUser")
-      .orderBy("referral.createdAt", "DESC");
+      .createQueryBuilder('referral')
+      .leftJoinAndSelect('referral.referrer', 'referrer')
+      .leftJoinAndSelect('referral.referredUser', 'referredUser')
+      .orderBy('referral.createdAt', 'DESC');
 
     if (status) {
-      queryBuilder.andWhere("referral.status = :status", { status });
+      queryBuilder.andWhere('referral.status = :status', { status });
     }
 
-    const [referrals, total] = await queryBuilder
-      .skip(offset)
-      .take(limit)
-      .getManyAndCount();
+    const [referrals, total] = await queryBuilder.skip(offset).take(limit).getManyAndCount();
 
     return { referrals, total };
   }
 
-  async cancelReferral(
-    referralId: string,
-    cancelledBy: string
-  ): Promise<Referral> {
+  async cancelReferral(referralId: string, cancelledBy: string): Promise<Referral> {
     const referral = await this.referralRepository.findOne({
       where: { id: referralId },
     });
 
     if (!referral) {
-      throw new NotFoundError("Referral not found");
+      throw new NotFoundError('Referral not found');
     }
 
     if (referral.referrerId !== cancelledBy) {
@@ -345,15 +327,15 @@ export class ReferralService {
         where: { id: cancelledBy },
       });
       if (!user?.isStaff && !user?.isSuperuser) {
-        throw new ForbiddenError("You can only cancel your own referrals");
+        throw new ForbiddenError('You can only cancel your own referrals');
       }
     }
 
-    if (referral.status !== "pending") {
-      throw new BadRequestError("Only pending referrals can be cancelled");
+    if (referral.status !== 'pending') {
+      throw new BadRequestError('Only pending referrals can be cancelled');
     }
 
-    referral.status = "cancelled";
+    referral.status = 'cancelled';
     referral.cancelledAt = new Date();
     referral.cancelledBy = cancelledBy;
 
@@ -366,7 +348,7 @@ export class ReferralService {
 
   async getReferralLeaderboard(
     limit: number = 10,
-    period?: "week" | "month" | "year" | "all"
+    period?: 'week' | 'month' | 'year' | 'all'
   ): Promise<
     Array<{
       user: User;
@@ -375,19 +357,19 @@ export class ReferralService {
       totalPointsEarned: number;
     }>
   > {
-    let dateFilter = "";
-    if (period && period !== "all") {
+    let dateFilter = '';
+    if (period && period !== 'all') {
       const now = new Date();
       let startDate: Date;
 
       switch (period) {
-        case "week":
+        case 'week':
           startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
           break;
-        case "month":
+        case 'month':
           startDate = new Date(now.getFullYear(), now.getMonth(), 1);
           break;
-        case "year":
+        case 'year':
           startDate = new Date(now.getFullYear(), 0, 1);
           break;
         default:
@@ -433,7 +415,7 @@ export class ReferralService {
   async generateReferralCode(userId: string): Promise<string> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
-      throw new NotFoundError("User not found");
+      throw new NotFoundError('User not found');
     }
 
     if (user.referralCode) {
@@ -455,7 +437,7 @@ export class ReferralService {
     } while (!isUnique && attempts < maxAttempts);
 
     if (!isUnique) {
-      throw new BadRequestError("Failed to generate unique referral code");
+      throw new BadRequestError('Failed to generate unique referral code');
     }
 
     user.referralCode = referralCode;

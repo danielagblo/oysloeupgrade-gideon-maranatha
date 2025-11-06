@@ -1,15 +1,16 @@
 import { expect } from "bun:test";
-import { AppDataSource } from "../src/config/database";
-import { User } from "../src/entities/User";
-import { Product } from "../src/entities/Product";
-import { Category } from "../src/entities/Category";
-import { Coupon } from "../src/entities/Coupon";
-import { Wallet } from "../src/entities/Wallet";
-import { NotificationHistory } from "../src/entities/NotificationHistory";
-import { createApp } from "../src/app";
-import { initDb } from "./setup";
-import bcrypt from "bcrypt";
 import { randomUUID } from "node:crypto";
+import bcrypt from "bcrypt";
+import { createApp } from "../src/app.js";
+import { AppDataSource } from "../src/config/database.js";
+import { AdminUser } from "../src/entities/AdminUser.js";
+import { Category } from "../src/entities/Category.js";
+import { Coupon } from "../src/entities/Coupon.js";
+import { NotificationHistory } from "../src/entities/NotificationHistory.js";
+import { Product } from "../src/entities/Product.js";
+import { User } from "../src/entities/User.js";
+import { Wallet } from "../src/entities/Wallet.js";
+import { initDb } from "./setup.js";
 
 process.env.NODE_ENV = "test";
 process.env.LOG_LEVEL = "debug";
@@ -23,8 +24,8 @@ process.env.GOOGLE_CLIENT_SECRET = "test-google-client-secret";
 process.env.GOOGLE_CALLBACK_URL = "http://localhost:3000/auth/google/callback";
 process.env.DB_PASSWORD = "postgres";
 
-import type { Application } from "express";
 import type { Server } from "node:http";
+import type { Application } from "express";
 
 export interface TestServer {
   app: Application;
@@ -50,6 +51,17 @@ export interface TestProduct {
   description?: string;
   categoryId?: string;
   userId?: string;
+}
+
+export interface TestAdminUser {
+  id: number;
+  username: string;
+  email?: string;
+  password: string;
+  role: "super-admin" | "admin" | "staff" | "support";
+  isActive?: boolean;
+  businessName?: string;
+  token?: string;
 }
 
 export async function initTestDb() {
@@ -387,6 +399,134 @@ export async function expectSuccess(response: Response, status: number) {
   };
   expect(jsonBody.success).toBe(true);
   return jsonBody;
+}
+
+export async function seedAdminUser(
+  adminData: Partial<TestAdminUser> = {}
+): Promise<TestAdminUser> {
+  const db = await initTestDb();
+
+  const defaultAdmin = {
+    username: `admin${randomUUID().slice(0, 8)}`,
+    email: `admin${randomUUID().slice(0, 8)}@example.com`,
+    password: "AdminPass123!",
+    role: "admin" as const,
+    isActive: true,
+    businessName: "Test Business",
+    ...adminData,
+  };
+
+  const hashedPassword = await bcrypt.hash(defaultAdmin.password, 12);
+
+  const permissions =
+    defaultAdmin.role === "super-admin"
+      ? [
+          "user:read",
+          "user:update",
+          "user:delete",
+          "user:verify",
+          "user:mute",
+          "ads:read",
+          "ads:moderate",
+          "ads:delete",
+          "support:read",
+          "support:manage",
+          "content:manage",
+          "system:config",
+          "system:reports",
+        ]
+      : defaultAdmin.role === "admin"
+      ? [
+          "user:read",
+          "user:update",
+          "user:verify",
+          "user:mute",
+          "ads:read",
+          "ads:moderate",
+          "ads:delete",
+          "support:read",
+          "support:manage",
+          "content:manage",
+          "system:reports",
+        ]
+      : defaultAdmin.role === "staff"
+      ? [
+          "user:read",
+          "ads:read",
+          "ads:moderate",
+          "support:read",
+          "support:manage",
+        ]
+      : defaultAdmin.role === "support"
+      ? ["support:read", "support:manage"]
+      : [];
+
+  const admin = new AdminUser();
+  admin.username = defaultAdmin.username;
+  admin.email = defaultAdmin.email;
+  admin.passwordHash = hashedPassword;
+  admin.role = defaultAdmin.role;
+  admin.permissions = permissions;
+  admin.isActive = defaultAdmin.isActive!;
+  admin.businessName = defaultAdmin.businessName;
+  admin.createdAt = new Date();
+  admin.updatedAt = new Date();
+
+  const savedAdmin = await db.getRepository(AdminUser).save(admin);
+
+  return {
+    id: savedAdmin.id,
+    username: savedAdmin.username,
+    email: savedAdmin.email,
+    password: defaultAdmin.password,
+    role: savedAdmin.role,
+    isActive: savedAdmin.isActive,
+    businessName: savedAdmin.businessName,
+  };
+}
+
+export async function loginAdminUser(
+  username: string,
+  password: string,
+  baseURL: string
+): Promise<string> {
+  const response = await fetch(`${baseURL}/api-v1/admin/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Admin login failed: ${response.status}`);
+  }
+
+  const data = (await response.json()) as { data: { token: string } };
+  return data.data.token;
+}
+
+export async function createAdminAndToken(
+  adminData: Partial<TestAdminUser> = {},
+  baseURL: string
+): Promise<{ admin: TestAdminUser; token: string }> {
+  const admin = await seedAdminUser(adminData);
+  const token = await loginAdminUser(admin.username, admin.password, baseURL);
+
+  return { admin, token };
+}
+
+export async function authenticatedAdminRequest(
+  url: string,
+  token: string,
+  options: RequestInit = {}
+) {
+  return fetch(url, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
 }
 
 export async function cleanupTestDb() {

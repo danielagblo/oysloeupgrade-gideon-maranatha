@@ -1,45 +1,45 @@
-import { describe, it, expect } from "bun:test";
+import { describe, expect, it } from 'bun:test';
 
 const userSchema = {
-  type: "object",
-  required: ["email", "password"],
+  type: 'object',
+  required: ['email', 'password'],
   properties: {
     email: {
-      type: "string",
-      format: "email",
+      type: 'string',
+      format: 'email',
     },
     password: {
-      type: "string",
+      type: 'string',
       minLength: 8,
     },
     firstName: {
-      type: "string",
+      type: 'string',
       minLength: 1,
     },
     lastName: {
-      type: "string",
+      type: 'string',
       minLength: 1,
     },
   },
 };
 
 const productSchema = {
-  type: "object",
-  required: ["name", "price"],
+  type: 'object',
+  required: ['name', 'price'],
   properties: {
     name: {
-      type: "string",
+      type: 'string',
       minLength: 1,
     },
     price: {
-      type: "number",
+      type: 'number',
       minimum: 0,
     },
     description: {
-      type: "string",
+      type: 'string',
     },
     category: {
-      type: "string",
+      type: 'string',
     },
   },
 };
@@ -66,11 +66,7 @@ function validateSchema(
 
   if (schema.required) {
     for (const field of schema.required) {
-      if (
-        data[field] === undefined ||
-        data[field] === null ||
-        data[field] === ""
-      ) {
+      if (data[field] === undefined || data[field] === null || data[field] === '') {
         errors.push(`${field} is required`);
       }
     }
@@ -82,28 +78,26 @@ function validateSchema(
       const rule = rules;
 
       if (value !== undefined) {
-        if (rule.type === "string" && typeof value !== "string") {
+        if (rule.type === 'string' && typeof value !== 'string') {
           errors.push(`${field} must be a string`);
         }
-        if (rule.type === "number" && typeof value !== "number") {
+        if (rule.type === 'number' && typeof value !== 'number') {
           errors.push(`${field} must be a number`);
         }
 
-        if (rule.type === "string") {
+        if (rule.type === 'string') {
           if (rule.minLength && value.length < rule.minLength) {
-            errors.push(
-              `${field} must be at least ${rule.minLength} characters long`
-            );
+            errors.push(`${field} must be at least ${rule.minLength} characters long`);
           }
         }
 
-        if (rule.type === "number") {
+        if (rule.type === 'number') {
           if (rule.minimum !== undefined && value < rule.minimum) {
             errors.push(`${field} must be at least ${rule.minimum}`);
           }
         }
 
-        if (rule.format === "email") {
+        if (rule.format === 'email') {
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           if (!emailRegex.test(value)) {
             errors.push(`${field} must be a valid email address`);
@@ -119,14 +113,14 @@ function validateSchema(
   };
 }
 
-describe("Validation Middleware", () => {
-  describe("user schema validation", () => {
-    it("validates correct user data", () => {
+describe('Validation Middleware', () => {
+  describe('user schema validation', () => {
+    it('validates correct user data', () => {
       const validUser = {
-        email: "test@example.com",
-        password: "SecurePass123!",
-        firstName: "John",
-        lastName: "Doe",
+        email: 'test@example.com',
+        password: 'SecurePass123!',
+        firstName: 'John',
+        lastName: 'Doe',
       };
 
       const result = validateSchema(validUser, userSchema);
@@ -134,82 +128,78 @@ describe("Validation Middleware", () => {
       expect(result.errors).toEqual([]);
     });
 
-    it("rejects missing required fields", () => {
+    it('rejects missing required fields', () => {
       const invalidUser = {
-        firstName: "John",
-        lastName: "Doe",
+        firstName: 'John',
+        lastName: 'Doe',
       };
 
       const result = validateSchema(invalidUser, userSchema);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain("email is required");
-      expect(result.errors).toContain("password is required");
+      expect(result.errors).toContain('email is required');
+      expect(result.errors).toContain('password is required');
     });
 
-    it("validates email format", () => {
+    it('validates email format', () => {
       const invalidUser = {
-        email: "invalid-email",
-        password: "SecurePass123!",
-        firstName: "John",
-        lastName: "Doe",
+        email: 'invalid-email',
+        password: 'SecurePass123!',
+        firstName: 'John',
+        lastName: 'Doe',
       };
 
       const result = validateSchema(invalidUser, userSchema);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain("email must be a valid email address");
+      expect(result.errors).toContain('email must be a valid email address');
     });
 
-    it("validates password minimum length", () => {
+    it('validates password minimum length', () => {
       const invalidUser = {
-        email: "test@example.com",
-        password: "123",
-        firstName: "John",
-        lastName: "Doe",
+        email: 'test@example.com',
+        password: '123',
+        firstName: 'John',
+        lastName: 'Doe',
       };
 
       const result = validateSchema(invalidUser, userSchema);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain(
-        "password must be at least 8 characters long"
-      );
+      expect(result.errors).toContain('password must be at least 8 characters long');
     });
 
-    it("validates firstName minimum length", () => {
+    it('validates firstName minimum length', () => {
       const invalidUser = {
-        email: "test@example.com",
-        password: "SecurePass123!",
-        firstName: "",
-        lastName: "Doe",
+        email: 'test@example.com',
+        password: 'SecurePass123!',
+        firstName: '',
+        lastName: 'Doe',
       };
 
       const result = validateSchema(invalidUser, userSchema);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain(
-        "firstName must be at least 1 characters long"
-      );
+      expect(result.errors).toContain('firstName must be at least 1 characters long');
     });
 
-    it("validates field types", () => {
+    it('validates field types', () => {
       const invalidUser = {
-        email: "test@example.com",
-        password: "SecurePass123!",
+        email: 'test@example.com',
+        password: 'SecurePass123!',
         firstName: 123,
-        lastName: "Doe",
+        lastName: 'Doe',
       };
 
       const result = validateSchema(invalidUser, userSchema);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain("firstName must be a string");
+      expect(result.errors).toContain('firstName must be a string');
     });
   });
 
-  describe("product schema validation", () => {
-    it("validates correct product data", () => {
+  describe('product schema validation', () => {
+    it('validates correct product data', () => {
       const validProduct = {
-        name: "Test Product",
+        name: 'Test Product',
         price: 29.99,
-        description: "A test product",
-        category: "Electronics",
+        description: 'A test product',
+        category: 'Electronics',
       };
 
       const result = validateSchema(validProduct, productSchema);
@@ -217,61 +207,59 @@ describe("Validation Middleware", () => {
       expect(result.errors).toEqual([]);
     });
 
-    it("rejects missing required fields", () => {
+    it('rejects missing required fields', () => {
       const invalidProduct = {
-        description: "A test product",
+        description: 'A test product',
       };
 
       const result = validateSchema(invalidProduct, productSchema);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain("name is required");
-      expect(result.errors).toContain("price is required");
+      expect(result.errors).toContain('name is required');
+      expect(result.errors).toContain('price is required');
     });
 
-    it("validates price is non-negative", () => {
+    it('validates price is non-negative', () => {
       const invalidProduct = {
-        name: "Test Product",
+        name: 'Test Product',
         price: -10,
-        description: "A test product",
+        description: 'A test product',
       };
 
       const result = validateSchema(invalidProduct, productSchema);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain("price must be at least 0");
+      expect(result.errors).toContain('price must be at least 0');
     });
 
-    it("validates name is not empty", () => {
+    it('validates name is not empty', () => {
       const invalidProduct = {
-        name: "",
+        name: '',
         price: 29.99,
-        description: "A test product",
+        description: 'A test product',
       };
 
       const result = validateSchema(invalidProduct, productSchema);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain(
-        "name must be at least 1 characters long"
-      );
+      expect(result.errors).toContain('name must be at least 1 characters long');
     });
 
-    it("validates price is a number", () => {
+    it('validates price is a number', () => {
       const invalidProduct = {
-        name: "Test Product",
-        price: "29.99",
-        description: "A test product",
+        name: 'Test Product',
+        price: '29.99',
+        description: 'A test product',
       };
 
       const result = validateSchema(invalidProduct, productSchema);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain("price must be a number");
+      expect(result.errors).toContain('price must be a number');
     });
   });
 
-  describe("error formatting", () => {
-    it("formats validation errors correctly", () => {
+  describe('error formatting', () => {
+    it('formats validation errors correctly', () => {
       const invalidData = {
-        email: "invalid",
-        password: "123",
+        email: 'invalid',
+        password: '123',
       };
 
       const result = validateSchema(invalidData, userSchema);
@@ -280,88 +268,82 @@ describe("Validation Middleware", () => {
       expect(result.errors.length).toBeGreaterThan(0);
 
       result.errors.forEach((error) => {
-        expect(typeof error).toBe("string");
+        expect(typeof error).toBe('string');
         expect(error.length).toBeGreaterThan(0);
       });
     });
 
-    it("provides specific error messages", () => {
+    it('provides specific error messages', () => {
       const invalidData = {
-        email: "not-an-email",
-        password: "short",
+        email: 'not-an-email',
+        password: 'short',
       };
 
       const result = validateSchema(invalidData, userSchema);
 
-      expect(result.errors).toContain("email must be a valid email address");
-      expect(result.errors).toContain(
-        "password must be at least 8 characters long"
-      );
+      expect(result.errors).toContain('email must be a valid email address');
+      expect(result.errors).toContain('password must be at least 8 characters long');
     });
 
-    it("handles multiple validation errors", () => {
+    it('handles multiple validation errors', () => {
       const invalidData = {
-        email: "invalid",
-        password: "123",
+        email: 'invalid',
+        password: '123',
         firstName: 123,
-        lastName: "",
+        lastName: '',
       };
 
       const result = validateSchema(invalidData, userSchema);
 
       expect(result.errors.length).toBeGreaterThanOrEqual(4);
-      expect(result.errors).toContain("email must be a valid email address");
-      expect(result.errors).toContain(
-        "password must be at least 8 characters long"
-      );
-      expect(result.errors).toContain("firstName must be a string");
-      expect(result.errors).toContain(
-        "lastName must be at least 1 characters long"
-      );
+      expect(result.errors).toContain('email must be a valid email address');
+      expect(result.errors).toContain('password must be at least 8 characters long');
+      expect(result.errors).toContain('firstName must be a string');
+      expect(result.errors).toContain('lastName must be at least 1 characters long');
     });
   });
 
-  describe("edge cases", () => {
-    it("handles null values", () => {
+  describe('edge cases', () => {
+    it('handles null values', () => {
       const dataWithNull = {
         email: null,
-        password: "SecurePass123!",
+        password: 'SecurePass123!',
       };
 
       const result = validateSchema(dataWithNull, userSchema);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain("email is required");
+      expect(result.errors).toContain('email is required');
     });
 
-    it("handles undefined values", () => {
+    it('handles undefined values', () => {
       const dataWithUndefined = {
         email: undefined,
-        password: "SecurePass123!",
+        password: 'SecurePass123!',
       };
 
       const result = validateSchema(dataWithUndefined, userSchema);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain("email is required");
+      expect(result.errors).toContain('email is required');
     });
 
-    it("handles empty string values", () => {
+    it('handles empty string values', () => {
       const dataWithEmpty = {
-        email: "",
-        password: "SecurePass123!",
+        email: '',
+        password: 'SecurePass123!',
       };
 
       const result = validateSchema(dataWithEmpty, userSchema);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain("email is required");
+      expect(result.errors).toContain('email is required');
     });
 
-    it("handles extra fields gracefully", () => {
+    it('handles extra fields gracefully', () => {
       const dataWithExtra = {
-        email: "test@example.com",
-        password: "SecurePass123!",
-        firstName: "John",
-        lastName: "Doe",
-        extraField: "should be ignored",
+        email: 'test@example.com',
+        password: 'SecurePass123!',
+        firstName: 'John',
+        lastName: 'Doe',
+        extraField: 'should be ignored',
       };
 
       const result = validateSchema(dataWithExtra, userSchema);

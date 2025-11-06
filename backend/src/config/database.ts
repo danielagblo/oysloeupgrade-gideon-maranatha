@@ -1,8 +1,12 @@
 import "reflect-metadata";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { DataSource } from "typeorm";
+import { SnakeNamingStrategy } from "typeorm-naming-strategies";
 import { logError, logInfo } from "../utils/logger.js";
 import { config } from "./env.js";
-import { ENTITIES } from "../entities/index.js";
+
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -13,7 +17,8 @@ export const AppDataSource = new DataSource({
   database: config.database.name,
   synchronize: false,
   logging: config.database.logging,
-  entities: [...ENTITIES],
+  namingStrategy: new SnakeNamingStrategy(),
+  entities: [join(__dirname, "..", "entities", "**", "*.{ts,js}")],
   subscribers: [],
   extra: {
     max: 20,

@@ -1,7 +1,7 @@
-import type { Request, Response } from "express";
-import { WalletService } from "../services/wallet.service.js";
-import { AppError, BadRequestError } from "../utils/errors.js";
-import { logError, logInfo } from "../utils/logger.js";
+import type { Request, Response } from 'express';
+import { WalletService } from '../services/wallet.service.js';
+import { AppError, BadRequestError } from '../utils/errors.js';
+import { logError, logInfo } from '../utils/logger.js';
 
 export class WalletController {
   private walletService = new WalletService();
@@ -11,27 +11,26 @@ export class WalletController {
       if (!req.user?.id) {
         return res.status(401).json({
           success: false,
-          message: "User not authenticated",
+          message: 'User not authenticated',
         });
       }
 
       const balance = await this.walletService.getBalance(req.user.id);
-      const balanceNumber =
-        typeof balance === "string" ? parseFloat(balance) : balance;
+      const balanceNumber = typeof balance === 'string' ? parseFloat(balance) : balance;
 
       res.json({
         success: true,
         data: {
           balance: balanceNumber.toFixed(2),
-          currency: "USD",
+          currency: 'USD',
         },
       });
     } catch (error) {
-      logError("Error getting wallet balance:", error);
+      logError('Error getting wallet balance:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to get wallet balance",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to get wallet balance',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -41,26 +40,18 @@ export class WalletController {
       if (!req.user?.id) {
         return res.status(401).json({
           success: false,
-          message: "User not authenticated",
+          message: 'User not authenticated',
         });
       }
 
       const { page = 1, limit = 20, type } = req.query;
 
-      const { transactions, total } =
-        await this.walletService.getTransactionHistory(
-          req.user.id,
-          Number(page),
-          Number(limit),
-          type as
-            | "credit"
-            | "debit"
-            | "referral"
-            | "coupon"
-            | "purchase"
-            | "refund"
-            | undefined
-        );
+      const { transactions, total } = await this.walletService.getTransactionHistory(
+        req.user.id,
+        Number(page),
+        Number(limit),
+        type as 'credit' | 'debit' | 'referral' | 'coupon' | 'purchase' | 'refund' | undefined
+      );
 
       res.json({
         success: true,
@@ -75,11 +66,11 @@ export class WalletController {
         },
       });
     } catch (error) {
-      logError("Error getting wallet transactions:", error);
+      logError('Error getting wallet transactions:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to get wallet transactions",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to get wallet transactions',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -89,7 +80,7 @@ export class WalletController {
       if (!req.user?.id) {
         return res.status(401).json({
           success: false,
-          message: "User not authenticated",
+          message: 'User not authenticated',
         });
       }
 
@@ -100,11 +91,11 @@ export class WalletController {
         data: summary,
       });
     } catch (error) {
-      logError("Error getting wallet summary:", error);
+      logError('Error getting wallet summary:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to get wallet summary",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to get wallet summary',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -114,46 +105,39 @@ export class WalletController {
       if (!req.user?.id) {
         return res.status(401).json({
           success: false,
-          message: "User not authenticated",
+          message: 'User not authenticated',
         });
       }
 
       const { toUserId, amount, reason } = req.body;
 
       if (!toUserId || !amount || !reason) {
-        throw new BadRequestError("toUserId, amount, and reason are required");
+        throw new BadRequestError('toUserId, amount, and reason are required');
       }
 
       if (amount <= 0) {
-        throw new BadRequestError("Amount must be greater than 0");
+        throw new BadRequestError('Amount must be greater than 0');
       }
 
-      await this.walletService.transferFunds(
-        req.user.id,
-        toUserId,
-        amount,
-        reason,
-        { transferType: "user_to_user" }
-      );
+      await this.walletService.transferFunds(req.user.id, toUserId, amount, reason, {
+        transferType: 'user_to_user',
+      });
 
-      logInfo(
-        `Transfer completed: ${req.user.id} -> ${toUserId}, amount: ${amount}`
-      );
+      logInfo(`Transfer completed: ${req.user.id} -> ${toUserId}, amount: ${amount}`);
 
       let newBalanceNumber: number;
       try {
         const newBalance = await this.walletService.getBalance(req.user.id);
-        newBalanceNumber =
-          typeof newBalance === "string" ? parseFloat(newBalance) : newBalance;
+        newBalanceNumber = typeof newBalance === 'string' ? parseFloat(newBalance) : newBalance;
       } catch (balanceError) {
-        logError("Failed to retrieve balance after transfer:", balanceError);
+        logError('Failed to retrieve balance after transfer:', balanceError);
         return res.json({
           success: true,
-          message: "Transfer completed successfully (balance unavailable)",
+          message: 'Transfer completed successfully (balance unavailable)',
           data: {
             transaction: {
               amount: amount,
-              type: "transfer",
+              type: 'transfer',
               reason: reason,
             },
           },
@@ -162,19 +146,19 @@ export class WalletController {
 
       res.json({
         success: true,
-        message: "Transfer completed successfully",
+        message: 'Transfer completed successfully',
         data: {
           newBalance: newBalanceNumber.toFixed(2),
           transaction: {
             amount: amount,
-            type: "transfer",
+            type: 'transfer',
             reason: reason,
             balanceAfter: newBalanceNumber.toFixed(2),
           },
         },
       });
     } catch (error) {
-      logError("Error transferring funds:", error);
+      logError('Error transferring funds:', error);
       if (error instanceof AppError) {
         return res.status(error.statusCode).json({
           success: false,
@@ -184,8 +168,8 @@ export class WalletController {
       }
       res.status(500).json({
         success: false,
-        message: "Failed to transfer funds",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: 'Failed to transfer funds',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }

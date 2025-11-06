@@ -1,7 +1,8 @@
-import type { Request, Response } from "express";
-import { AppDataSource } from "../config/database.js";
-import { FCMDevice } from "../entities/FCMDevice.js";
-import { logError, logInfo } from "../utils/logger.js";
+import type { Request, Response } from 'express';
+import { AppDataSource } from '../config/database.js';
+import { FCMDevice } from '../entities/FCMDevice.js';
+import { logError, logInfo } from '../utils/logger.js';
+import { requireUserId } from '../utils/guards.js';
 
 export interface RegisterDeviceRequest {
   token: string;
@@ -15,18 +16,16 @@ export class FCMController {
 
   async registerDevice(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user?.id;
+      const userId = requireUserId(req);
       if (!userId) {
-        res.status(401).json({ success: false, message: "Unauthorized" });
+        res.status(401).json({ success: false, message: 'Unauthorized' });
         return;
       }
 
       const { token, deviceInfo }: RegisterDeviceRequest = req.body;
 
       if (!token) {
-        res
-          .status(400)
-          .json({ success: false, message: "FCM token is required" });
+        res.status(400).json({ success: false, message: 'FCM token is required' });
         return;
       }
 
@@ -40,7 +39,7 @@ export class FCMController {
         await this.fcmDeviceRepository.save(existingDevice);
 
         logInfo(`FCM device updated for user ${userId}`);
-        res.json({ success: true, message: "Device updated successfully" });
+        res.json({ success: true, message: 'Device updated successfully' });
         return;
       }
 
@@ -53,27 +52,25 @@ export class FCMController {
       await this.fcmDeviceRepository.save(device);
 
       logInfo(`FCM device registered for user ${userId}`);
-      res.json({ success: true, message: "Device registered successfully" });
+      res.json({ success: true, message: 'Device registered successfully' });
     } catch (error) {
       logError(`FCM device registration error: ${error}`);
-      res
-        .status(500)
-        .json({ success: false, message: "Failed to register device" });
+      res.status(500).json({ success: false, message: 'Failed to register device' });
     }
   }
 
-  async removeDevice(req: Request, res: Response): Promise<void> {
+  async unregisterDevice(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user?.id;
+      const userId = requireUserId(req);
       if (!userId) {
-        res.status(401).json({ success: false, message: "Unauthorized" });
+        res.status(401).json({ success: false, message: 'Unauthorized' });
         return;
       }
 
       const { token } = req.params;
 
       if (!token) {
-        res.status(400).json({ success: false, message: "Token is required" });
+        res.status(400).json({ success: false, message: 'Token is required' });
         return;
       }
 
@@ -82,33 +79,31 @@ export class FCMController {
       });
 
       if (!device) {
-        res.status(404).json({ success: false, message: "Device not found" });
+        res.status(404).json({ success: false, message: 'Device not found' });
         return;
       }
 
       await this.fcmDeviceRepository.remove(device);
 
       logInfo(`FCM device removed for user ${userId}`);
-      res.json({ success: true, message: "Device removed successfully" });
+      res.json({ success: true, message: 'Device removed successfully' });
     } catch (error) {
       logError(`FCM device removal error: ${error}`);
-      res
-        .status(500)
-        .json({ success: false, message: "Failed to remove device" });
+      res.status(500).json({ success: false, message: 'Failed to remove device' });
     }
   }
 
-  async getUserDevices(req: Request, res: Response): Promise<void> {
+  async getDevices(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user?.id;
+      const userId = requireUserId(req);
       if (!userId) {
-        res.status(401).json({ success: false, message: "Unauthorized" });
+        res.status(401).json({ success: false, message: 'Unauthorized' });
         return;
       }
 
       const devices = await this.fcmDeviceRepository.find({
         where: { userId },
-        select: ["id", "token", "deviceInfo", "createdAt"],
+        select: ['id', 'token', 'deviceInfo', 'createdAt'],
       });
 
       res.json({
@@ -122,30 +117,26 @@ export class FCMController {
       });
     } catch (error) {
       logError(`FCM devices fetch error: ${error}`);
-      res
-        .status(500)
-        .json({ success: false, message: "Failed to fetch devices" });
+      res.status(500).json({ success: false, message: 'Failed to fetch devices' });
     }
   }
 
   async testNotification(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user?.id;
+      const userId = requireUserId(req);
       if (!userId) {
-        res.status(401).json({ success: false, message: "Unauthorized" });
+        res.status(401).json({ success: false, message: 'Unauthorized' });
         return;
       }
 
-      const { NotificationService } = await import(
-        "../services/notification.service.js"
-      );
+      const { NotificationService } = await import('../services/notification.service.js');
       const notificationService = new NotificationService();
 
       const result = await notificationService.sendPushNotification(
         userId,
-        "Test Notification",
-        "This is a test notification from Oysloe Marketplace",
-        { type: "test" }
+        'Test Notification',
+        'This is a test notification from Oysloe Marketplace',
+        { type: 'test' }
       );
 
       if (result.success) {
@@ -156,14 +147,12 @@ export class FCMController {
       } else {
         res.status(500).json({
           success: false,
-          message: result.error || "Failed to send test notification",
+          message: result.error || 'Failed to send test notification',
         });
       }
     } catch (error) {
       logError(`Test notification error: ${error}`);
-      res
-        .status(500)
-        .json({ success: false, message: "Failed to send test notification" });
+      res.status(500).json({ success: false, message: 'Failed to send test notification' });
     }
   }
 }

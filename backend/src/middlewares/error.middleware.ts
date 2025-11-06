@@ -1,7 +1,7 @@
-import type { NextFunction, Request, Response } from "express";
-import { config } from "../config/env.js";
-import { AppError } from "../utils/errors.js";
-import { logError } from "../utils/logger.js";
+import type { NextFunction, Request, Response } from 'express';
+import { config } from '../config/env.js';
+import { AppError } from '../utils/errors.js';
+import { logError } from '../utils/logger.js';
 
 export const errorHandler = (
   err: Error | AppError,
@@ -12,8 +12,8 @@ export const errorHandler = (
   logError(err.message, err);
 
   let statusCode = 500;
-  let message = "Internal server error";
-  let code = "INTERNAL_ERROR";
+  let message = 'Internal server error';
+  let code = 'INTERNAL_ERROR';
 
   if (err instanceof AppError) {
     statusCode = err.statusCode;
@@ -34,10 +34,8 @@ export const errorHandler = (
     ...(config.server.isDevelopment && { stack: err.stack }),
   };
 
-  if ("errors" in err && err instanceof AppError) {
-    response.errors = (
-      err as AppError & { errors?: Record<string, string[]> }
-    ).errors;
+  if ('errors' in err && err instanceof AppError) {
+    response.errors = (err as AppError & { errors?: Record<string, string[]> }).errors;
   }
 
   res.status(statusCode).json(response);

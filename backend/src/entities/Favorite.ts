@@ -7,33 +7,32 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
   Unique,
-} from "typeorm";
+} from 'typeorm';
+import type { Product } from './Product.js';
+import type { User } from './User.js';
 
-import { User } from "./User.js";
-import { Product } from "./Product.js";
-
-@Entity("favorites")
-@Unique("uq_favorites_user_product", ["userId", "productId"])
+@Entity('favorites')
+@Unique('uq_favorites_user_product', ['userId', 'productId'])
 export class Favorite {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ type: "uuid", name: "user_id" })
+  @Column({ type: 'uuid', name: 'user_id' })
   @Index()
   userId!: string;
 
-  @Column({ type: "uuid", name: "product_id" })
+  @Column({ type: 'uuid', name: 'product_id' })
   @Index()
   productId!: string;
 
-  @CreateDateColumn({ type: "timestamp", name: "created_at" })
+  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt!: Date;
 
-  @ManyToOne(() => User, (u) => u.favorites, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "user_id" })
+  @ManyToOne('User', (u: any) => u.favorites, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
   user?: User;
 
-  @ManyToOne(() => Product, (p) => p.favorites, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "product_id" })
+  @ManyToOne('Product', (p: any) => p.favorites, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'product_id' })
   product?: Product;
 }

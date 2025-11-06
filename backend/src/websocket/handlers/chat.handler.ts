@@ -1,25 +1,20 @@
-import type { Server as SocketIOServer } from "socket.io";
-import { ChatService } from "../../services/chat.service.js";
-import { logError, logInfo } from "../../utils/logger.js";
-import { notificationHelper } from "../../utils/notification-helper.js";
-import { toRoomKey, toUserRoomKey } from "../../utils/rooms.js";
-import { isUserInRoom } from "../../utils/websocket-helper.js";
+import type { Server as SocketIOServer } from 'socket.io';
+import { ChatService } from '../../services/chat.service.js';
+import { logError, logInfo } from '../../utils/logger.js';
+import { notificationHelper } from '../../utils/notification-helper.js';
+import { toRoomKey, toUserRoomKey } from '../../utils/rooms.js';
+import { isUserInRoom } from '../../utils/websocket-helper.js';
 import {
   type AuthenticatedSocket,
   authenticateSocket,
   requireAuth,
-} from "../middleware/auth.middleware.js";
+} from '../middleware/auth.middleware.js';
 
-async function logRoomMembers(
-  io: SocketIOServer,
-  roomKey: string
-): Promise<void> {
+async function logRoomMembers(io: SocketIOServer, roomKey: string): Promise<void> {
   try {
     const sockets = await io.in(roomKey).fetchSockets();
     const ids = sockets.map((s) => s.id);
-    logInfo(
-      `[rooms] ${roomKey} has ${ids.length} sockets: [${ids.join(", ")}]`
-    );
+    logInfo(`[rooms] ${roomKey} has ${ids.length} sockets: [${ids.join(', ')}]`);
   } catch (error) {
     logError(`Error fetching room members: ${error}`);
   }
@@ -29,7 +24,7 @@ export class ChatHandler {
   private chatService = new ChatService();
 
   initializeHandlers(io: SocketIOServer): void {
-    io.on("connection", async (socket: AuthenticatedSocket) => {
+    io.on('connection', async (socket: AuthenticatedSocket) => {
       try {
         const isAuthenticated = await authenticateSocket(socket);
         if (!isAuthenticated) {
@@ -47,12 +42,10 @@ export class ChatHandler {
         logInfo(`Event handlers registered for user: ${user.email}`);
 
         socket.onAny((eventName, ...args) => {
-          logInfo(
-            `Received event: ${eventName} with args: ${JSON.stringify(args)}`
-          );
+          logInfo(`Received event: ${eventName} with args: ${JSON.stringify(args)}`);
         });
 
-        socket.on("disconnect", (reason) => {
+        socket.on('disconnect', (reason) => {
           logInfo(`User ${user.email} disconnected: ${reason}`);
         });
       } catch (error) {
@@ -67,7 +60,7 @@ export class ChatHandler {
     _user: { id: string; email: string; name: string }
   ): void {
     socket.on(
-      "join_room",
+      'join_room',
       async (
         data: { roomId?: string; roomName?: string },
         ack?: (res: { ok: boolean; error?: string }) => void
@@ -76,8 +69,8 @@ export class ChatHandler {
           logInfo(`Received join_room event: ${JSON.stringify(data)}`);
           const roomId = data.roomId ?? data.roomName;
           if (!roomId) {
-            logError("No roomId or roomName provided");
-            ack?.({ ok: false, error: "roomId or roomName required" });
+            logError('No roomId or roomName provided');
+            ack?.({ ok: false, error: 'roomId or roomName required' });
             return;
           }
           logInfo(`Processing join_room for roomId: ${roomId}`);
@@ -91,7 +84,7 @@ export class ChatHandler {
     );
 
     socket.on(
-      "send_message",
+      'send_message',
       async (
         data: {
           message: string;
@@ -110,15 +103,15 @@ export class ChatHandler {
       }
     );
 
-    socket.on("typing", async (data: { roomId: string }) => {
+    socket.on('typing', async (data: { roomId: string }) => {
       await this.handleTyping(socket, data.roomId, true);
     });
 
-    socket.on("stop_typing", async (data: { roomId: string }) => {
+    socket.on('stop_typing', async (data: { roomId: string }) => {
       await this.handleTyping(socket, data.roomId, false);
     });
 
-    socket.on("join_private_chat", async (data: { otherUserEmail: string }) => {
+    socket.on('join_private_chat', async (data: { otherUserEmail: string }) => {
       await this.handleJoinPrivateChat(socket, data.otherUserEmail);
     });
   }
@@ -127,55 +120,46 @@ export class ChatHandler {
     socket: AuthenticatedSocket,
     user: { id: string; email: string; name: string }
   ): void {
-    socket.join("chatrooms_updates");
+    socket.join('chatrooms_updates');
 
     this.sendChatroomsList(socket, user.id);
 
-    socket.on(
-      "get_chatrooms",
-      async (ack?: (res: { ok: boolean; error?: string }) => void) => {
-        try {
-          await this.sendChatroomsList(socket, user.id);
-          ack?.({ ok: true });
-        } catch (error) {
-          logError(`Chatrooms list error: ${error}`);
-          ack?.({ ok: false, error: String(error) });
-        }
+    socket.on('get_chatrooms', async (ack?: (res: { ok: boolean; error?: string }) => void) => {
+      try {
+        await this.sendChatroomsList(socket, user.id);
+        ack?.({ ok: true });
+      } catch (error) {
+        logError(`Chatrooms list error: ${error}`);
+        ack?.({ ok: false, error: String(error) });
       }
-    );
+    });
   }
 
   private registerUnreadCount(
     socket: AuthenticatedSocket,
     user: { id: string; email: string; name: string }
   ): void {
-    const unreadRoomKey = toUserRoomKey(user.id, "unread");
+    const unreadRoomKey = toUserRoomKey(user.id, 'unread');
     socket.join(unreadRoomKey);
 
     this.sendUnreadCount(socket, user.id);
 
-    socket.on(
-      "get_unread_count",
-      async (ack?: (res: { ok: boolean; error?: string }) => void) => {
-        try {
-          await this.sendUnreadCount(socket, user.id);
-          ack?.({ ok: true });
-        } catch (error) {
-          logError(`Unread count error: ${error}`);
-          ack?.({ ok: false, error: String(error) });
-        }
+    socket.on('get_unread_count', async (ack?: (res: { ok: boolean; error?: string }) => void) => {
+      try {
+        await this.sendUnreadCount(socket, user.id);
+        ack?.({ ok: true });
+      } catch (error) {
+        logError(`Unread count error: ${error}`);
+        ack?.({ ok: false, error: String(error) });
       }
-    );
+    });
 
-    socket.on("unread_count_update", async () => {
+    socket.on('unread_count_update', async () => {
       await this.sendUnreadCount(socket, user.id);
     });
   }
 
-  private async handleJoinRoom(
-    socket: AuthenticatedSocket,
-    roomId: string
-  ): Promise<void> {
+  private async handleJoinRoom(socket: AuthenticatedSocket, roomId: string): Promise<void> {
     try {
       const user = requireAuth(socket);
 
@@ -183,7 +167,7 @@ export class ChatHandler {
       const chatroom = await this.chatService.ensureRoom(roomId);
       if (!chatroom) {
         logError(`Failed to ensure room: ${roomId}`);
-        socket.emit("error", { message: "Chatroom not found" });
+        socket.emit('error', { message: 'Chatroom not found' });
         return;
       }
       logInfo(`Room ensured: ${roomId} -> ${chatroom.id}`);
@@ -193,27 +177,21 @@ export class ChatHandler {
 
       await logRoomMembers(socket.nsp.server, roomKey);
 
-      logInfo(
-        `Socket ${socket.id} is now in rooms: [${Array.from(socket.rooms).join(
-          ", "
-        )}]`
-      );
+      logInfo(`Socket ${socket.id} is now in rooms: [${Array.from(socket.rooms).join(', ')}]`);
       const history = await this.chatService.getChatHistory(chatroom.id, 50);
       const historyData = {
-        type: "chat_history",
+        type: 'chat_history',
         messages: history.reverse().map((msg) => ({
           id: msg.id,
-          sender: msg.sender?.name || "Unknown",
-          email: msg.sender?.email || "",
+          sender: msg.sender?.name || 'Unknown',
+          email: msg.sender?.email || '',
           content: msg.content,
           timestamp: msg.createdAt.toISOString(),
         })),
       };
 
-      socket.emit("chat_history", historyData);
-      logInfo(
-        `Sent chat history to ${user.email}: ${historyData.messages.length} messages`
-      );
+      socket.emit('chat_history', historyData);
+      logInfo(`Sent chat history to ${user.email}: ${historyData.messages.length} messages`);
 
       await this.chatService.markMessagesAsRead(chatroom.id, user.id);
 
@@ -235,13 +213,12 @@ export class ChatHandler {
 
       const chatroom = await this.chatService.findRoom(data.roomId);
       if (!chatroom) {
-        socket.emit("error", { message: "Chatroom not found" });
+        socket.emit('error', { message: 'Chatroom not found' });
         return;
       }
 
-      type MessageType = "text" | "image" | "audio";
-      const messageType: MessageType =
-        (data.messageType as MessageType) ?? "text";
+      type MessageType = 'text' | 'image' | 'audio';
+      const messageType: MessageType = (data.messageType as MessageType) ?? 'text';
 
       const savedMessage = await this.chatService.saveMessage(
         chatroom.id,
@@ -251,12 +228,12 @@ export class ChatHandler {
       );
 
       if (!savedMessage) {
-        socket.emit("error", { message: "Failed to save message" });
+        socket.emit('error', { message: 'Failed to save message' });
         return;
       }
 
       const messageData = {
-        type: "chat_message",
+        type: 'chat_message',
         message: data.message,
         username: user.name,
         email: user.email,
@@ -265,26 +242,19 @@ export class ChatHandler {
 
       const roomKey = toRoomKey(data.roomId);
       logInfo(`Broadcasting message to room: ${roomKey}`);
-      socket.to(roomKey).emit("chat_message", messageData);
-      socket.emit("chat_message", messageData);
+      socket.to(roomKey).emit('chat_message', messageData);
+      socket.emit('chat_message', messageData);
 
-      socket
-        .to("chatrooms_updates")
-        .emit("chatrooms_update", { type: "chatrooms_update" });
+      socket.to('chatrooms_updates').emit('chatrooms_update', { type: 'chatrooms_update' });
 
       await this.notifyUnreadCountUpdates(socket, user.id);
 
-      await this.sendChatNotifications(
-        chatroom.id,
-        user,
-        data.message,
-        savedMessage.id
-      );
+      await this.sendChatNotifications(chatroom.id, user, data.message, savedMessage.id);
 
       logInfo(`Message sent by ${user.email} in room ${roomKey}`);
     } catch (error) {
       logError(`Error sending message: ${error}`);
-      socket.emit("error", { message: "Failed to send message" });
+      socket.emit('error', { message: 'Failed to send message' });
     }
   }
 
@@ -297,20 +267,19 @@ export class ChatHandler {
       const user = requireAuth(socket);
 
       const typingData = {
-        type: isTyping ? "typing_notification" : "stop_typing_notification",
+        type: isTyping ? 'typing_notification' : 'stop_typing_notification',
         is_typing: isTyping,
         username: user.email,
       };
 
       const roomKey = toRoomKey(roomId);
 
-      const roomSize = (await socket.nsp.adapter.sockets(new Set([roomKey])))
-        .size;
+      const roomSize = (await socket.nsp.adapter.sockets(new Set([roomKey]))).size;
       logInfo(
         `Typing in ${roomKey} — members=${roomSize}, from=${socket.id}, isTyping=${isTyping}`
       );
 
-      socket.to(roomKey).emit(isTyping ? "typing" : "stop_typing", typingData);
+      socket.to(roomKey).emit(isTyping ? 'typing' : 'stop_typing', typingData);
     } catch (error) {
       logError(`Error handling typing: ${error}`);
     }
@@ -326,22 +295,19 @@ export class ChatHandler {
       const otherUser = await this.chatService.findUserByEmail(otherUserEmail);
 
       if (!otherUser) {
-        socket.emit("error", { message: "User not found" });
+        socket.emit('error', { message: 'User not found' });
         return;
       }
 
       if (otherUser.id === user.id) {
-        socket.emit("error", { message: "Cannot chat with yourself" });
+        socket.emit('error', { message: 'Cannot chat with yourself' });
         return;
       }
 
-      const chatroom = await this.chatService.getOrCreatePrivateChatroom(
-        user.id,
-        otherUser.id
-      );
+      const chatroom = await this.chatService.getOrCreatePrivateChatroom(user.id, otherUser.id);
 
       if (!chatroom) {
-        socket.emit("error", { message: "Failed to create chatroom" });
+        socket.emit('error', { message: 'Failed to create chatroom' });
         return;
       }
 
@@ -349,12 +315,12 @@ export class ChatHandler {
       socket.join(roomKey);
 
       const history = await this.chatService.getChatHistory(chatroom.id, 50);
-      socket.emit("chat_history", {
-        type: "chat_history",
+      socket.emit('chat_history', {
+        type: 'chat_history',
         messages: history.reverse().map((msg) => ({
           id: msg.id,
-          sender: msg.sender?.name || "Unknown",
-          email: msg.sender?.email || "",
+          sender: msg.sender?.name || 'Unknown',
+          email: msg.sender?.email || '',
           content: msg.content,
           timestamp: msg.createdAt.toISOString(),
         })),
@@ -365,19 +331,16 @@ export class ChatHandler {
       logInfo(`User ${user.email} joined private chat with ${otherUserEmail}`);
     } catch (error) {
       logError(`Error joining private chat: ${error}`);
-      socket.emit("error", { message: "Failed to join private chat" });
+      socket.emit('error', { message: 'Failed to join private chat' });
     }
   }
 
-  private async sendChatroomsList(
-    socket: AuthenticatedSocket,
-    userId: string
-  ): Promise<void> {
+  private async sendChatroomsList(socket: AuthenticatedSocket, userId: string): Promise<void> {
     try {
       const chatrooms = await this.chatService.getChatroomsForUser(userId);
 
-      socket.emit("chatrooms_list", {
-        type: "chatrooms_list",
+      socket.emit('chatrooms_list', {
+        type: 'chatrooms_list',
         chatrooms,
       });
     } catch (error) {
@@ -385,15 +348,12 @@ export class ChatHandler {
     }
   }
 
-  private async sendUnreadCount(
-    socket: AuthenticatedSocket,
-    userId: string
-  ): Promise<void> {
+  private async sendUnreadCount(socket: AuthenticatedSocket, userId: string): Promise<void> {
     try {
       const count = await this.chatService.getTotalUnreadCount(userId);
 
-      socket.emit("unread_count", {
-        type: "unread_count",
+      socket.emit('unread_count', {
+        type: 'unread_count',
         count,
       });
     } catch (error) {
@@ -406,9 +366,9 @@ export class ChatHandler {
     userId: string
   ): Promise<void> {
     try {
-      const unreadRoomKey = toUserRoomKey(userId, "unread");
-      socket.to(unreadRoomKey).emit("unread_count_update", {
-        type: "unread_count_update",
+      const unreadRoomKey = toUserRoomKey(userId, 'unread');
+      socket.to(unreadRoomKey).emit('unread_count_update', {
+        type: 'unread_count_update',
       });
     } catch (error) {
       logError(`Error notifying unread count updates: ${error}`);
@@ -422,20 +382,15 @@ export class ChatHandler {
     messageId: string
   ): Promise<void> {
     try {
-
       const roomMembers = await this.chatService.getRoomMembers(roomId);
 
-      const recipients = roomMembers.filter(
-        (member) => member.id !== sender.id
-      );
+      const recipients = roomMembers.filter((member) => member.id !== sender.id);
 
       for (const recipient of recipients) {
         try {
-
           const isOnline = await isUserInRoom(recipient.id, roomId);
 
           if (!isOnline) {
-
             await notificationHelper.notifyNewMessage(
               recipient.id,
               sender.name,
@@ -446,9 +401,7 @@ export class ChatHandler {
             );
           }
         } catch (error) {
-          logError(
-            `Error sending chat notification to user ${recipient.id}: ${error}`
-          );
+          logError(`Error sending chat notification to user ${recipient.id}: ${error}`);
         }
       }
     } catch (error) {

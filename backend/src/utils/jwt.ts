@@ -1,7 +1,7 @@
-import { type JwtPayload, type Secret, sign, verify } from "jsonwebtoken";
+import { type JwtPayload, type Secret, sign, verify } from 'jsonwebtoken';
 
-import { config } from "../config/env.js";
-import { InvalidTokenError } from "./errors.js";
+import { config } from '../config/env.js';
+import { InvalidTokenError } from './errors.js';
 
 export interface JWTPayload extends JwtPayload {
   userId: string;
@@ -11,10 +11,7 @@ export interface JWTPayload extends JwtPayload {
 
 const JWT_SECRET: Secret = config.jwt.secret;
 
-export function issueJwt(
-  payload: object,
-  expiresIn: string | number = "1h"
-): string {
+export function issueJwt(payload: object, expiresIn: string | number = '1h'): string {
   return sign(payload, JWT_SECRET, { expiresIn });
 }
 
@@ -22,13 +19,11 @@ export function verifyToken(token: string): JWTPayload {
   try {
     return verify(token, JWT_SECRET) as JWTPayload;
   } catch {
-    throw new InvalidTokenError("Invalid token");
+    throw new InvalidTokenError('Invalid token');
   }
 }
 
-export const generateToken = (
-  payload: Omit<JWTPayload, "iat" | "exp">
-): string => {
+export const generateToken = (payload: Omit<JWTPayload, 'iat' | 'exp'>): string => {
   return issueJwt(payload, config.jwt.expiry);
 };
 
@@ -47,9 +42,7 @@ export const getTokenExpiry = (token: string): number => {
   return Math.max(0, decoded.exp - now);
 };
 
-export function getBearerTokenFromHeader(
-  authorization?: string
-): string | null {
+export function getBearerTokenFromHeader(authorization?: string): string | null {
   if (!authorization) return null;
   const match = authorization.match(/^Bearer\s+(.+)$/i);
   if (!match) return null;

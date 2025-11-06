@@ -10,7 +10,6 @@ import {
 } from './index.js';
 
 export function registerWebSocketEndpoints(registry: OpenAPIRegistry): void {
-
   registry.registerPath({
     method: 'get',
     path: '/websocket',

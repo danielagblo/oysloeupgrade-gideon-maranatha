@@ -8,21 +8,21 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-
-import { Product } from "./Product.js";
-import { Review } from "./Review.js";
 import { ChatroomMember } from "./ChatroomMember.js";
+import { CouponRedemption } from "./CouponRedemption.js";
+import { Favorite } from "./Favorite.js";
+import { FCMDevice } from "./FCMDevice.js";
 import { Message } from "./Message.js";
+import { NotificationHistory } from "./NotificationHistory.js";
+import { Product } from "./Product.js";
+import { RecentlyViewed } from "./RecentlyViewed.js";
 import { Referral } from "./Referral.js";
 import { ReferralRedemption } from "./ReferralRedemption.js";
-import { FCMDevice } from "./FCMDevice.js";
-import { CouponRedemption } from "./CouponRedemption.js";
-import { Wallet } from "./Wallet.js";
-import { Favorite } from "./Favorite.js";
-import { NotificationHistory } from "./NotificationHistory.js";
-import { UserAnalytics } from "./UserAnalytics.js";
+import { Review } from "./Review.js";
+
 import { SearchHistory } from "./SearchHistory.js";
-import { RecentlyViewed } from "./RecentlyViewed.js";
+import { UserAnalytics } from "./UserAnalytics.js";
+import { Wallet } from "./Wallet.js";
 
 @Entity("users")
 export class User {
@@ -136,48 +136,97 @@ export class User {
   @UpdateDateColumn({ type: "timestamp", name: "updated_at" })
   updatedAt!: Date;
 
-  @OneToMany(() => Product, (p) => p.user)
-  products?: Product[];
+  @OneToMany(() => Product, (p: any) => p.user)
+  products?: any[];
 
-  @OneToMany(() => Review, (r) => r.user)
+  @OneToMany(() => Review, (r: any) => r.user)
   reviews?: Review[];
 
-  @OneToMany(() => ChatroomMember, (cm) => cm.user)
+  @OneToMany(() => ChatroomMember, (cm: ChatroomMember) => cm.user)
   chatroomMembers?: ChatroomMember[];
 
-  @OneToMany(() => Message, (m) => m.sender)
+  @OneToMany(() => Message, (m: Message) => m.sender)
   messages?: Message[];
 
-  @OneToMany(() => Referral, (r) => r.referrer)
+  @OneToMany(() => Referral, (r: Referral) => r.referrer)
   referralsGiven?: Referral[];
 
-  @OneToMany(() => Referral, (r) => r.referredUser)
+  @OneToMany(() => Referral, (r: Referral) => r.referredUser)
   referralsReceived?: Referral[];
 
-  @OneToMany(() => ReferralRedemption, (rr) => rr.user)
+  @OneToMany(() => ReferralRedemption, (rr: ReferralRedemption) => rr.user)
   referralRedemptions?: ReferralRedemption[];
 
-  @OneToMany(() => FCMDevice, (fd) => fd.user)
+  @OneToMany(() => FCMDevice, (fd: FCMDevice) => fd.user)
   fcmDevices?: FCMDevice[];
 
-  @OneToMany(() => CouponRedemption, (cr) => cr.user)
+  @OneToMany(() => CouponRedemption, (cr: CouponRedemption) => cr.user)
   couponRedemptions?: CouponRedemption[];
 
-  @OneToOne(() => Wallet, (w) => w.user)
+  @OneToOne(() => Wallet, (w: Wallet) => w.user)
   wallet?: Wallet;
 
-  @OneToMany(() => Favorite, (f) => f.user)
+  @OneToMany(() => Favorite, (f: Favorite) => f.user)
   favorites?: Favorite[];
 
-  @OneToMany(() => NotificationHistory, (nh) => nh.user)
+  @OneToMany(() => NotificationHistory, (nh: NotificationHistory) => nh.user)
   notificationHistory?: NotificationHistory[];
 
-  @OneToMany(() => UserAnalytics, (ua) => ua.user)
+  @OneToMany(() => UserAnalytics, (ua: UserAnalytics) => ua.user)
   analytics?: UserAnalytics[];
 
-  @OneToMany(() => SearchHistory, (sh) => sh.user)
+  @OneToMany(() => SearchHistory, (sh: SearchHistory) => sh.user)
   searchHistory?: SearchHistory[];
 
-  @OneToMany(() => RecentlyViewed, (rv) => rv.user)
+  @OneToMany(() => RecentlyViewed, (rv: RecentlyViewed) => rv.user)
   recentlyViewed?: RecentlyViewed[];
+
+  @OneToMany("JobApplication", (ja: any) => ja.user)
+  jobApplications?: any[];
+
+  @OneToMany("SupportCase", (sc: any) => sc.user)
+  supportCases?: any[];
+
+  @OneToMany("UserReport", (ur: any) => ur.reporterUser)
+  reportedBy?: any[];
+
+  @OneToMany("UserReport", (ur: any) => ur.reportedUser)
+  reportsFiled?: any[];
+
+  @Column({
+    type: "varchar",
+    length: 20,
+    default: "unverified",
+    name: "verification_status",
+  })
+  verificationStatus!: string;
+
+  @Column({
+    type: "varchar",
+    length: 20,
+    default: "basic",
+    name: "verification_level",
+  })
+  verificationLevel!: string;
+
+  @Column({ type: "boolean", default: false, name: "is_muted" })
+  isMuted!: boolean;
+
+  @Column({ type: "integer", nullable: true, name: "muted_by" })
+  mutedBy?: number;
+
+  @Column({ type: "timestamp", nullable: true, name: "muted_at" })
+  mutedAt?: Date;
+
+  @Column({ type: "text", nullable: true, name: "mute_reason" })
+  muteReason?: string;
+
+  @Column({ type: "integer", nullable: true, name: "verified_by" })
+  verifiedBy?: number;
+
+  @Column({ type: "timestamp", nullable: true, name: "verified_at" })
+  verifiedAt?: Date;
+
+  @Column({ type: "text", nullable: true, name: "admin_notes" })
+  adminNotes?: string;
 }

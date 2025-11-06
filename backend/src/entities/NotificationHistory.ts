@@ -6,52 +6,52 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
-} from "typeorm";
-import { User } from "./User.js";
+} from 'typeorm';
+import type { User } from './User.js';
 
 export type NotificationType =
-  | "chat_message"
-  | "wallet_credit"
-  | "wallet_debit"
-  | "welcome"
-  | "account_created"
-  | "coupon_redemption"
-  | "referral_bonus"
-  | "referral_redemption"
-  | "product_review";
+  | 'chat_message'
+  | 'wallet_credit'
+  | 'wallet_debit'
+  | 'welcome'
+  | 'account_created'
+  | 'coupon_redemption'
+  | 'referral_bonus'
+  | 'referral_redemption'
+  | 'product_review';
 
-@Entity("notification_history")
-@Index(["userId", "createdAt"])
-@Index(["userId", "isRead"])
+@Entity('notification_history')
+@Index(['userId', 'createdAt'])
+@Index(['userId', 'isRead'])
 export class NotificationHistory {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ type: "uuid", name: "user_id" })
+  @Column({ type: 'uuid', name: 'user_id' })
   userId!: string;
 
-  @Column({ type: "varchar", length: 50 })
+  @Column({ type: 'varchar', length: 50 })
   type!: NotificationType;
 
-  @Column({ type: "varchar", length: 255 })
+  @Column({ type: 'varchar', length: 255 })
   title!: string;
 
-  @Column({ type: "text" })
+  @Column({ type: 'text' })
   body!: string;
 
-  @Column({ type: "jsonb", nullable: true })
+  @Column({ type: 'jsonb', nullable: true })
   data?: Record<string, unknown>;
 
-  @Column({ type: "boolean", default: false, name: "is_read" })
+  @Column({ type: 'boolean', default: false, name: 'is_read' })
   isRead!: boolean;
 
-  @Column({ type: "timestamp", nullable: true, name: "read_at" })
+  @Column({ type: 'timestamp', nullable: true, name: 'read_at' })
   readAt?: Date;
 
-  @CreateDateColumn({ type: "timestamp", name: "created_at" })
+  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt!: Date;
 
-  @ManyToOne(() => User, (u) => u.notificationHistory, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "user_id" })
+  @ManyToOne('User', (u: any) => u.notificationHistory, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
   user?: User;
 }

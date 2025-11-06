@@ -1,6 +1,6 @@
+import { BadRequestError } from "../utils/errors.js";
+import { logError } from "../utils/logger.js";
 import type { Request, Response } from "express";
-import { BadRequestError } from "@utils/errors.js";
-import { logError } from "@utils/logger.js";
 import { SearchService } from "../services/search.service.js";
 
 export class SearchController {

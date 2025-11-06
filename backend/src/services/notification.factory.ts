@@ -1,13 +1,11 @@
-import type { INotification } from "./notification.port";
-import { NoopNotificationService } from "./notification.noop";
-import { FirebaseNotificationService } from "./notification.firebase";
+import { FirebaseNotificationService } from './notification.firebase';
+import { NoopNotificationService } from './notification.noop';
+import type { INotification } from './notification.port';
 
-export function makeNotificationService(
-  env: NodeJS.ProcessEnv = process.env
-): INotification {
-  const mode = env.APP_MODE ?? env.NODE_ENV ?? "development";
+export function makeNotificationService(env: NodeJS.ProcessEnv = process.env): INotification {
+  const mode = env.APP_MODE ?? env.NODE_ENV ?? 'development';
 
-  if (mode === "test") {
+  if (mode === 'test') {
     return new NoopNotificationService();
   }
 
@@ -26,7 +24,7 @@ export function makeNotificationService(
       });
     } catch (error) {
       console.warn(
-        "Firebase notification service initialization failed, falling back to Noop:",
+        'Firebase notification service initialization failed, falling back to Noop:',
         error
       );
       return new NoopNotificationService();

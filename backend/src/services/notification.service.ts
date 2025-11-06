@@ -1,12 +1,9 @@
-import { In } from "typeorm";
-import { AppDataSource } from "../config/database.js";
-import { config } from "../config/env.js";
-import { FCMDevice } from "../entities/FCMDevice.js";
-import {
-  NotificationHistory,
-  type NotificationType,
-} from "../entities/NotificationHistory.js";
-import { logError, logInfo } from "../utils/logger.js";
+import { In } from 'typeorm';
+import { AppDataSource } from '../config/database.js';
+import { config } from '../config/env.js';
+import { FCMDevice } from '../entities/FCMDevice.js';
+import { NotificationHistory, type NotificationType } from '../entities/NotificationHistory.js';
+import { logError, logInfo } from '../utils/logger.js';
 
 export interface SMSResult {
   success: boolean;
@@ -51,20 +48,16 @@ export class NotificationService {
     return AppDataSource.getRepository(NotificationHistory);
   }
 
-  async sendSMS(
-    phone: string,
-    message: string,
-    sender?: string
-  ): Promise<SMSResult> {
+  async sendSMS(phone: string, message: string, sender?: string): Promise<SMSResult> {
     try {
-      const senderId = sender || config.sms.senderId || "Oysloe";
+      const senderId = sender || config.sms.senderId || 'Oysloe';
 
-      const response = await fetch("https://sms.arkesel.com/api/v2/sms/send", {
-        method: "POST",
+      const response = await fetch('https://sms.arkesel.com/api/v2/sms/send', {
+        method: 'POST',
         headers: {
-          "api-key": config.sms.arkeselApiKey,
-          "Content-Type": "application/json",
-          Accept: "application/json",
+          'api-key': config.sms.arkeselApiKey,
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify({
           sender: senderId,
@@ -79,7 +72,7 @@ export class NotificationService {
         logError(`SMS sending failed: ${JSON.stringify(data)}`);
         return {
           success: false,
-          error: data.message || "SMS sending failed",
+          error: data.message || 'SMS sending failed',
           data,
         };
       }
@@ -93,7 +86,7 @@ export class NotificationService {
       logError(`SMS sending error: ${error}`);
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -103,7 +96,7 @@ export class NotificationService {
     title: string,
     body: string,
     data?: Record<string, string>,
-    _options?: { priority?: "high" | "normal" }
+    _options?: { priority?: 'high' | 'normal' }
   ): Promise<PushNotificationResult> {
     try {
       const devices = await this.fcmDeviceRepository.find({
@@ -118,7 +111,7 @@ export class NotificationService {
         };
       }
 
-      const { getMessaging } = await import("../config/firebase.js");
+      const { getMessaging } = await import('../config/firebase.js');
       const messaging = getMessaging();
 
       const tokens = devices.map((device) => device.token);
@@ -132,9 +125,7 @@ export class NotificationService {
         tokens,
       };
 
-      const response = (await messaging.sendEachForMulticast(
-        message
-      )) as FCMMulticastResponse;
+      const response = (await messaging.sendEachForMulticast(message)) as FCMMulticastResponse;
 
       const invalidTokens: string[] = [];
       response.responses.forEach((resp: FCMResponse, index: number) => {
@@ -164,7 +155,7 @@ export class NotificationService {
       return {
         success: false,
         deviceCount: 0,
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -185,30 +176,21 @@ export class NotificationService {
 
     for (const userId of userIds) {
       try {
-        const result = await this.sendPushNotification(
-          userId,
-          title,
-          body,
-          data
-        );
+        const result = await this.sendPushNotification(userId, title, body, data);
         if (result.success) {
           successCount += result.deviceCount;
         } else if (result.error) {
           errors.push(`User ${userId}: ${result.error}`);
         }
       } catch (error) {
-        errors.push(
-          `User ${userId}: ${
-            error instanceof Error ? error.message : "Unknown error"
-          }`
-        );
+        errors.push(`User ${userId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     }
 
     return {
       success: errors.length === 0,
       deviceCount: successCount,
-      error: errors.length > 0 ? errors.join("; ") : undefined,
+      error: errors.length > 0 ? errors.join('; ') : undefined,
     };
   }
 
@@ -240,13 +222,11 @@ export class NotificationService {
         data,
       });
 
-      const savedNotification = await this.notificationHistoryRepository.save(
-        notification
-      );
+      const savedNotification = await this.notificationHistoryRepository.save(notification);
       logInfo(`Notification history saved for user ${userId}: ${type}`);
       return savedNotification;
     } catch (error) {
-      logError("Failed to save notification history", error as Error);
+      logError('Failed to save notification history', error as Error);
       return null;
     }
   }
@@ -269,13 +249,12 @@ export class NotificationService {
         whereConditions.isRead = false;
       }
 
-      const [notifications, total] =
-        await this.notificationHistoryRepository.findAndCount({
-          where: whereConditions,
-          order: { createdAt: "DESC" },
-          skip: offset,
-          take: limit,
-        });
+      const [notifications, total] = await this.notificationHistoryRepository.findAndCount({
+        where: whereConditions,
+        order: { createdAt: 'DESC' },
+        skip: offset,
+        take: limit,
+      });
 
       return {
         notifications,
@@ -283,7 +262,7 @@ export class NotificationService {
         hasMore: offset + notifications.length < total,
       };
     } catch (error) {
-      logError("Failed to get notification history", error as Error);
+      logError('Failed to get notification history', error as Error);
       return {
         notifications: [],
         total: 0,
@@ -301,7 +280,7 @@ export class NotificationService {
 
       return result.affected ? result.affected > 0 : false;
     } catch (error) {
-      logError("Failed to mark notification as read", error as Error);
+      logError('Failed to mark notification as read', error as Error);
       return false;
     }
   }
@@ -312,7 +291,7 @@ export class NotificationService {
         where: { userId, isRead: false },
       });
     } catch (error) {
-      logError("Failed to get unread count", error as Error);
+      logError('Failed to get unread count', error as Error);
       return 0;
     }
   }
@@ -326,7 +305,7 @@ export class NotificationService {
 
       return result.affected || 0;
     } catch (error) {
-      logError("Failed to mark all notifications as read", error as Error);
+      logError('Failed to mark all notifications as read', error as Error);
       return 0;
     }
   }
@@ -338,21 +317,10 @@ export class NotificationService {
     type: NotificationType,
     data?: Record<string, string>
   ): Promise<PushNotificationResult & { historyId?: string }> {
-    const pushResult = await this.sendPushNotification(
-      userId,
-      title,
-      body,
-      data
-    );
+    const pushResult = await this.sendPushNotification(userId, title, body, data);
 
     if (pushResult.success) {
-      const historyRecord = await this.saveNotificationHistory(
-        userId,
-        type,
-        title,
-        body,
-        data
-      );
+      const historyRecord = await this.saveNotificationHistory(userId, type, title, body, data);
 
       return {
         ...pushResult,

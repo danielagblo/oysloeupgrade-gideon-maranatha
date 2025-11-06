@@ -1,16 +1,16 @@
-import type { NextFunction, Request, Response } from "express";
-import { addTokenToDenyList } from "../config/redis.js";
-import type { User } from "../entities/User.js";
-import type { AuthService } from "../services/auth.service.js";
-import { UnauthorizedError } from "../utils/errors.js";
-import { extractTokenFromHeader, getTokenExpiry } from "../utils/jwt.js";
+import type { NextFunction, Request, Response } from 'express';
+import { addTokenToDenyList } from '../config/redis.js';
+import type { User } from '../entities/User.js';
+import type { AuthService } from '../services/auth.service.js';
+import { UnauthorizedError } from '../utils/errors.js';
+import { extractTokenFromHeader, getTokenExpiry } from '../utils/jwt.js';
 import type {
   LoginInput,
   OTPSendInput,
   OTPVerifyInput,
   PasswordResetInput,
   RegisterInput,
-} from "../validators/auth.validator.js";
+} from '../validators/auth.validator.js';
 
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -22,7 +22,7 @@ export class AuthController {
 
       res.status(201).json({
         success: true,
-        message: "User registered successfully",
+        message: 'User registered successfully',
         data: result,
       });
     } catch (error) {
@@ -37,7 +37,7 @@ export class AuthController {
 
       res.status(200).json({
         success: true,
-        message: "Login successful",
+        message: 'Login successful',
         data: result,
       });
     } catch (error) {
@@ -49,7 +49,7 @@ export class AuthController {
     try {
       const token = extractTokenFromHeader(req.headers.authorization);
       if (!token) {
-        throw new UnauthorizedError("No token provided");
+        throw new UnauthorizedError('No token provided');
       }
 
       const ttl = getTokenExpiry(token);
@@ -59,7 +59,7 @@ export class AuthController {
 
       res.status(200).json({
         success: true,
-        message: "Logout successful",
+        message: 'Logout successful',
       });
     } catch (error) {
       next(error);
@@ -70,7 +70,7 @@ export class AuthController {
     try {
       const user = req.user;
       if (!user) {
-        throw new UnauthorizedError("Not authenticated");
+        throw new UnauthorizedError('Not authenticated');
       }
 
       res.status(200).json({
@@ -121,13 +121,10 @@ export class AuthController {
       const user = req.user as User;
 
       if (!user) {
-        throw new UnauthorizedError("Authentication required");
+        throw new UnauthorizedError('Authentication required');
       }
 
-      const result = await this.authService.resetPassword(
-        user,
-        input.newPassword
-      );
+      const result = await this.authService.resetPassword(user, input.newPassword);
 
       res.status(200).json({
         success: true,

@@ -1,5 +1,5 @@
+import { logError, logInfo } from "../utils/logger.js";
 import type { Request, Response } from "express";
-import { logError, logInfo } from "@utils/logger.js";
 import { NotificationService } from "../services/notification.service.js";
 
 export class NotificationController {

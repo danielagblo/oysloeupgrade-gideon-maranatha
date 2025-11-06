@@ -132,10 +132,7 @@ function generateSampleTest(endpoints: EndpointInfo[], tag: string): string {
   const authEndpoints = endpoints.filter((e) => e.requiresAuth);
   const publicEndpoints = endpoints.filter((e) => !e.requiresAuth);
 
-  let testCode = `/**
- * ${tag} API Endpoint Tests
- * Verify ${tag.toLowerCase()} endpoints work correctly
- */
+
 
 import request from "supertest";
 import { createApp } from "@/app";

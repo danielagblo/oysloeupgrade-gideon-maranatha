@@ -31,7 +31,6 @@ export async function getUserSocketIds(_userId: string): Promise<string[]> {
   }
 
   try {
-
     const sockets = await ioInstance.fetchSockets();
     return sockets.map((socket) => socket.id);
   } catch (error) {

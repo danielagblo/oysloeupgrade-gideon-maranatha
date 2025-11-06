@@ -14,7 +14,6 @@ export function getMessaging(): Messaging {
 
 export async function initializeFirebase(): Promise<void> {
   try {
-
     if (getApps().length > 0) {
       messaging = getMessaging();
       logInfo('Firebase Admin already initialized');
