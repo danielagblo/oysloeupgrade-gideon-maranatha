@@ -1,36 +1,39 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync } from "node:fs";
 
-import cors from 'cors';
-import type { Application } from 'express';
-import express from 'express';
-import session from 'express-session';
-import helmet from 'helmet';
-import passport from 'passport';
-import swaggerUi from 'swagger-ui-express';
+import cors from "cors";
+import type { Application } from "express";
+import express from "express";
+import session from "express-session";
+import helmet from "helmet";
+import passport from "passport";
+import swaggerUi from "swagger-ui-express";
 
-import { config } from './config/env.js';
-import './config/passport.js';
-import './config/cloudinary.js';
-import { errorHandler, notFoundHandler } from './middlewares/error.middleware.js';
-import uploadRoutes from './modules/uploads/routes.js';
-import adminRoutes from './routes/admin.routes.js';
-import analyticsRoutes from './routes/analytics.routes.js';
-import { createAuthRoutes } from './routes/auth.routes.js';
-import chatRoutes from './routes/chat.routes.js';
-import couponRoutes from './routes/coupon.routes.js';
-import fcmRoutes from './routes/fcm.routes.js';
-import fcmTestRoutes from './routes/fcm-test.routes.js';
-import googleRoutes from './routes/google.routes.js';
-import notificationRoutes from './routes/notification.routes.js';
-import productRoutes from './routes/product.routes.js';
-import referralRoutes from './routes/referral.routes.js';
-import reviewRoutes from './routes/review.routes.js';
-import searchRoutes from './routes/search.routes.js';
-import userRoutes from './routes/user.routes.js';
-import walletRoutes from './routes/wallet.routes.js';
-import { AuthService } from './services/auth.service.js';
-import { makeNotificationService } from './services/notification.factory.js';
-import { logInfo } from './utils/logger.js';
+import { config } from "./config/env.js";
+import "./config/passport.js";
+import "./config/cloudinary.js";
+import {
+  errorHandler,
+  notFoundHandler,
+} from "./middlewares/error.middleware.js";
+import uploadRoutes from "./modules/uploads/routes.js";
+import adminRoutes from "./routes/admin.routes.js";
+import analyticsRoutes from "./routes/analytics.routes.js";
+import { createAuthRoutes } from "./routes/auth.routes.js";
+import chatRoutes from "./routes/chat.routes.js";
+import couponRoutes from "./routes/coupon.routes.js";
+import fcmRoutes from "./routes/fcm.routes.js";
+import fcmTestRoutes from "./routes/fcm-test.routes.js";
+import googleRoutes from "./routes/google.routes.js";
+import notificationRoutes from "./routes/notification.routes.js";
+import productRoutes from "./routes/product.routes.js";
+import referralRoutes from "./routes/referral.routes.js";
+import reviewRoutes from "./routes/review.routes.js";
+import searchRoutes from "./routes/search.routes.js";
+import userRoutes from "./routes/user.routes.js";
+import walletRoutes from "./routes/wallet.routes.js";
+import { AuthService } from "./services/auth.service.js";
+import { makeNotificationService } from "./services/notification.factory.js";
+import { logInfo } from "./utils/logger.js";
 
 export const createApp = (): Application => {
   const app = express();
@@ -44,10 +47,18 @@ export const createApp = (): Application => {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-          scriptSrc: ["'self'", 'https://cdn.jsdelivr.net', 'https://unpkg.com'],
-          fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-          imgSrc: ["'self'", 'data:', 'https:'],
+          styleSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            "https://fonts.googleapis.com",
+          ],
+          scriptSrc: [
+            "'self'",
+            "https://cdn.jsdelivr.net",
+            "https://unpkg.com",
+          ],
+          fontSrc: ["'self'", "https://fonts.gstatic.com"],
+          imgSrc: ["'self'", "data:", "https:"],
           connectSrc: ["'self'"],
           frameSrc: ["'none'"],
           objectSrc: ["'none'"],
@@ -80,36 +91,38 @@ export const createApp = (): Application => {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  app.use(express.json({ limit: '10mb' }));
-  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+  app.use(express.json({ limit: "10mb" }));
+  app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-  app.get('/health', (_req, res) => {
+  app.get("/health", (_req, res) => {
     res.json({
-      status: 'ok',
+      status: "ok",
       timestamp: new Date().toISOString(),
       environment: config.server.env,
     });
   });
 
-  app.get('/openapi.json', (_req, res) => {
+  app.get("/openapi.json", (_req, res) => {
     try {
-      const spec = readFileSync('spec/openapi.json', 'utf8');
-      res.type('application/json').send(spec);
+      const spec = readFileSync("spec/openapi.json", "utf8");
+      res.type("application/json").send(spec);
     } catch (err) {
-      console.error('Failed to read spec/openapi.json:', err);
-      res.status(500).json({ error: 'OpenAPI spec not found. Run: bun run spec:gen' });
+      console.error("Failed to read spec/openapi.json:", err);
+      res
+        .status(500)
+        .json({ error: "OpenAPI spec not found. Run: bun run spec:gen" });
     }
   });
 
   app.use(
-    '/docs',
+    "/docs",
     swaggerUi.serve,
     swaggerUi.setup(undefined, {
       swaggerOptions: {
-        url: '/openapi.json',
+        url: "/openapi.json",
       },
-      customCss: '.swagger-ui .topbar { display: none }',
-      customSiteTitle: 'Oysloe API Documentation',
+      customCss: ".swagger-ui .topbar { display: none }",
+      customSiteTitle: "Oysloe API Documentation",
     })
   );
 
