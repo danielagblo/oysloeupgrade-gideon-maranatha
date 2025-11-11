@@ -10,5 +10,5 @@ cache = true
 
 # Path resolution for TypeScript path mappings (needed for production)
 [resolve]
-# Map @ paths to src directory (relative to the file being executed)
-alias = { "@/*" = "./dist/*", "@config/*" = "./dist/config/*", "@entities/*" = "./dist/entities/*", "@controllers/*" = "./dist/controllers/*", "@services/*" = "./dist/services/*", "@middlewares/*" = "./dist/middlewares/*", "@routes/*" = "./dist/routes/*", "@validators/*" = "./dist/validators/*", "@utils/*" = "./dist/utils/*", "@types/*" = "./dist/types/*" }
+# Map @ paths to dist directory (absolute paths for production container)
+alias = { "@/*" = "/app/dist/*", "@config/*" = "/app/dist/config/*", "@entities/*" = "/app/dist/entities/*", "@controllers/*" = "/app/dist/controllers/*", "@services/*" = "/app/dist/services/*", "@middlewares/*" = "/app/dist/middlewares/*", "@routes/*" = "/app/dist/routes/*", "@validators/*" = "/app/dist/validators/*", "@utils/*" = "/app/dist/utils/*", "@types/*" = "/app/dist/types/*" }
