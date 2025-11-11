@@ -1,5 +1,11 @@
 #!/usr/bin/env bun
 
+import dotenv from 'dotenv';
+
+// Load environment variables based on NODE_ENV
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
+dotenv.config({ path: envFile });
+
 import { AppDataSource } from './data-source.js';
 import { User } from './entities/User.js';
 import { Category } from './entities/Category.js';
