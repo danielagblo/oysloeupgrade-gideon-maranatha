@@ -1,0 +1,55 @@
+import type { MigrationInterface, QueryRunner } from "typeorm";
+
+export class Initial1762101486201 implements MigrationInterface {
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    // Create enum types first
+    await queryRunner.query(
+      `CREATE TYPE "admin_users_role_enum" AS ENUM('super-admin', 'admin', 'staff', 'support')`
+    );
+
+    // Create core tables
+    await queryRunner.query(
+      `CREATE TABLE "admin_users" (
+        "id" SERIAL NOT NULL,
+        "username" character varying(50) NOT NULL,
+        "email" character varying(255),
+        "password_hash" character varying(255) NOT NULL,
+        "role" "admin_users_role_enum" NOT NULL DEFAULT 'staff',
+        "sub_role" character varying(50),
+        "permissions" jsonb NOT NULL DEFAULT '[]',
+        "is_active" boolean NOT NULL DEFAULT true,
+        "profile_image_url" character varying(500),
+        "business_name" character varying(255),
+        "business_logo_url" character varying(500),
+        "last_login_at" TIMESTAMP,
+        "created_at" TIMESTAMP NOT NULL DEFAULT now(),
+        "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
+        CONSTRAINT "UQ_admin_users_username" UNIQUE ("username"),
+        CONSTRAINT "UQ_admin_users_email" UNIQUE ("email"),
+        CONSTRAINT "PK_admin_users" PRIMARY KEY ("id")
+      )`
+    );
+
+    await queryRunner.query(
+      `CREATE TABLE "categories" (
+        "id" SERIAL NOT NULL,
+        "name" character varying(100) NOT NULL,
+        "description" text,
+        "icon" character varying(100),
+        "image_url" character varying(500),
+        "is_active" boolean NOT NULL DEFAULT true,
+        "sort_order" integer NOT NULL DEFAULT 0,
+        "created_at" TIMESTAMP NOT NULL DEFAULT now(),
+        "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
+        CONSTRAINT "UQ_categories_name" UNIQUE ("name"),
+        CONSTRAINT "PK_categories" PRIMARY KEY ("id")
+      )`
+    );
+  }
+
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`DROP TABLE "categories"`);
+    await queryRunner.query(`DROP TABLE "admin_users"`);
+    await queryRunner.query(`DROP TYPE "admin_users_role_enum"`);
+  }
+}

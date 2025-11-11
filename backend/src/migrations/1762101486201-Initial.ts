@@ -1,106 +1,202 @@
-import type { MigrationInterface, QueryRunner } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from "typeorm";
 
 export class Initial1762101486201 implements MigrationInterface {
-  name = 'Initial1762101486201';
-
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // Create enum types first
     await queryRunner.query(
-      `ALTER TABLE "admin_audit_log" DROP CONSTRAINT "admin_audit_log_admin_user_id_fkey"`
+      `CREATE TYPE "admin_users_role_enum" AS ENUM('super-admin', 'admin', 'staff', 'support')`
     );
     await queryRunner.query(
-      `ALTER TABLE "admin_sessions" DROP CONSTRAINT "admin_sessions_admin_user_id_fkey"`
+      `CREATE TYPE "users_verification_status_enum" AS ENUM('unverified', 'pending', 'verified')`
     );
     await queryRunner.query(
-      `ALTER TABLE "chatroom_members" DROP CONSTRAINT "FK_1ab2a70203b9457454ab7928445"`
+      `CREATE TYPE "users_verification_level_enum" AS ENUM('basic', 'advanced', 'premium')`
     );
     await queryRunner.query(
-      `ALTER TABLE "chatroom_members" DROP CONSTRAINT "FK_ff5e08f25be5a3ed0e486754fd8"`
-    );
-    await queryRunner.query(`ALTER TABLE "alerts" DROP CONSTRAINT "alerts_created_by_fkey"`);
-    await queryRunner.query(`ALTER TABLE "alerts" DROP CONSTRAINT "alerts_coupon_id_fkey"`);
-    await queryRunner.query(
-      `ALTER TABLE "job_applications" DROP CONSTRAINT "job_applications_reviewed_by_fkey"`
+      `CREATE TYPE "products_status_enum" AS ENUM('draft', 'active', 'paused', 'archived', 'sold')`
     );
     await queryRunner.query(
-      `ALTER TABLE "job_applications" DROP CONSTRAINT "job_applications_user_id_fkey"`
+      `CREATE TYPE "products_moderation_status_enum" AS ENUM('pending', 'active', 'suspended', 'rejected')`
     );
     await queryRunner.query(
-      `ALTER TABLE "application_reviews" DROP CONSTRAINT "application_reviews_admin_user_id_fkey"`
+      `CREATE TYPE "alerts_status_enum" AS ENUM('draft', 'active', 'scheduled', 'sent', 'cancelled')`
     );
     await queryRunner.query(
-      `ALTER TABLE "application_reviews" DROP CONSTRAINT "application_reviews_application_id_fkey"`
+      `CREATE TYPE "support_cases_status_enum" AS ENUM('open', 'in-progress', 'resolved', 'closed')`
     );
     await queryRunner.query(
-      `ALTER TABLE "application_documents" DROP CONSTRAINT "application_documents_application_id_fkey"`
+      `CREATE TYPE "support_cases_priority_enum" AS ENUM('low', 'normal', 'high', 'urgent')`
     );
     await queryRunner.query(
-      `ALTER TABLE "user_reports" DROP CONSTRAINT "user_reports_admin_user_id_fkey"`
+      `CREATE TYPE "user_reports_status_enum" AS ENUM('pending', 'resolved', 'dismissed')`
     );
     await queryRunner.query(
-      `ALTER TABLE "user_reports" DROP CONSTRAINT "user_reports_reported_user_id_fkey"`
+      `CREATE TYPE "system_settings_type_enum" AS ENUM('string', 'number', 'boolean', 'json')`
+    );
+
+    // Create all core tables
+    await queryRunner.query(
+      `CREATE TABLE "admin_users" (
+        "id" SERIAL NOT NULL,
+        "username" character varying(50) NOT NULL,
+        "email" character varying(255),
+        "password_hash" character varying(255) NOT NULL,
+        "role" "admin_users_role_enum" NOT NULL DEFAULT 'staff',
+        "sub_role" character varying(50),
+        "permissions" jsonb NOT NULL DEFAULT '[]',
+        "is_active" boolean NOT NULL DEFAULT true,
+        "profile_image_url" character varying(500),
+        "business_name" character varying(255),
+        "business_logo_url" character varying(500),
+        "last_login_at" TIMESTAMP,
+        "created_at" TIMESTAMP NOT NULL DEFAULT now(),
+        "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
+        CONSTRAINT "UQ_admin_users_username" UNIQUE ("username"),
+        CONSTRAINT "UQ_admin_users_email" UNIQUE ("email"),
+        CONSTRAINT "PK_admin_users" PRIMARY KEY ("id")
+      )`
+    );
+
+    await queryRunner.query(
+      `CREATE TABLE "categories" (
+        "id" SERIAL NOT NULL,
+        "name" character varying(100) NOT NULL,
+        "description" text,
+        "icon" character varying(100),
+        "image_url" character varying(500),
+        "is_active" boolean NOT NULL DEFAULT true,
+        "sort_order" integer NOT NULL DEFAULT 0,
+        "created_at" TIMESTAMP NOT NULL DEFAULT now(),
+        "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
+        CONSTRAINT "UQ_categories_name" UNIQUE ("name"),
+        CONSTRAINT "PK_categories" PRIMARY KEY ("id")
+      )`
+    );
+
+    await queryRunner.query(
+      `CREATE TABLE "subcategories" (
+        "id" SERIAL NOT NULL,
+        "name" character varying(100) NOT NULL,
+        "description" text,
+        "category_id" integer NOT NULL,
+        "icon" character varying(100),
+        "image_url" character varying(500),
+        "is_active" boolean NOT NULL DEFAULT true,
+        "sort_order" integer NOT NULL DEFAULT 0,
+        "created_at" TIMESTAMP NOT NULL DEFAULT now(),
+        "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
+        CONSTRAINT "UQ_subcategories_name_category" UNIQUE ("name", "category_id"),
+        CONSTRAINT "PK_subcategories" PRIMARY KEY ("id")
+      )`
+    );
+
+    await queryRunner.query(
+      `CREATE TABLE "admin_sessions" (
+        "id" SERIAL NOT NULL,
+        "admin_user_id" integer NOT NULL,
+        "token_hash" character varying(255) NOT NULL,
+        "refresh_token_hash" character varying(255),
+        "expires_at" TIMESTAMP NOT NULL,
+        "ip_address" inet,
+        "user_agent" text,
+        "created_at" TIMESTAMP NOT NULL DEFAULT now(),
+        CONSTRAINT "UQ_820cb9c73b9f2bf3f2fb678d935" UNIQUE ("token_hash"),
+        CONSTRAINT "UQ_1def6946a43bfad01f38da9b603" UNIQUE ("refresh_token_hash"),
+        CONSTRAINT "PK_38bb553c2372215d48de2306c5e" PRIMARY KEY ("id")
+      )`
+    );
+
+    await queryRunner.query(
+      `CREATE TABLE "users" (
+        "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+        "email" character varying(50) NOT NULL,
+        "phone" character varying(15),
+        "password_hash" character varying(128),
+        "google_id" character varying(50),
+        "first_name" character varying(50),
+        "last_name" character varying(50),
+        "display_name" character varying(100),
+        "avatar_url" character varying(500),
+        "bio" text,
+        "location" character varying(100),
+        "verification_status" "users_verification_status_enum" NOT NULL DEFAULT 'unverified',
+        "verification_level" "users_verification_level_enum" NOT NULL DEFAULT 'basic',
+        "is_muted" boolean NOT NULL DEFAULT false,
+        "muted_by" integer,
+        "muted_until" TIMESTAMP,
+        "verified_by" integer,
+        "verified_at" TIMESTAMP,
+        "last_login_at" TIMESTAMP,
+        "is_active" boolean NOT NULL DEFAULT true,
+        "created_at" TIMESTAMP NOT NULL DEFAULT now(),
+        "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
+        CONSTRAINT "UQ_users_email" UNIQUE ("email"),
+        CONSTRAINT "UQ_users_phone" UNIQUE ("phone"),
+        CONSTRAINT "PK_users" PRIMARY KEY ("id")
+      )`
+    );
+
+    await queryRunner.query(
+      `CREATE TABLE "products" (
+        "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+        "pid" character varying(20),
+        "user_id" uuid NOT NULL,
+        "category_id" integer,
+        "subcategory_id" integer,
+        "name" character varying(100) NOT NULL,
+        "description" text NOT NULL,
+        "image" text,
+        "price" numeric(10,2) NOT NULL,
+        "status" "products_status_enum" NOT NULL DEFAULT 'draft',
+        "views_count" integer NOT NULL DEFAULT '0',
+        "favorites_count" integer NOT NULL DEFAULT '0',
+        "reports_count" integer NOT NULL DEFAULT '0',
+        "is_promoted" boolean NOT NULL DEFAULT false,
+        "promoted_until" TIMESTAMP,
+        "deleted" boolean NOT NULL DEFAULT false,
+        "deleted_at" TIMESTAMP,
+        "moderation_status" "products_moderation_status_enum" NOT NULL DEFAULT 'pending',
+        "moderated_by" integer,
+        "moderated_at" TIMESTAMP,
+        "suspension_reason" text,
+        "approved_by" integer,
+        "approved_at" TIMESTAMP,
+        "rejection_reason" text,
+        "admin_notes" text,
+        "created_at" TIMESTAMP NOT NULL DEFAULT now(),
+        "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
+        CONSTRAINT "UQ_7311085e7abaaedf39f5019c35b" UNIQUE ("pid"),
+        CONSTRAINT "PK_0806c755e0aca124e67c0cf6d7d" PRIMARY KEY ("id")
+      )`
+    );
+
+    // Create all additional tables
+    await queryRunner.query(
+      `CREATE TABLE "chatroom_members" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "chatroom_id" uuid NOT NULL, "user_id" uuid NOT NULL, "last_read_message_id" uuid, "last_read_at" TIMESTAMP, "joined_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_831eb2549102ce2b291ec831d5d" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "user_reports" DROP CONSTRAINT "user_reports_reporter_user_id_fkey"`
+      `CREATE TABLE "coupon_redemptions" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "coupon_id" uuid NOT NULL, "user_id" uuid NOT NULL, "discount_amount" numeric(10,2) NOT NULL, "order_amount" numeric(10,2) NOT NULL, "redeemed_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_dd4cda7c82246e92c50453fda30" UNIQUE ("user_id", "coupon_id"), CONSTRAINT "PK_5086813ea980d21dbeb190ed0a7" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "wallet_ledger" DROP CONSTRAINT "FK_c7e9efe5a3b0a356eefbf012f64"`
+      `CREATE INDEX "IDX_9df1b9bc48e3eea5da3762f8e5" ON "coupon_redemptions" ("coupon_id") `
     );
     await queryRunner.query(
-      `ALTER TABLE "system_settings" DROP CONSTRAINT "system_settings_updated_by_fkey"`
-    );
-    await queryRunner.query(`ALTER TABLE "products" DROP CONSTRAINT "products_approved_by_fkey"`);
-    await queryRunner.query(`ALTER TABLE "products" DROP CONSTRAINT "products_moderated_by_fkey"`);
-    await queryRunner.query(
-      `ALTER TABLE "wallets" DROP CONSTRAINT "FK_92558c08091598f7a4439586cda"`
-    );
-    await queryRunner.query(`ALTER TABLE "users" DROP CONSTRAINT "users_verified_by_fkey"`);
-    await queryRunner.query(`ALTER TABLE "users" DROP CONSTRAINT "users_muted_by_fkey"`);
-    await queryRunner.query(
-      `ALTER TABLE "support_cases" DROP CONSTRAINT "support_cases_assigned_admin_id_fkey"`
+      `CREATE INDEX "IDX_986f8dd830915cf2835f89709d" ON "coupon_redemptions" ("user_id") `
     );
     await queryRunner.query(
-      `ALTER TABLE "support_cases" DROP CONSTRAINT "support_cases_user_id_fkey"`
+      `CREATE TABLE "coupons" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "code" character varying(50) NOT NULL, "description" text, "discount_type" character varying(10) NOT NULL, "discount_value" numeric(10,2) NOT NULL, "max_uses" bigint, "used_count" integer NOT NULL DEFAULT '0', "per_user_limit" integer NOT NULL DEFAULT '1', "valid_from" TIMESTAMP, "valid_until" TIMESTAMP, "is_active" boolean NOT NULL DEFAULT true, "created_by" uuid, "min_order_amount" numeric(10,2), "usage_limit" integer, "max_discount_amount" numeric(10,2), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_e025109230e82925843f2a14c48" UNIQUE ("code"), CONSTRAINT "PK_d7ea8864a0150183770f3e9a8cb" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "support_case_assignments" DROP CONSTRAINT "support_case_assignments_admin_user_id_fkey"`
+      `CREATE INDEX "IDX_e025109230e82925843f2a14c4" ON "coupons" ("code") `
     );
     await queryRunner.query(
-      `ALTER TABLE "support_case_assignments" DROP CONSTRAINT "support_case_assignments_case_id_fkey"`
+      `CREATE TABLE "fcm_devices" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid NOT NULL, "token" character varying(255) NOT NULL, "device_info" jsonb, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_785fe0046bfff3ba5fbe22ff6b5" UNIQUE ("token"), CONSTRAINT "PK_df89260289da56ca1ba815c3446" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "support_messages" DROP CONSTRAINT "support_messages_case_id_fkey"`
+      `CREATE INDEX "IDX_cee8e59b0b919e0f0fea8a8e89" ON "fcm_devices" ("user_id") `
     );
     await queryRunner.query(
-      `ALTER TABLE "ad_moderation_history" DROP CONSTRAINT "ad_moderation_history_admin_user_id_fkey"`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "ad_moderation_history" DROP CONSTRAINT "ad_moderation_history_ad_id_fkey"`
-    );
-    await queryRunner.query(`DROP INDEX "public"."IDX_admin_users_role"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_admin_users_active"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_admin_audit_log_resource"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_admin_audit_log_admin_user"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_admin_audit_log_created_at"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_admin_sessions_admin_user"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_admin_sessions_expires_at"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_alerts_status"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_alerts_created_by"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_job_applications_status"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_job_applications_user"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_a659a668ff098ce43a940d7438"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_user_reports_status"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_user_reports_reported_user"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_products_moderation_status"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_products_moderated_at"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_products_status_moderated"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_support_cases_status"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_support_cases_assigned_admin"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_support_cases_status_priority"`);
-    await queryRunner.query(
-      `ALTER TABLE "recently_viewed" DROP CONSTRAINT "UQ_f65476c2f349ea1836c75da0b03"`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "product_features" DROP CONSTRAINT "UQ_3353c46dc9a352073d23cc2c060"`
+      `CREATE INDEX "IDX_785fe0046bfff3ba5fbe22ff6b" ON "fcm_devices" ("token") `
     );
     await queryRunner.query(
       `CREATE TABLE "favorites" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid NOT NULL, "product_id" uuid NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "uq_favorites_user_product" UNIQUE ("user_id", "product_id"), CONSTRAINT "PK_890818d27523748dd36a4d1bdc8" PRIMARY KEY ("id"))`
@@ -111,535 +207,474 @@ export class Initial1762101486201 implements MigrationInterface {
     await queryRunner.query(
       `CREATE INDEX "IDX_003e599a9fc0e8f154b6313639" ON "favorites" ("product_id") `
     );
-    await queryRunner.query(`ALTER TABLE "job_applications" DROP COLUMN "user_id"`);
-    await queryRunner.query(`ALTER TABLE "job_applications" DROP COLUMN "position"`);
-    await queryRunner.query(`ALTER TABLE "job_applications" DROP COLUMN "status"`);
-    await queryRunner.query(`ALTER TABLE "job_applications" DROP COLUMN "cover_letter"`);
-    await queryRunner.query(`ALTER TABLE "job_applications" DROP COLUMN "notes"`);
-    await queryRunner.query(`ALTER TABLE "job_applications" DROP COLUMN "feedback"`);
-    await queryRunner.query(`ALTER TABLE "job_applications" DROP COLUMN "reviewed_by"`);
-    await queryRunner.query(`ALTER TABLE "job_applications" DROP COLUMN "reviewed_at"`);
-    await queryRunner.query(`ALTER TABLE "recently_viewed" DROP COLUMN "created_at"`);
-    await queryRunner.query(`ALTER TABLE "product_images" DROP COLUMN "cdn_public_id"`);
-    await queryRunner.query(`ALTER TABLE "product_images" DROP COLUMN "cdn_url"`);
-    await queryRunner.query(`ALTER TABLE "product_images" DROP COLUMN "cdn_resource_type"`);
-    await queryRunner.query(`ALTER TABLE "product_images" DROP COLUMN "cdn_format"`);
-    await queryRunner.query(`ALTER TABLE "product_images" DROP COLUMN "cdn_bytes"`);
-    await queryRunner.query(`ALTER TABLE "product_images" DROP COLUMN "cdn_width"`);
-    await queryRunner.query(`ALTER TABLE "product_images" DROP COLUMN "cdn_height"`);
-    await queryRunner.query(`ALTER TABLE "product_images" DROP COLUMN "is_primary"`);
-    await queryRunner.query(`ALTER TABLE "users" DROP COLUMN "googleId"`);
     await queryRunner.query(
-      `ALTER TABLE "job_applications" ADD "name" character varying(255) NOT NULL`
+      `CREATE TABLE "messages" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "room_id" uuid NOT NULL, "sender_id" uuid, "content" text NOT NULL, "message_type" character varying(20) NOT NULL DEFAULT 'text', "file_url" text, "is_read" boolean NOT NULL DEFAULT false, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_18325f38ae6de43878487eff986" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "job_applications" ADD "email" character varying(255) NOT NULL`
-    );
-    await queryRunner.query(`ALTER TABLE "product_images" ADD "public_id" text NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "product_images" ADD "url" text NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "product_images" ADD "format" character varying(10)`);
-    await queryRunner.query(`ALTER TABLE "product_images" ADD "bytes" integer`);
-    await queryRunner.query(`ALTER TABLE "product_images" ADD "width" integer`);
-    await queryRunner.query(`ALTER TABLE "product_images" ADD "height" integer`);
-    await queryRunner.query(
-      `ALTER TABLE "product_images" ADD "updated_at" TIMESTAMP NOT NULL DEFAULT now()`
-    );
-    await queryRunner.query(`ALTER TABLE "wallet_ledger" ADD "wallet_id" uuid NOT NULL`);
-    await queryRunner.query(
-      `ALTER TABLE "product_features" ADD "created_at" TIMESTAMP NOT NULL DEFAULT now()`
+      `CREATE INDEX "IDX_9567685b5f7232c895fc29375e" ON "messages" ("room_id", "created_at") `
     );
     await queryRunner.query(
-      `ALTER TABLE "product_features" ADD "updated_at" TIMESTAMP NOT NULL DEFAULT now()`
+      `CREATE INDEX "IDX_9364e6b3f140d619c2a191d538" ON "messages" ("room_id", "id") `
     );
     await queryRunner.query(
-      `ALTER TYPE "public"."admin_role_enum" RENAME TO "admin_role_enum_old"`
+      `CREATE TABLE "chatrooms" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "room_id" character varying(200) NOT NULL, "name" character varying(100) NOT NULL, "is_group" boolean NOT NULL DEFAULT false, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_d6b60872c210a769a9a77cf2a30" UNIQUE ("room_id"), CONSTRAINT "PK_d190d6f785fb99dffb138cd0443" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `CREATE TYPE "public"."admin_users_role_enum" AS ENUM('super-admin', 'admin', 'staff', 'support')`
-    );
-    await queryRunner.query(`ALTER TABLE "admin_users" ALTER COLUMN "role" DROP DEFAULT`);
-    await queryRunner.query(
-      `ALTER TABLE "admin_users" ALTER COLUMN "role" TYPE "public"."admin_users_role_enum" USING "role"::"text"::"public"."admin_users_role_enum"`
-    );
-    await queryRunner.query(`ALTER TABLE "admin_users" ALTER COLUMN "role" SET DEFAULT 'staff'`);
-    await queryRunner.query(`DROP TYPE "public"."admin_role_enum_old"`);
-    await queryRunner.query(`ALTER TABLE "admin_users" ALTER COLUMN "permissions" SET NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "admin_users" ALTER COLUMN "is_active" SET NOT NULL`);
-    await queryRunner.query(
-      `ALTER TABLE "admin_audit_log" ALTER COLUMN "admin_user_id" SET NOT NULL`
+      `CREATE INDEX "IDX_d6b60872c210a769a9a77cf2a3" ON "chatrooms" ("room_id") `
     );
     await queryRunner.query(
-      `ALTER TABLE "admin_sessions" ALTER COLUMN "admin_user_id" SET NOT NULL`
-    );
-    await queryRunner.query(`ALTER TABLE "alerts" ALTER COLUMN "status" SET NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "alerts" ALTER COLUMN "send_immediately" SET NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "alerts" ALTER COLUMN "delivered_count" SET NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "alerts" ALTER COLUMN "clicked_count" SET NOT NULL`);
-    await queryRunner.query(
-      `ALTER TABLE "job_applications" DROP CONSTRAINT "job_applications_pkey"`
-    );
-    await queryRunner.query(`ALTER TABLE "job_applications" DROP COLUMN "id"`);
-    await queryRunner.query(
-      `ALTER TABLE "job_applications" ADD "id" uuid NOT NULL DEFAULT uuid_generate_v4()`
+      `CREATE TABLE "notification_history" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid NOT NULL, "type" character varying(50) NOT NULL, "title" character varying(255) NOT NULL, "body" text NOT NULL, "data" jsonb, "is_read" boolean NOT NULL DEFAULT false, "read_at" TIMESTAMP, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_901f37d36fcc63dffdc1281d6bd" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "job_applications" ADD CONSTRAINT "PK_c56a5e86707d0f0df18fa111280" PRIMARY KEY ("id")`
-    );
-    await queryRunner.query(`ALTER TABLE "application_reviews" DROP COLUMN "application_id"`);
-    await queryRunner.query(`ALTER TABLE "application_reviews" ADD "application_id" uuid NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "application_documents" DROP COLUMN "application_id"`);
-    await queryRunner.query(
-      `ALTER TABLE "application_documents" ADD "application_id" uuid NOT NULL`
+      `CREATE INDEX "IDX_4be1055bf99ca49c468524a850" ON "notification_history" ("user_id", "is_read") `
     );
     await queryRunner.query(
-      `ALTER TABLE "recently_viewed" ALTER COLUMN "viewed_at" SET DEFAULT now()`
-    );
-    await queryRunner.query(`ALTER TABLE "user_reports" ALTER COLUMN "status" SET NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "system_settings" ALTER COLUMN "is_public" SET NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "product_features" DROP COLUMN "value"`);
-    await queryRunner.query(`ALTER TABLE "product_features" ADD "value" text`);
-    await queryRunner.query(`ALTER TABLE "products" ALTER COLUMN "moderation_status" SET NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "users" DROP COLUMN "google_id"`);
-    await queryRunner.query(`ALTER TABLE "users" ADD "google_id" character varying(50)`);
-    await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "verification_status" SET NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "verification_level" SET NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "is_muted" SET NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "support_cases" ALTER COLUMN "status" SET NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "support_cases" ALTER COLUMN "priority" SET NOT NULL`);
-    await queryRunner.query(
-      `ALTER TABLE "support_cases" ALTER COLUMN "last_message_at" SET NOT NULL`
+      `CREATE INDEX "IDX_65bb163f315f8bc642a706db6a" ON "notification_history" ("user_id", "created_at") `
     );
     await queryRunner.query(
-      `ALTER TABLE "support_cases" ALTER COLUMN "last_message_at" SET DEFAULT NOW()`
-    );
-    await queryRunner.query(`ALTER TABLE "support_messages" DROP COLUMN "sender_id"`);
-    await queryRunner.query(
-      `ALTER TABLE "support_messages" ADD "sender_id" character varying NOT NULL`
+      `CREATE TABLE "otp_codes" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "phone" character varying(10) NOT NULL, "otp" character varying(6) NOT NULL, "expires_at" TIMESTAMP NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_9d0487965ac1837d57fec4d6a26" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "support_messages" ALTER COLUMN "message_type" SET NOT NULL`
+      `CREATE INDEX "IDX_4fc4f51a23f34ac45b3920f169" ON "otp_codes" ("phone", "expires_at") `
     );
-    await queryRunner.query(`ALTER TABLE "support_messages" ALTER COLUMN "is_read" SET NOT NULL`);
+    await queryRunner.query(
+      `CREATE TABLE "product_images" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "product_id" uuid NOT NULL, "public_id" text NOT NULL, "url" text NOT NULL, "format" character varying(10), "bytes" integer, "width" integer, "height" integer, "display_order" integer NOT NULL DEFAULT '0', "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_1974264ea7265989af8392f63a1" PRIMARY KEY ("id"))`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_4f166bb8c2bfcef2498d97b406" ON "product_images" ("product_id") `
+    );
+    await queryRunner.query(
+      `CREATE TABLE "recently_viewed" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid NOT NULL, "product_id" uuid NOT NULL, "viewed_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_69c131fcd783f4d5a30f6bbcfd3" PRIMARY KEY ("id"))`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_13c5b56da6d00c32cb4c0764a0" ON "recently_viewed" ("user_id") `
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_72ecdebddea783ebe1ef655bbd" ON "recently_viewed" ("product_id") `
+    );
+    await queryRunner.query(
+      `CREATE TABLE "product_features" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "product_id" uuid NOT NULL, "feature_id" uuid NOT NULL, "value" text, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_a022cf7f3a083036c0ebbcacbc0" PRIMARY KEY ("id"))`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_939542cc775c7bb88faf24b23a" ON "product_features" ("product_id") `
+    );
     await queryRunner.query(
       `CREATE INDEX "IDX_e8112444d4a4beec5f7d6dc536" ON "product_features" ("feature_id") `
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_b2286c6d70b3aaf12046aa7016" ON "products" ("moderation_status") `
+      `CREATE TABLE "features" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "subcategory_id" integer NOT NULL, "name" character varying(100) NOT NULL, "description" text NOT NULL, "key" character varying(50), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_5c1e336df2f4a7051e5bf08a941" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "admin_audit_log" ADD CONSTRAINT "FK_7abbe8f7be301725ce49e822788" FOREIGN KEY ("admin_user_id") REFERENCES "admin_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
+      `CREATE INDEX "IDX_93e8864031fab4b49493c926f7" ON "features" ("subcategory_id") `
     );
     await queryRunner.query(
-      `ALTER TABLE "admin_sessions" ADD CONSTRAINT "FK_c1711b1831bdf66b77c3605bcdb" FOREIGN KEY ("admin_user_id") REFERENCES "admin_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
+      `CREATE TABLE "regions" ("id" SERIAL NOT NULL, "name" character varying(100) NOT NULL, "code" character varying(10) NOT NULL, "coordinates" jsonb, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_4f6dc5a464961e7c65a395ea4c6" UNIQUE ("code"), CONSTRAINT "PK_4fcd12ed6a046276e2deb08801c" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "chatroom_members" ADD CONSTRAINT "FK_ff5e08f25be5a3ed0e486754fd8" FOREIGN KEY ("chatroom_id") REFERENCES "chatrooms"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+      `CREATE TABLE "referral_redemptions" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid NOT NULL, "redeemed_points" integer NOT NULL, "cash_amount" numeric(10,2) NOT NULL, "wallet_balance_after" numeric(10,2) NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_2215f085e5636a009baeabcb860" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "chatroom_members" ADD CONSTRAINT "FK_1ab2a70203b9457454ab7928445" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+      `CREATE INDEX "IDX_1f68a0ad9eab8af5e5c5ecbcea" ON "referral_redemptions" ("user_id") `
     );
     await queryRunner.query(
-      `ALTER TABLE "alerts" ADD CONSTRAINT "FK_13cc1efe00291983890dd809cfa" FOREIGN KEY ("coupon_id") REFERENCES "coupons"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
+      `CREATE TABLE "referrals" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "referrer_id" uuid NOT NULL, "referred_user_id" uuid NOT NULL, "points_earned" integer NOT NULL DEFAULT '250', "status" character varying NOT NULL DEFAULT 'pending', "confirmed_at" TIMESTAMP, "cancelled_at" TIMESTAMP, "cancelled_by" uuid, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_55aabf1620a232dd89201336b53" UNIQUE ("referrer_id", "referred_user_id"), CONSTRAINT "PK_ea9980e34f738b6252817326c08" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "alerts" ADD CONSTRAINT "FK_779c7c43268165afb5a947e0562" FOREIGN KEY ("created_by") REFERENCES "admin_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
+      `CREATE INDEX "IDX_18af9fcaffac6d6d3b28130e14" ON "referrals" ("referrer_id") `
     );
     await queryRunner.query(
-      `ALTER TABLE "favorites" ADD CONSTRAINT "FK_35a6b05ee3b624d0de01ee50593" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+      `CREATE TABLE "reviews" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "product_id" uuid NOT NULL, "user_id" uuid NOT NULL, "rating" integer NOT NULL, "comment" text, "likes_count" integer NOT NULL DEFAULT '0', "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_43968e5855f331f4f1355a3fb27" UNIQUE ("product_id", "user_id"), CONSTRAINT "PK_231ae565c273ee700b283f15c1d" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "favorites" ADD CONSTRAINT "FK_003e599a9fc0e8f154b6313639f" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+      `CREATE INDEX "IDX_9482e9567d8dcc2bc615981ef4" ON "reviews" ("product_id") `
     );
     await queryRunner.query(
-      `ALTER TABLE "application_reviews" ADD CONSTRAINT "FK_37429cb43f4837e1c8a0032ba51" FOREIGN KEY ("application_id") REFERENCES "job_applications"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+      `CREATE TABLE "search_history" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid, "query" character varying(255) NOT NULL, "results_count" integer NOT NULL DEFAULT '0', "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_cb93c8f85dbdca85943ca494812" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "application_reviews" ADD CONSTRAINT "FK_22d981457073eae92e8f9fa2e97" FOREIGN KEY ("admin_user_id") REFERENCES "admin_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
+      `CREATE INDEX "IDX_d1ebf4101b2804213251e0a04d" ON "search_history" ("user_id") `
     );
     await queryRunner.query(
-      `ALTER TABLE "application_documents" ADD CONSTRAINT "FK_9ad8ab815e842d67e9aaec900cb" FOREIGN KEY ("application_id") REFERENCES "job_applications"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+      `CREATE INDEX "IDX_28c0159d8d5cbca27380289e41" ON "search_history" ("query") `
     );
     await queryRunner.query(
-      `ALTER TABLE "user_reports" ADD CONSTRAINT "FK_a3c4ba2f4a0cdd6ebcfdebd97ab" FOREIGN KEY ("reporter_user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
+      `CREATE INDEX "IDX_c3e3193c5bd8073f56bdd62673" ON "search_history" ("user_id", "created_at") `
     );
     await queryRunner.query(
-      `ALTER TABLE "user_reports" ADD CONSTRAINT "FK_006c1307e23fea0915e8cf1882a" FOREIGN KEY ("reported_user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
+      `CREATE TABLE "support_cases" ("id" SERIAL NOT NULL, "user_id" uuid NOT NULL, "subject" character varying(255) NOT NULL, "status" "support_cases_status_enum" NOT NULL DEFAULT 'open', "priority" "support_cases_priority_enum" NOT NULL DEFAULT 'normal', "category" character varying(50), "assigned_admin_id" integer, "last_message_at" TIMESTAMP NOT NULL DEFAULT NOW(), "resolved_at" TIMESTAMP, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_c4cc80fe374d1965c37576527b5" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "user_reports" ADD CONSTRAINT "FK_f6b9af9e74c67dd269b22d9d84a" FOREIGN KEY ("admin_user_id") REFERENCES "admin_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
+      `CREATE TABLE "support_messages" ("id" SERIAL NOT NULL, "case_id" integer NOT NULL, "sender_id" character varying NOT NULL, "sender_type" character varying(20) NOT NULL, "message_type" character varying(20) NOT NULL DEFAULT 'text', "content" text, "file_url" character varying(500), "file_name" character varying(255), "file_size" integer, "is_read" boolean NOT NULL DEFAULT false, "read_at" TIMESTAMP, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_2aa37479e71ef29cbf4dba2b1a2" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "wallet_ledger" ADD CONSTRAINT "FK_53d9fecd40f5fe635d119b49c4d" FOREIGN KEY ("wallet_id") REFERENCES "wallets"("user_id") ON DELETE NO ACTION ON UPDATE NO ACTION`
+      `CREATE TABLE "towns" ("id" SERIAL NOT NULL, "name" character varying(100) NOT NULL, "region_id" integer NOT NULL, "coordinates" jsonb, "is_active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_8f5c3dbce1d3ea5de7dcc48c230" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "system_settings" ADD CONSTRAINT "FK_301c531938f84c39fa5019e7465" FOREIGN KEY ("updated_by") REFERENCES "admin_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
+      `CREATE INDEX "IDX_b5a5beb6b0365fd074c42a8b6a" ON "towns" ("is_active") `
     );
     await queryRunner.query(
-      `ALTER TABLE "products" ADD CONSTRAINT "FK_29565df5a020791583febb73c07" FOREIGN KEY ("moderated_by") REFERENCES "admin_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
+      `CREATE TABLE "ad_moderation_history" ("id" SERIAL NOT NULL, "ad_id" uuid NOT NULL, "admin_user_id" integer NOT NULL, "action" character varying(50) NOT NULL, "reason" text, "old_status" character varying(20), "new_status" character varying(20), "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_86591b52cbe321dcbd9918cec0e" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "products" ADD CONSTRAINT "FK_641c6d1bb7d127da620b1179175" FOREIGN KEY ("approved_by") REFERENCES "admin_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
+      `CREATE TABLE "alerts" ("id" SERIAL NOT NULL, "title" character varying(255) NOT NULL, "message" text NOT NULL, "type" character varying(20) NOT NULL, "status" "alerts_status_enum" NOT NULL DEFAULT 'active', "recipient_ids" jsonb NOT NULL, "linked_ad_ids" jsonb, "coupon_id" uuid, "created_by" integer NOT NULL, "send_immediately" boolean NOT NULL DEFAULT true, "scheduled_for" TIMESTAMP, "delivered_count" integer NOT NULL DEFAULT '0', "clicked_count" integer NOT NULL DEFAULT '0', "expires_at" TIMESTAMP, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_60f895662df096bfcdfab7f4b96" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "wallets" ADD CONSTRAINT "FK_92558c08091598f7a4439586cda" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+      `CREATE TABLE "admin_audit_log" ("id" SERIAL NOT NULL, "admin_user_id" integer NOT NULL, "action" character varying(100) NOT NULL, "resource_type" character varying(50) NOT NULL, "resource_id" integer, "old_values" jsonb, "new_values" jsonb, "ip_address" inet, "user_agent" text, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_9425be48a9c753f5753017c61b2" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "support_cases" ADD CONSTRAINT "FK_5a99a9d58af4a0e3093e2d14252" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
+      `CREATE TABLE "job_applications" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid NOT NULL, "name" character varying(255) NOT NULL, "email" character varying(255) NOT NULL, "phone" character varying(15), "status" character varying(50) NOT NULL DEFAULT 'pending', "cover_letter" text, "experience" text, "skills" text, "position" character varying(255), "admin_notes" text, "feedback" text, "reviewed_by" integer, "reviewed_at" TIMESTAMP, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_c56a5e86707d0f0df18fa111280" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "support_cases" ADD CONSTRAINT "FK_a39beb2b481b4920b76cf0eed86" FOREIGN KEY ("assigned_admin_id") REFERENCES "admin_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
+      `CREATE TABLE "application_reviews" ("id" SERIAL NOT NULL, "application_id" uuid NOT NULL, "admin_user_id" integer NOT NULL, "action" character varying(50) NOT NULL, "notes" text, "feedback" text, "old_status" character varying(50), "new_status" character varying(50), "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_23f8004d07c6b4fd00875407a35" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "support_case_assignments" ADD CONSTRAINT "FK_eb01a5e4cc56c669816c6d9fc05" FOREIGN KEY ("case_id") REFERENCES "support_cases"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
+      `CREATE TABLE "system_settings" ("id" SERIAL NOT NULL, "key" character varying(100) NOT NULL, "value" jsonb, "description" text, "category" character varying(50), "is_public" boolean NOT NULL DEFAULT false, "updated_by" integer, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_b1b5bc664526d375c94ce9ad43d" UNIQUE ("key"), CONSTRAINT "PK_82521f08790d248b2a80cc85d40" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "support_case_assignments" ADD CONSTRAINT "FK_7d3ff3317ac3b668637efbff05f" FOREIGN KEY ("admin_user_id") REFERENCES "admin_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
+      `CREATE TABLE "support_case_assignments" ("id" SERIAL NOT NULL, "case_id" integer NOT NULL, "admin_user_id" integer NOT NULL, "assigned_at" TIMESTAMP NOT NULL DEFAULT now(), "unassigned_at" TIMESTAMP, "notes" text, CONSTRAINT "PK_62c75966c5c478af67cfe883825" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "support_messages" ADD CONSTRAINT "FK_8c825aa202717f0516b512168d0" FOREIGN KEY ("case_id") REFERENCES "support_cases"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
+      `CREATE TABLE "application_documents" ("id" SERIAL NOT NULL, "application_id" uuid NOT NULL, "document_type" character varying(50) NOT NULL, "file_url" character varying(500) NOT NULL, "file_name" character varying(255) NOT NULL, "file_size" integer NOT NULL, "mime_type" character varying(100), "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_592142aa992e003beadf1409e9e" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "ad_moderation_history" ADD CONSTRAINT "FK_6c3a43769f915528c2015c7f554" FOREIGN KEY ("ad_id") REFERENCES "products"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
+      `CREATE TABLE "user_analytics" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid, "event_type" character varying(50) NOT NULL, "entity_type" character varying(50) NOT NULL, "entity_id" uuid, "metadata" jsonb, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_23e622f18cec061f740c403ff75" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(
-      `ALTER TABLE "ad_moderation_history" ADD CONSTRAINT "FK_1351bfb68717889cfaddcbab342" FOREIGN KEY ("admin_user_id") REFERENCES "admin_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
+      `CREATE INDEX "IDX_e1d34d7c48ed38c0cce711d8d6" ON "user_analytics" ("entity_type", "entity_id") `
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_224715a3888e12204bd443961c" ON "user_analytics" ("event_type", "created_at") `
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_a0473894cfe6d12a550431e10d" ON "user_analytics" ("user_id", "created_at") `
+    );
+    await queryRunner.query(
+      `CREATE TABLE "wallet_ledger" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid NOT NULL, "wallet_id" uuid NOT NULL, "amount" numeric(10,2) NOT NULL, "balance_after" numeric(10,2) NOT NULL, "transaction_type" character varying(20) NOT NULL, "reason" character varying(50) NOT NULL, "reference_id" uuid, "metadata" jsonb, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_d925214b1961738af45cc6959af" PRIMARY KEY ("id"))`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_c8d8f0ba3509cfa5878eb68c56" ON "wallet_ledger" ("user_id", "created_at") `
+    );
+    await queryRunner.query(
+      `CREATE TABLE "user_reports" ("id" SERIAL NOT NULL, "reporter_user_id" uuid NOT NULL, "reported_user_id" uuid NOT NULL, "report_type" character varying(50) NOT NULL, "description" text NOT NULL, "status" "user_reports_status_enum" NOT NULL DEFAULT 'pending', "admin_user_id" integer, "resolution" text, "resolved_at" TIMESTAMP, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_d727f04c93f97a3d445a647d234" PRIMARY KEY ("id"))`
+    );
+    await queryRunner.query(
+      `CREATE TABLE "wallets" ("user_id" uuid NOT NULL, "balance" numeric(10,2) NOT NULL DEFAULT '0', "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_92558c08091598f7a4439586cda" PRIMARY KEY ("user_id"))`
+    );
+
+    // Add foreign key constraints
+    await queryRunner.query(
+      `ALTER TABLE "subcategories" ADD CONSTRAINT "FK_subcategories_category_id" FOREIGN KEY ("category_id") REFERENCES "categories"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "admin_sessions" ADD CONSTRAINT "FK_admin_sessions_admin_user_id" FOREIGN KEY ("admin_user_id") REFERENCES "admin_users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "products" ADD CONSTRAINT "FK_products_category_id" FOREIGN KEY ("category_id") REFERENCES "categories"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "products" ADD CONSTRAINT "FK_products_subcategory_id" FOREIGN KEY ("subcategory_id") REFERENCES "subcategories"("id") ON DELETE SET NULL ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "products" ADD CONSTRAINT "FK_products_user_id" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "products" ADD CONSTRAINT "FK_products_moderated_by" FOREIGN KEY ("moderated_by") REFERENCES "admin_users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "products" ADD CONSTRAINT "FK_products_approved_by" FOREIGN KEY ("approved_by") REFERENCES "admin_users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "chatroom_members" ADD CONSTRAINT "FK_chatroom_members_chatroom_id" FOREIGN KEY ("chatroom_id") REFERENCES "chatrooms"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "chatroom_members" ADD CONSTRAINT "FK_chatroom_members_user_id" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "messages" ADD CONSTRAINT "FK_messages_room_id" FOREIGN KEY ("room_id") REFERENCES "chatrooms"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "messages" ADD CONSTRAINT "FK_messages_sender_id" FOREIGN KEY ("sender_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "favorites" ADD CONSTRAINT "FK_favorites_user_id" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "favorites" ADD CONSTRAINT "FK_favorites_product_id" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "notification_history" ADD CONSTRAINT "FK_notification_history_user_id" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "fcm_devices" ADD CONSTRAINT "FK_fcm_devices_user_id" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "product_images" ADD CONSTRAINT "FK_product_images_product_id" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "recently_viewed" ADD CONSTRAINT "FK_recently_viewed_user_id" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "recently_viewed" ADD CONSTRAINT "FK_recently_viewed_product_id" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "product_features" ADD CONSTRAINT "FK_product_features_product_id" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "product_features" ADD CONSTRAINT "FK_product_features_feature_id" FOREIGN KEY ("feature_id") REFERENCES "features"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "features" ADD CONSTRAINT "FK_features_subcategory_id" FOREIGN KEY ("subcategory_id") REFERENCES "subcategories"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "towns" ADD CONSTRAINT "FK_towns_region_id" FOREIGN KEY ("region_id") REFERENCES "regions"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "referral_redemptions" ADD CONSTRAINT "FK_referral_redemptions_user_id" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "referrals" ADD CONSTRAINT "FK_referrals_referrer_id" FOREIGN KEY ("referrer_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "referrals" ADD CONSTRAINT "FK_referrals_referred_user_id" FOREIGN KEY ("referred_user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "reviews" ADD CONSTRAINT "FK_reviews_product_id" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "reviews" ADD CONSTRAINT "FK_reviews_user_id" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "search_history" ADD CONSTRAINT "FK_search_history_user_id" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "support_cases" ADD CONSTRAINT "FK_support_cases_user_id" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "support_cases" ADD CONSTRAINT "FK_support_cases_assigned_admin_id" FOREIGN KEY ("assigned_admin_id") REFERENCES "admin_users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "support_messages" ADD CONSTRAINT "FK_support_messages_case_id" FOREIGN KEY ("case_id") REFERENCES "support_cases"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "ad_moderation_history" ADD CONSTRAINT "FK_ad_moderation_history_ad_id" FOREIGN KEY ("ad_id") REFERENCES "products"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "ad_moderation_history" ADD CONSTRAINT "FK_ad_moderation_history_admin_user_id" FOREIGN KEY ("admin_user_id") REFERENCES "admin_users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "alerts" ADD CONSTRAINT "FK_alerts_coupon_id" FOREIGN KEY ("coupon_id") REFERENCES "coupons"("id") ON DELETE SET NULL ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "alerts" ADD CONSTRAINT "FK_alerts_created_by" FOREIGN KEY ("created_by") REFERENCES "admin_users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "admin_audit_log" ADD CONSTRAINT "FK_admin_audit_log_admin_user_id" FOREIGN KEY ("admin_user_id") REFERENCES "admin_users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "job_applications" ADD CONSTRAINT "FK_job_applications_user_id" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "job_applications" ADD CONSTRAINT "FK_job_applications_reviewed_by" FOREIGN KEY ("reviewed_by") REFERENCES "admin_users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "application_reviews" ADD CONSTRAINT "FK_application_reviews_application_id" FOREIGN KEY ("application_id") REFERENCES "job_applications"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "application_reviews" ADD CONSTRAINT "FK_application_reviews_admin_user_id" FOREIGN KEY ("admin_user_id") REFERENCES "admin_users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "system_settings" ADD CONSTRAINT "FK_system_settings_updated_by" FOREIGN KEY ("updated_by") REFERENCES "admin_users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "support_case_assignments" ADD CONSTRAINT "FK_support_case_assignments_case_id" FOREIGN KEY ("case_id") REFERENCES "support_cases"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "support_case_assignments" ADD CONSTRAINT "FK_support_case_assignments_admin_user_id" FOREIGN KEY ("admin_user_id") REFERENCES "admin_users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "application_documents" ADD CONSTRAINT "FK_application_documents_application_id" FOREIGN KEY ("application_id") REFERENCES "job_applications"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_analytics" ADD CONSTRAINT "FK_user_analytics_user_id" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "wallet_ledger" ADD CONSTRAINT "FK_wallet_ledger_user_id" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "wallet_ledger" ADD CONSTRAINT "FK_wallet_ledger_wallet_id" FOREIGN KEY ("wallet_id") REFERENCES "wallets"("user_id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_reports" ADD CONSTRAINT "FK_user_reports_reporter_user_id" FOREIGN KEY ("reporter_user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_reports" ADD CONSTRAINT "FK_user_reports_reported_user_id" FOREIGN KEY ("reported_user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_reports" ADD CONSTRAINT "FK_user_reports_admin_user_id" FOREIGN KEY ("admin_user_id") REFERENCES "admin_users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "wallets" ADD CONSTRAINT "FK_wallets_user_id" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "coupon_redemptions" ADD CONSTRAINT "FK_coupon_redemptions_coupon_id" FOREIGN KEY ("coupon_id") REFERENCES "coupons"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "coupon_redemptions" ADD CONSTRAINT "FK_coupon_redemptions_user_id" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+    );
+
+    // Create indexes
+    await queryRunner.query(
+      `CREATE INDEX "IDX_admin_users_role" ON "admin_users" ("role")`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_admin_users_active" ON "admin_users" ("is_active")`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_admin_sessions_admin_user" ON "admin_sessions" ("admin_user_id")`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_admin_sessions_expires_at" ON "admin_sessions" ("expires_at")`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_admin_audit_log_admin_user" ON "admin_audit_log" ("admin_user_id")`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_admin_audit_log_created_at" ON "admin_audit_log" ("created_at")`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_users_email" ON "users" ("email")`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_users_phone" ON "users" ("phone")`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_products_category_id" ON "products" ("category_id")`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_products_user_id" ON "products" ("user_id")`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_products_status" ON "products" ("status")`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_products_moderation_status" ON "products" ("moderation_status")`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_alerts_status" ON "alerts" ("status")`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_alerts_created_by" ON "alerts" ("created_by")`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_support_cases_status" ON "support_cases" ("status")`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_support_cases_assigned_admin" ON "support_cases" ("assigned_admin_id")`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_user_reports_status" ON "user_reports" ("status")`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_user_reports_reported_user" ON "user_reports" ("reported_user_id")`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_subcategories_category_id" ON "subcategories" ("category_id")`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_categories_name" ON "categories" ("name")`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_coupons_code" ON "coupons" ("code")`
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_system_settings_key" ON "system_settings" ("key")`
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
+    // Drop tables in reverse order of dependencies
     await queryRunner.query(
-      `ALTER TABLE "ad_moderation_history" DROP CONSTRAINT "FK_1351bfb68717889cfaddcbab342"`
+      `DROP TABLE IF EXISTS "coupon_redemptions" CASCADE`
     );
+    await queryRunner.query(`DROP TABLE IF EXISTS "wallets" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "user_reports" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "wallet_ledger" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "user_analytics" CASCADE`);
     await queryRunner.query(
-      `ALTER TABLE "ad_moderation_history" DROP CONSTRAINT "FK_6c3a43769f915528c2015c7f554"`
+      `DROP TABLE IF EXISTS "application_documents" CASCADE`
     );
     await queryRunner.query(
-      `ALTER TABLE "support_messages" DROP CONSTRAINT "FK_8c825aa202717f0516b512168d0"`
+      `DROP TABLE IF EXISTS "support_case_assignments" CASCADE`
     );
+    await queryRunner.query(`DROP TABLE IF EXISTS "system_settings" CASCADE`);
     await queryRunner.query(
-      `ALTER TABLE "support_case_assignments" DROP CONSTRAINT "FK_7d3ff3317ac3b668637efbff05f"`
+      `DROP TABLE IF EXISTS "application_reviews" CASCADE`
     );
+    await queryRunner.query(`DROP TABLE IF EXISTS "job_applications" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "admin_audit_log" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "alerts" CASCADE`);
     await queryRunner.query(
-      `ALTER TABLE "support_case_assignments" DROP CONSTRAINT "FK_eb01a5e4cc56c669816c6d9fc05"`
+      `DROP TABLE IF EXISTS "ad_moderation_history" CASCADE`
     );
+    await queryRunner.query(`DROP TABLE IF EXISTS "towns" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "support_messages" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "support_cases" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "search_history" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "reviews" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "referrals" CASCADE`);
     await queryRunner.query(
-      `ALTER TABLE "support_cases" DROP CONSTRAINT "FK_a39beb2b481b4920b76cf0eed86"`
+      `DROP TABLE IF EXISTS "referral_redemptions" CASCADE`
     );
+    await queryRunner.query(`DROP TABLE IF EXISTS "regions" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "features" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "product_features" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "recently_viewed" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "product_images" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "otp_codes" CASCADE`);
     await queryRunner.query(
-      `ALTER TABLE "support_cases" DROP CONSTRAINT "FK_5a99a9d58af4a0e3093e2d14252"`
+      `DROP TABLE IF EXISTS "notification_history" CASCADE`
     );
+    await queryRunner.query(`DROP TABLE IF EXISTS "chatrooms" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "messages" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "favorites" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "fcm_devices" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "coupons" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "chatroom_members" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "products" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "users" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "admin_sessions" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "subcategories" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "categories" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "admin_users" CASCADE`);
+
+    // Drop enum types
     await queryRunner.query(
-      `ALTER TABLE "wallets" DROP CONSTRAINT "FK_92558c08091598f7a4439586cda"`
+      `DROP TYPE IF EXISTS "system_settings_type_enum" CASCADE`
     );
     await queryRunner.query(
-      `ALTER TABLE "products" DROP CONSTRAINT "FK_641c6d1bb7d127da620b1179175"`
+      `DROP TYPE IF EXISTS "user_reports_status_enum" CASCADE`
     );
     await queryRunner.query(
-      `ALTER TABLE "products" DROP CONSTRAINT "FK_29565df5a020791583febb73c07"`
+      `DROP TYPE IF EXISTS "support_cases_priority_enum" CASCADE`
     );
     await queryRunner.query(
-      `ALTER TABLE "system_settings" DROP CONSTRAINT "FK_301c531938f84c39fa5019e7465"`
+      `DROP TYPE IF EXISTS "support_cases_status_enum" CASCADE`
     );
+    await queryRunner.query(`DROP TYPE IF EXISTS "alerts_status_enum" CASCADE`);
     await queryRunner.query(
-      `ALTER TABLE "wallet_ledger" DROP CONSTRAINT "FK_53d9fecd40f5fe635d119b49c4d"`
+      `DROP TYPE IF EXISTS "products_moderation_status_enum" CASCADE`
     );
     await queryRunner.query(
-      `ALTER TABLE "user_reports" DROP CONSTRAINT "FK_f6b9af9e74c67dd269b22d9d84a"`
+      `DROP TYPE IF EXISTS "products_status_enum" CASCADE`
     );
     await queryRunner.query(
-      `ALTER TABLE "user_reports" DROP CONSTRAINT "FK_006c1307e23fea0915e8cf1882a"`
+      `DROP TYPE IF EXISTS "users_verification_level_enum" CASCADE`
     );
     await queryRunner.query(
-      `ALTER TABLE "user_reports" DROP CONSTRAINT "FK_a3c4ba2f4a0cdd6ebcfdebd97ab"`
+      `DROP TYPE IF EXISTS "users_verification_status_enum" CASCADE`
     );
     await queryRunner.query(
-      `ALTER TABLE "application_documents" DROP CONSTRAINT "FK_9ad8ab815e842d67e9aaec900cb"`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "application_reviews" DROP CONSTRAINT "FK_22d981457073eae92e8f9fa2e97"`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "application_reviews" DROP CONSTRAINT "FK_37429cb43f4837e1c8a0032ba51"`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "favorites" DROP CONSTRAINT "FK_003e599a9fc0e8f154b6313639f"`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "favorites" DROP CONSTRAINT "FK_35a6b05ee3b624d0de01ee50593"`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "alerts" DROP CONSTRAINT "FK_779c7c43268165afb5a947e0562"`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "alerts" DROP CONSTRAINT "FK_13cc1efe00291983890dd809cfa"`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "chatroom_members" DROP CONSTRAINT "FK_1ab2a70203b9457454ab7928445"`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "chatroom_members" DROP CONSTRAINT "FK_ff5e08f25be5a3ed0e486754fd8"`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "admin_sessions" DROP CONSTRAINT "FK_c1711b1831bdf66b77c3605bcdb"`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "admin_audit_log" DROP CONSTRAINT "FK_7abbe8f7be301725ce49e822788"`
-    );
-    await queryRunner.query(`DROP INDEX "public"."IDX_b2286c6d70b3aaf12046aa7016"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_e8112444d4a4beec5f7d6dc536"`);
-    await queryRunner.query(`ALTER TABLE "support_messages" ALTER COLUMN "is_read" DROP NOT NULL`);
-    await queryRunner.query(
-      `ALTER TABLE "support_messages" ALTER COLUMN "message_type" DROP NOT NULL`
-    );
-    await queryRunner.query(`ALTER TABLE "support_messages" DROP COLUMN "sender_id"`);
-    await queryRunner.query(
-      `ALTER TABLE "support_messages" ADD "sender_id" character varying(255) NOT NULL`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "support_cases" ALTER COLUMN "last_message_at" SET DEFAULT now()`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "support_cases" ALTER COLUMN "last_message_at" DROP NOT NULL`
-    );
-    await queryRunner.query(`ALTER TABLE "support_cases" ALTER COLUMN "priority" DROP NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "support_cases" ALTER COLUMN "status" DROP NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "is_muted" DROP NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "verification_level" DROP NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "verification_status" DROP NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "users" DROP COLUMN "google_id"`);
-    await queryRunner.query(`ALTER TABLE "users" ADD "google_id" character varying`);
-    await queryRunner.query(
-      `ALTER TABLE "products" ALTER COLUMN "moderation_status" DROP NOT NULL`
-    );
-    await queryRunner.query(`ALTER TABLE "product_features" DROP COLUMN "value"`);
-    await queryRunner.query(
-      `ALTER TABLE "product_features" ADD "value" character varying(255) NOT NULL`
-    );
-    await queryRunner.query(`ALTER TABLE "system_settings" ALTER COLUMN "is_public" DROP NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "user_reports" ALTER COLUMN "status" DROP NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "recently_viewed" ALTER COLUMN "viewed_at" DROP DEFAULT`);
-    await queryRunner.query(`ALTER TABLE "application_documents" DROP COLUMN "application_id"`);
-    await queryRunner.query(
-      `ALTER TABLE "application_documents" ADD "application_id" integer NOT NULL`
-    );
-    await queryRunner.query(`ALTER TABLE "application_reviews" DROP COLUMN "application_id"`);
-    await queryRunner.query(
-      `ALTER TABLE "application_reviews" ADD "application_id" integer NOT NULL`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "job_applications" DROP CONSTRAINT "PK_c56a5e86707d0f0df18fa111280"`
-    );
-    await queryRunner.query(`ALTER TABLE "job_applications" DROP COLUMN "id"`);
-    await queryRunner.query(`ALTER TABLE "job_applications" ADD "id" SERIAL NOT NULL`);
-    await queryRunner.query(
-      `ALTER TABLE "job_applications" ADD CONSTRAINT "job_applications_pkey" PRIMARY KEY ("id")`
-    );
-    await queryRunner.query(`ALTER TABLE "alerts" ALTER COLUMN "clicked_count" DROP NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "alerts" ALTER COLUMN "delivered_count" DROP NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "alerts" ALTER COLUMN "send_immediately" DROP NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "alerts" ALTER COLUMN "status" DROP NOT NULL`);
-    await queryRunner.query(
-      `ALTER TABLE "admin_sessions" ALTER COLUMN "admin_user_id" DROP NOT NULL`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "admin_audit_log" ALTER COLUMN "admin_user_id" DROP NOT NULL`
-    );
-    await queryRunner.query(`ALTER TABLE "admin_users" ALTER COLUMN "is_active" DROP NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "admin_users" ALTER COLUMN "permissions" DROP NOT NULL`);
-    await queryRunner.query(
-      `CREATE TYPE "public"."admin_role_enum_old" AS ENUM('super-admin', 'admin', 'staff', 'support')`
-    );
-    await queryRunner.query(`ALTER TABLE "admin_users" ALTER COLUMN "role" DROP DEFAULT`);
-    await queryRunner.query(
-      `ALTER TABLE "admin_users" ALTER COLUMN "role" TYPE "public"."admin_role_enum_old" USING "role"::"text"::"public"."admin_role_enum_old"`
-    );
-    await queryRunner.query(`ALTER TABLE "admin_users" ALTER COLUMN "role" SET DEFAULT 'staff'`);
-    await queryRunner.query(`DROP TYPE "public"."admin_users_role_enum"`);
-    await queryRunner.query(
-      `ALTER TYPE "public"."admin_role_enum_old" RENAME TO "admin_role_enum"`
-    );
-    await queryRunner.query(`ALTER TABLE "product_features" DROP COLUMN "updated_at"`);
-    await queryRunner.query(`ALTER TABLE "product_features" DROP COLUMN "created_at"`);
-    await queryRunner.query(`ALTER TABLE "wallet_ledger" DROP COLUMN "wallet_id"`);
-    await queryRunner.query(`ALTER TABLE "product_images" DROP COLUMN "updated_at"`);
-    await queryRunner.query(`ALTER TABLE "product_images" DROP COLUMN "height"`);
-    await queryRunner.query(`ALTER TABLE "product_images" DROP COLUMN "width"`);
-    await queryRunner.query(`ALTER TABLE "product_images" DROP COLUMN "bytes"`);
-    await queryRunner.query(`ALTER TABLE "product_images" DROP COLUMN "format"`);
-    await queryRunner.query(`ALTER TABLE "product_images" DROP COLUMN "url"`);
-    await queryRunner.query(`ALTER TABLE "product_images" DROP COLUMN "public_id"`);
-    await queryRunner.query(`ALTER TABLE "job_applications" DROP COLUMN "email"`);
-    await queryRunner.query(`ALTER TABLE "job_applications" DROP COLUMN "name"`);
-    await queryRunner.query(`ALTER TABLE "users" ADD "googleId" character varying(50)`);
-    await queryRunner.query(
-      `ALTER TABLE "product_images" ADD "is_primary" boolean NOT NULL DEFAULT false`
-    );
-    await queryRunner.query(`ALTER TABLE "product_images" ADD "cdn_height" integer`);
-    await queryRunner.query(`ALTER TABLE "product_images" ADD "cdn_width" integer`);
-    await queryRunner.query(`ALTER TABLE "product_images" ADD "cdn_bytes" integer NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "product_images" ADD "cdn_format" text NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "product_images" ADD "cdn_resource_type" text NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "product_images" ADD "cdn_url" text NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "product_images" ADD "cdn_public_id" text NOT NULL`);
-    await queryRunner.query(
-      `ALTER TABLE "recently_viewed" ADD "created_at" TIMESTAMP NOT NULL DEFAULT now()`
-    );
-    await queryRunner.query(`ALTER TABLE "job_applications" ADD "reviewed_at" TIMESTAMP`);
-    await queryRunner.query(`ALTER TABLE "job_applications" ADD "reviewed_by" integer`);
-    await queryRunner.query(`ALTER TABLE "job_applications" ADD "feedback" text`);
-    await queryRunner.query(`ALTER TABLE "job_applications" ADD "notes" text`);
-    await queryRunner.query(`ALTER TABLE "job_applications" ADD "cover_letter" text`);
-    await queryRunner.query(
-      `ALTER TABLE "job_applications" ADD "status" character varying(50) DEFAULT 'pending'`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "job_applications" ADD "position" character varying(255) NOT NULL`
-    );
-    await queryRunner.query(`ALTER TABLE "job_applications" ADD "user_id" uuid NOT NULL`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_003e599a9fc0e8f154b6313639"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_35a6b05ee3b624d0de01ee5059"`);
-    await queryRunner.query(`DROP TABLE "favorites"`);
-    await queryRunner.query(
-      `ALTER TABLE "product_features" ADD CONSTRAINT "UQ_3353c46dc9a352073d23cc2c060" UNIQUE ("product_id", "feature_id")`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "recently_viewed" ADD CONSTRAINT "UQ_f65476c2f349ea1836c75da0b03" UNIQUE ("user_id", "product_id")`
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_support_cases_status_priority" ON "support_cases" ("status", "priority") `
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_support_cases_assigned_admin" ON "support_cases" ("assigned_admin_id") `
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_support_cases_status" ON "support_cases" ("status") `
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_products_status_moderated" ON "products" ("moderation_status", "moderated_at") `
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_products_moderated_at" ON "products" ("moderated_at") `
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_products_moderation_status" ON "products" ("moderation_status") `
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_user_reports_reported_user" ON "user_reports" ("reported_user_id") `
-    );
-    await queryRunner.query(`CREATE INDEX "IDX_user_reports_status" ON "user_reports" ("status") `);
-    await queryRunner.query(
-      `CREATE INDEX "IDX_a659a668ff098ce43a940d7438" ON "recently_viewed" ("user_id", "viewed_at") `
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_job_applications_user" ON "job_applications" ("user_id") `
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_job_applications_status" ON "job_applications" ("status") `
-    );
-    await queryRunner.query(`CREATE INDEX "IDX_alerts_created_by" ON "alerts" ("created_by") `);
-    await queryRunner.query(`CREATE INDEX "IDX_alerts_status" ON "alerts" ("status") `);
-    await queryRunner.query(
-      `CREATE INDEX "IDX_admin_sessions_expires_at" ON "admin_sessions" ("expires_at") `
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_admin_sessions_admin_user" ON "admin_sessions" ("admin_user_id") `
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_admin_audit_log_created_at" ON "admin_audit_log" ("created_at") `
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_admin_audit_log_admin_user" ON "admin_audit_log" ("admin_user_id") `
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_admin_audit_log_resource" ON "admin_audit_log" ("resource_type", "resource_id") `
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_admin_users_active" ON "admin_users" ("is_active") `
-    );
-    await queryRunner.query(`CREATE INDEX "IDX_admin_users_role" ON "admin_users" ("role") `);
-    await queryRunner.query(
-      `ALTER TABLE "ad_moderation_history" ADD CONSTRAINT "ad_moderation_history_ad_id_fkey" FOREIGN KEY ("ad_id") REFERENCES "products"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "ad_moderation_history" ADD CONSTRAINT "ad_moderation_history_admin_user_id_fkey" FOREIGN KEY ("admin_user_id") REFERENCES "admin_users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "support_messages" ADD CONSTRAINT "support_messages_case_id_fkey" FOREIGN KEY ("case_id") REFERENCES "support_cases"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "support_case_assignments" ADD CONSTRAINT "support_case_assignments_case_id_fkey" FOREIGN KEY ("case_id") REFERENCES "support_cases"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "support_case_assignments" ADD CONSTRAINT "support_case_assignments_admin_user_id_fkey" FOREIGN KEY ("admin_user_id") REFERENCES "admin_users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "support_cases" ADD CONSTRAINT "support_cases_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "support_cases" ADD CONSTRAINT "support_cases_assigned_admin_id_fkey" FOREIGN KEY ("assigned_admin_id") REFERENCES "admin_users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "users" ADD CONSTRAINT "users_muted_by_fkey" FOREIGN KEY ("muted_by") REFERENCES "admin_users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "users" ADD CONSTRAINT "users_verified_by_fkey" FOREIGN KEY ("verified_by") REFERENCES "admin_users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "wallets" ADD CONSTRAINT "FK_92558c08091598f7a4439586cda" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "products" ADD CONSTRAINT "products_moderated_by_fkey" FOREIGN KEY ("moderated_by") REFERENCES "admin_users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "products" ADD CONSTRAINT "products_approved_by_fkey" FOREIGN KEY ("approved_by") REFERENCES "admin_users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "system_settings" ADD CONSTRAINT "system_settings_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "admin_users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "wallet_ledger" ADD CONSTRAINT "FK_c7e9efe5a3b0a356eefbf012f64" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "user_reports" ADD CONSTRAINT "user_reports_reporter_user_id_fkey" FOREIGN KEY ("reporter_user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "user_reports" ADD CONSTRAINT "user_reports_reported_user_id_fkey" FOREIGN KEY ("reported_user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "user_reports" ADD CONSTRAINT "user_reports_admin_user_id_fkey" FOREIGN KEY ("admin_user_id") REFERENCES "admin_users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "application_documents" ADD CONSTRAINT "application_documents_application_id_fkey" FOREIGN KEY ("application_id") REFERENCES "job_applications"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "application_reviews" ADD CONSTRAINT "application_reviews_application_id_fkey" FOREIGN KEY ("application_id") REFERENCES "job_applications"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "application_reviews" ADD CONSTRAINT "application_reviews_admin_user_id_fkey" FOREIGN KEY ("admin_user_id") REFERENCES "admin_users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "job_applications" ADD CONSTRAINT "job_applications_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "job_applications" ADD CONSTRAINT "job_applications_reviewed_by_fkey" FOREIGN KEY ("reviewed_by") REFERENCES "admin_users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "alerts" ADD CONSTRAINT "alerts_coupon_id_fkey" FOREIGN KEY ("coupon_id") REFERENCES "coupons"("id") ON DELETE SET NULL ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "alerts" ADD CONSTRAINT "alerts_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "admin_users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "chatroom_members" ADD CONSTRAINT "FK_ff5e08f25be5a3ed0e486754fd8" FOREIGN KEY ("chatroom_id") REFERENCES "chatrooms"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "chatroom_members" ADD CONSTRAINT "FK_1ab2a70203b9457454ab7928445" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "admin_sessions" ADD CONSTRAINT "admin_sessions_admin_user_id_fkey" FOREIGN KEY ("admin_user_id") REFERENCES "admin_users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
-    );
-    await queryRunner.query(
-      `ALTER TABLE "admin_audit_log" ADD CONSTRAINT "admin_audit_log_admin_user_id_fkey" FOREIGN KEY ("admin_user_id") REFERENCES "admin_users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`
+      `DROP TYPE IF EXISTS "admin_users_role_enum" CASCADE`
     );
   }
 }
