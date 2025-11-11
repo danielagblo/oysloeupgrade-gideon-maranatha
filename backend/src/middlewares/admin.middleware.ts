@@ -48,9 +48,14 @@ export const requireAdminPermissions = (...requiredPermissions: string[]) => {
       return next(new ForbiddenError("No permissions found"));
     }
 
-    const hasPermission = requiredPermissions.every((permission) =>
-      req.adminPermissions!.includes(permission)
-    );
+    // Check if admin has wildcard permission "*" which grants all permissions
+    const hasWildcardPermission = req.adminPermissions!.includes("*");
+
+    const hasPermission =
+      hasWildcardPermission ||
+      requiredPermissions.every((permission) =>
+        req.adminPermissions!.includes(permission)
+      );
 
     if (!hasPermission) {
       return next(
