@@ -1,36 +1,55 @@
-import { Router } from 'express';
+import { Router } from "express";
 import {
   createCoupon,
   getAlertsHistory,
   getSelectableAds,
+  getSelectableTargets,
   getSelectableUsers,
   sendAlert,
-} from '../../controllers/admin-alerts.controller.js';
-import { auditLog, requireAdminPermissions } from '../../middlewares/admin.middleware.js';
+} from "../../controllers/admin-alerts.controller.js";
+import {
+  auditLog,
+  requireAdminPermissions,
+} from "../../middlewares/admin.middleware.js";
 
 const router = Router();
 
 router.post(
-  '/send',
-  requireAdminPermissions('system:config'),
-  auditLog('send_alert', 'alert'),
+  "/send",
+  requireAdminPermissions("system:config"),
+  auditLog("send_alert", "alert"),
   sendAlert
 );
 
 router.post(
-  '/coupon/create',
-  requireAdminPermissions('system:config'),
-  auditLog('create_coupon_alert', 'coupon'),
+  "/coupon/create",
+  requireAdminPermissions("system:config"),
+  auditLog("create_coupon_alert", "coupon"),
   createCoupon
 );
 
-router.get('/history', requireAdminPermissions('system:reports'), getAlertsHistory);
+router.get(
+  "/history",
+  requireAdminPermissions("system:reports"),
+  getAlertsHistory
+);
 
-router.get('/users/selectable', requireAdminPermissions('system:config'), getSelectableUsers);
+router.get(
+  "/users/selectable",
+  requireAdminPermissions("system:config"),
+  getSelectableUsers
+);
 
-router.get('/ads/selectable', requireAdminPermissions('system:config'), getSelectableAds);
+router.get(
+  "/ads/selectable",
+  requireAdminPermissions("system:config"),
+  getSelectableAds
+);
+
+router.get(
+  "/selectable",
+  requireAdminPermissions("system:config"),
+  getSelectableTargets
+);
 
 export default router;
-
-
-

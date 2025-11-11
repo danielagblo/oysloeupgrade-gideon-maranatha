@@ -141,3 +141,29 @@ export const getSelectableAds = async (
     next(error);
   }
 };
+
+export const getSelectableTargets = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // Get both users and ads in parallel
+    const [usersResult, adsResult] = await Promise.all([
+      alertsService.getSelectableUsers({ page: 1, limit: 50, search: req.query.search as string }),
+      alertsService.getSelectableAds({ page: 1, limit: 50, search: req.query.search as string })
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        users: usersResult.users,
+        ads: adsResult.ads,
+        totalUsers: usersResult.total,
+        totalAds: adsResult.total,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};

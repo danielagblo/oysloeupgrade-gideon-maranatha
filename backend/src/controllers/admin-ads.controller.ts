@@ -5,6 +5,7 @@ import { AdModerationHistory } from "../entities/AdModerationHistory.js";
 import { Product } from "../entities/Product.js";
 import { ProductImage } from "../entities/ProductImage.js";
 import { NotFoundError } from "../utils/errors.js";
+import { BulkUpdateAdsSchema } from "../schemas/admin.js";
 
 export const getAds = async (
   req: Request,
@@ -220,7 +221,8 @@ export const bulkUpdateAds = async (
   next: NextFunction
 ) => {
   try {
-    const { adIds, status, reason, notes } = req.body;
+    const parsed = BulkUpdateAdsSchema.parse(req.body);
+    const { adIds, status, reason, notes } = parsed;
     if (!req.admin?.id) {
       return res.status(401).json({
         success: false,

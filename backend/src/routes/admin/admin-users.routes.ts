@@ -18,7 +18,7 @@ router.get('/', requireAdminPermissions('user:read'), getUsers);
 
 router.get('/stats', requireAdminPermissions('user:read'), getUserStats);
 
-router.post('/export', requireAdminPermissions('user:read'), exportUsers);
+router.get('/export', requireAdminPermissions('user:read'), exportUsers);
 
 router.get('/:id', requireAdminPermissions('user:read'), getUser);
 

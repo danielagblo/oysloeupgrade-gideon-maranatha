@@ -1,6 +1,9 @@
 import type { NextFunction, Request, Response } from 'express';
 import { FilterRequestSchema, GlobalSearchQuerySchema } from '../schemas/admin.js';
 import { AdminSearchService } from '../services/admin-search.service.js';
+import { z } from 'zod';
+
+const Zod = z;
 
 type GlobalSearchQuery = Zod.infer<typeof GlobalSearchQuerySchema>;
 type FilterRequest = Zod.infer<typeof FilterRequestSchema>;

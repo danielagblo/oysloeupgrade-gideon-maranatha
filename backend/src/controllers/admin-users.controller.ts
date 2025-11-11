@@ -509,7 +509,7 @@ export const exportUsers = async (
   next: NextFunction
 ) => {
   try {
-    const parsed: ExportUsersRequest = ExportUsersSchema.parse(req.body);
+    const parsed: ExportUsersRequest = ExportUsersSchema.parse(req.query);
     const { format, filters, fields } = parsed;
 
     const exportFormat = format === "excel" ? "xlsx" : format;

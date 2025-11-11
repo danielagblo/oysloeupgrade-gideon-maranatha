@@ -18,6 +18,8 @@ import adminSettingsRoutes from "./admin/admin-settings.routes.js";
 import adminSupportRoutes from "./admin/admin-support.routes.js";
 import adminUploadsRoutes from "./admin/admin-uploads.routes.js";
 import adminUsersRoutes from "./admin/admin-users.routes.js";
+import { getFeedback } from "../controllers/admin-reports.controller.js";
+import { requireAdminPermissions } from "../middlewares/admin.middleware.js";
 
 const router = Router();
 
@@ -26,6 +28,9 @@ router.use("/auth", adminAuthRoutes);
 router.use(authenticateAdmin);
 
 router.use(adminRateLimit);
+
+// Direct feedback endpoint
+router.get("/feedback", requireAdminPermissions("system:reports"), getFeedback);
 
 router.use("/users", adminUsersRoutes);
 
