@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y dumb-init && rm -rf /var/lib/apt/lists/
 COPY --from=base /app/dist ./dist
 COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/package.json ./
+COPY --from=base /app/bunfig.toml ./
 COPY --from=base /app/spec ./spec
 COPY --from=base /app/scripts ./scripts
 COPY --from=base /app/zod-extend.ts ./
