@@ -11,7 +11,7 @@
     "migration:drift": "typeorm-ts-node-esm migration:generate tmp_schema_check -d src/data-source.ts --pretty || true",
     "orm:check": "bun run orm:tsc && bun run orm:esm && bun run migration:show && bun run migration:drift",
     "orm:fix": "bash scripts/fix-orm.sh",
-    "build": "bun build src/server.ts --outdir dist --target bun --external mock-aws-s3 --external aws-sdk --external nock",
+    "build": "bun build src/server.ts --outdir dist --target node --packages external --external mock-aws-s3 --external aws-sdk --external nock --no-minify",
     "pretest": "bun run orm:check",
     "precommit": "bun run orm:check",
     "dev": "bun --watch src/server.ts",
