@@ -111,7 +111,7 @@ export const auditLog = (action: string, resourceType: string) => {
           adminUserId: req.admin.id,
           action,
           resourceType,
-          resourceId: req.params.id ? parseInt(req.params.id) : undefined,
+          resourceId: req.params.id || undefined,
           oldValues: (req as any).oldValues,
           newValues: (req as any).newValues,
           ipAddress: req.ip,

@@ -150,8 +150,16 @@ export const getSelectableTargets = async (
   try {
     // Get both users and ads in parallel
     const [usersResult, adsResult] = await Promise.all([
-      alertsService.getSelectableUsers({ page: 1, limit: 50, search: req.query.search as string }),
-      alertsService.getSelectableAds({ page: 1, limit: 50, search: req.query.search as string })
+      alertsService.getSelectableUsers({
+        page: 1,
+        limit: 50,
+        search: req.query.search as string,
+      }),
+      alertsService.getSelectableAds({
+        page: 1,
+        limit: 50,
+        search: req.query.search as string,
+      }),
     ]);
 
     res.json({

@@ -26,8 +26,8 @@ export class AdminAuditLog {
   @Column({ type: "varchar", length: 50 })
   resourceType!: string;
 
-  @Column({ type: "integer", nullable: true })
-  resourceId?: number;
+  @Column({ type: "varchar", length: 255, nullable: true })
+  resourceId?: string;
 
   @Column({ type: "jsonb", nullable: true })
   oldValues?: Record<string, unknown>;

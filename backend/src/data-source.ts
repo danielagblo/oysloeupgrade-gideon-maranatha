@@ -60,5 +60,5 @@ export const AppDataSource = new DataSource({
   ],
   migrations: [join(__dirname, 'migrations', '*.{ts,js}')],
   subscribers: [],
-  ssl: config.server.isProduction ? { rejectUnauthorized: false } : false,
+  ssl: false,
 });
