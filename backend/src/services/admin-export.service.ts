@@ -1,5 +1,6 @@
 import { AppDataSource } from "../config/database.js";
 import { Product } from "../entities/Product.js";
+import { Subscription } from "../entities/Subscription.js";
 import { SupportCase } from "../entities/SupportCase.js";
 import { User } from "../entities/User.js";
 import { UserReport } from "../entities/UserReport.js";
@@ -30,6 +31,10 @@ export class AdminExportService {
 
   private get userReportRepository() {
     return AppDataSource.getRepository(UserReport);
+  }
+
+  private get subscriptionRepository() {
+    return AppDataSource.getRepository(Subscription);
   }
 
   async exportUsers(options: ExportOptions) {
@@ -246,6 +251,52 @@ export class AdminExportService {
       .join("\n");
   }
 
+  async exportSubscriptions(options: ExportOptions) {
+    const { format, filters } = options;
+
+    const queryBuilder = this.subscriptionRepository
+      .createQueryBuilder("subscription")
+      .leftJoinAndSelect("subscription.user", "user");
+
+    if (filters?.planType) {
+      queryBuilder.andWhere("subscription.planType = :planType", {
+        planType: filters.planType,
+      });
+    }
+
+    if (filters?.status) {
+      queryBuilder.andWhere("subscription.status = :status", {
+        status: filters.status,
+      });
+    }
+
+    if (filters?.userId) {
+      queryBuilder.andWhere("subscription.userId = :userId", {
+        userId: filters.userId,
+      });
+    }
+
+    if (filters?.dateRange) {
+      queryBuilder.andWhere("subscription.createdAt >= :from", {
+        from: filters.dateRange.from,
+      });
+      queryBuilder.andWhere("subscription.createdAt <= :to", {
+        to: filters.dateRange.to,
+      });
+    }
+
+    const subscriptions = await queryBuilder.getMany();
+
+    const csvData = this.generateSubscriptionsCSV(subscriptions);
+
+    return {
+      data: csvData,
+      recordCount: subscriptions.length,
+      contentType: "text/csv",
+      filename: `subscriptions_export_${Date.now()}.csv`,
+    };
+  }
+
   private generateReportsCSV(reports: UserReport[]): string {
     const headers = [
       "ID",
@@ -264,6 +315,37 @@ export class AdminExportService {
       report.reporterUser?.email || "",
       report.reportedUser?.email || "",
       report.createdAt.toISOString(),
+    ]);
+
+    return [headers, ...rows]
+      .map((row) => row.map((field) => `"${field}"`).join(","))
+      .join("\n");
+  }
+
+  private generateSubscriptionsCSV(subscriptions: Subscription[]): string {
+    const headers = [
+      "ID",
+      "User Email",
+      "User Name",
+      "Plan Type",
+      "Status",
+      "Price",
+      "Start Date",
+      "End Date",
+      "Payment Method",
+      "Created At",
+    ];
+    const rows = subscriptions.map((subscription) => [
+      subscription.id,
+      subscription.user?.email || "",
+      subscription.user?.name || "",
+      subscription.planType,
+      subscription.status,
+      subscription.price.toString(),
+      subscription.startDate.toISOString(),
+      subscription.endDate.toISOString(),
+      subscription.paymentMethod || "",
+      subscription.createdAt.toISOString(),
     ]);
 
     return [headers, ...rows]

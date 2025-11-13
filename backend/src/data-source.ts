@@ -47,6 +47,7 @@ export const AppDataSource = new DataSource({
     join(__dirname, 'entities', 'Review.ts'),
     join(__dirname, 'entities', 'SearchHistory.ts'),
     join(__dirname, 'entities', 'Subcategory.ts'),
+    join(__dirname, 'entities', 'Subscription.ts'),
     join(__dirname, 'entities', 'SupportCase.ts'),
     join(__dirname, 'entities', 'SupportCaseAssignment.ts'),
     join(__dirname, 'entities', 'SupportMessage.ts'),

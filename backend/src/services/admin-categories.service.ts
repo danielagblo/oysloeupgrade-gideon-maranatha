@@ -1,5 +1,8 @@
 import { AppDataSource } from '../config/database.js';
 import { Category } from '../entities/Category.js';
+import { Feature } from '../entities/Feature.js';
+import { Product } from '../entities/Product.js';
+import { ProductFeature } from '../entities/ProductFeature.js';
 import { Subcategory } from '../entities/Subcategory.js';
 import { ConflictError, NotFoundError } from '../utils/errors.js';
 
@@ -35,6 +38,14 @@ export class AdminCategoriesService {
 
   private get subcategoryRepository() {
     return AppDataSource.getRepository(Subcategory);
+  }
+
+  private get productRepository() {
+    return AppDataSource.getRepository(Product);
+  }
+
+  private get featureRepository() {
+    return AppDataSource.getRepository(Feature);
   }
 
   async getCategories() {
@@ -210,6 +221,123 @@ export class AdminCategoriesService {
     }
 
     return await this.subcategoryRepository.save(subcategory);
+  }
+
+  async deleteCategory(categoryId: string) {
+    const category = await this.categoryRepository.findOne({
+      where: { id: categoryId },
+      relations: ['subcategories'],
+    });
+
+    if (!category) {
+      throw new NotFoundError('Category not found');
+    }
+
+    // Check if category has products
+    const productCount = await this.productRepository.count({
+      where: { categoryId },
+    });
+
+    if (productCount > 0) {
+      throw new ConflictError(
+        `Cannot delete category: ${productCount} product(s) are using this category`
+      );
+    }
+
+    // Check if category has subcategories
+    if (category.subcategories && category.subcategories.length > 0) {
+      throw new ConflictError(
+        `Cannot delete category: ${category.subcategories.length} subcategory(ies) exist. Delete subcategories first.`
+      );
+    }
+
+    await this.categoryRepository.remove(category);
+    return { success: true };
+  }
+
+  async deleteSubcategory(categoryId: string, subcategoryId: string) {
+    const subcategory = await this.subcategoryRepository.findOne({
+      where: { id: subcategoryId, categoryId },
+    });
+
+    if (!subcategory) {
+      throw new NotFoundError('Subcategory not found');
+    }
+
+    // Check if subcategory has products
+    const productCount = await this.productRepository.count({
+      where: { subcategoryId },
+    });
+
+    if (productCount > 0) {
+      throw new ConflictError(
+        `Cannot delete subcategory: ${productCount} product(s) are using this subcategory`
+      );
+    }
+
+    // Check if subcategory has features
+    const featureCount = await this.featureRepository.count({
+      where: { subcategoryId },
+    });
+
+    if (featureCount > 0) {
+      throw new ConflictError(
+        `Cannot delete subcategory: ${featureCount} feature(s) exist. Delete features first.`
+      );
+    }
+
+    await this.subcategoryRepository.remove(subcategory);
+    return { success: true };
+  }
+
+  async deleteFeature(categoryId: string, subcategoryId: string, featureId: string) {
+    // Verify subcategory belongs to category
+    const subcategory = await this.subcategoryRepository.findOne({
+      where: { id: subcategoryId, categoryId },
+    });
+
+    if (!subcategory) {
+      throw new NotFoundError('Subcategory not found');
+    }
+
+    const feature = await this.featureRepository.findOne({
+      where: { id: featureId, subcategoryId },
+    });
+
+    if (!feature) {
+      throw new NotFoundError('Feature not found');
+    }
+
+    // Note: ProductFeature junction table will cascade delete
+    // But we should check if any products are using this feature
+    const productFeatureRepository = AppDataSource.getRepository(ProductFeature);
+    const usageCount = await productFeatureRepository.count({
+      where: { featureId },
+    });
+
+    if (usageCount > 0) {
+      throw new ConflictError(
+        `Cannot delete feature: ${usageCount} product(s) are using this feature`
+      );
+    }
+
+    await this.featureRepository.remove(feature);
+    return { success: true };
+  }
+
+  async reorderCategories(orders: Array<{ id: string; displayOrder: number }>) {
+    // Use transaction to ensure all updates succeed or fail together
+    return await AppDataSource.transaction(async (manager) => {
+      const categoryRepository = manager.getRepository(Category);
+
+      for (const order of orders) {
+        await categoryRepository.update(order.id, {
+          displayOrder: order.displayOrder,
+        });
+      }
+
+      return { success: true, updated: orders.length };
+    });
   }
 }
 

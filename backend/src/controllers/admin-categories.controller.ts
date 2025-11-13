@@ -90,3 +90,84 @@ export const updateSubcategory = async (req: Request, res: Response, next: NextF
     next(error);
   }
 };
+
+export const deleteCategory = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const categoryId = req.params.id;
+    const result = await categoriesService.deleteCategory(categoryId);
+
+    req.oldValues = { categoryId };
+    req.newValues = { deleted: true };
+
+    res.json({
+      success: true,
+      data: result,
+      message: 'Category deleted successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteSubcategory = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const categoryId = req.params.catId;
+    const subcategoryId = req.params.subId;
+    const result = await categoriesService.deleteSubcategory(categoryId, subcategoryId);
+
+    req.oldValues = { categoryId, subcategoryId };
+    req.newValues = { deleted: true };
+
+    res.json({
+      success: true,
+      data: result,
+      message: 'Subcategory deleted successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteFeature = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const categoryId = req.params.catId;
+    const subcategoryId = req.params.subId;
+    const featureId = req.params.featureId;
+    const result = await categoriesService.deleteFeature(categoryId, subcategoryId, featureId);
+
+    req.oldValues = { categoryId, subcategoryId, featureId };
+    req.newValues = { deleted: true };
+
+    res.json({
+      success: true,
+      data: result,
+      message: 'Feature deleted successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const reorderCategories = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { orders } = req.body;
+    
+    if (!Array.isArray(orders)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid request: orders must be an array',
+        error: { code: 'INVALID_INPUT' },
+      });
+    }
+
+    const result = await categoriesService.reorderCategories(orders);
+
+    res.json({
+      success: true,
+      data: result,
+      message: `Successfully reordered ${result.updated} categories`,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

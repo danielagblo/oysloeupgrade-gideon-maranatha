@@ -2,7 +2,7 @@ import { AppDataSource } from '../config/database.js';
 import { redisClient } from '../config/redis.js';
 import { Region } from '../entities/Region.js';
 import { Town } from '../entities/Town.js';
-import { NotFoundError, ValidationError } from '../utils/errors.js';
+import { ConflictError, NotFoundError, ValidationError } from '../utils/errors.js';
 
 export interface CreateRegionInput {
   name: string;
@@ -140,6 +140,48 @@ export class AdminLocationsService {
     await this.invalidateCache();
 
     return savedTown;
+  }
+
+  async deleteTown(regionId: string, townId: string): Promise<{ success: boolean }> {
+    const town = await this.townRepository.findOne({
+      where: { id: townId, regionId }
+    });
+
+    if (!town) {
+      throw new NotFoundError('Town not found in specified region');
+    }
+
+    await this.townRepository.remove(town);
+    await this.invalidateCache();
+
+    return { success: true };
+  }
+
+  async deleteRegion(regionId: string): Promise<{ success: boolean }> {
+    const region = await this.regionRepository.findOne({
+      where: { id: regionId },
+      relations: ['towns']
+    });
+
+    if (!region) {
+      throw new NotFoundError('Region not found');
+    }
+
+    // Check if region has towns
+    const townCount = await this.townRepository.count({
+      where: { regionId }
+    });
+
+    if (townCount > 0) {
+      throw new ConflictError(
+        `Cannot delete region: ${townCount} town(s) exist. Delete towns first.`
+      );
+    }
+
+    await this.regionRepository.remove(region);
+    await this.invalidateCache();
+
+    return { success: true };
   }
 }
 

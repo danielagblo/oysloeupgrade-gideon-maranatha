@@ -370,15 +370,99 @@ describe('Admin Locations Management API', () => {
         token,
         {
           method: 'DELETE',
-          body: JSON.stringify({
-            reason: 'Town no longer exists',
-          }),
         }
       );
 
       const deleteBody = await expectSuccess(deleteResponse, 200);
-      expect(deleteBody.data.message).toBeDefined();
-      expect(deleteBody.data.auditLogId).toBeDefined();
+      expect(deleteBody.success).toBe(true);
+      expect(deleteBody.data.success).toBe(true);
+      expect(deleteBody.data.message).toBe('Town deleted successfully');
+
+      // Verify town is actually deleted
+      const verifyResponse = await authenticatedAdminRequest(
+        `${baseURL}/api-v1/admin/locations/regions/${regionId}/towns/${townId}`,
+        token,
+        {
+          method: 'PUT',
+          body: JSON.stringify({ name: 'Test' }),
+        }
+      );
+
+      await expectError(verifyResponse, 404);
+    });
+
+    it('returns 404 for non-existent town', async () => {
+      const { token } = await createAdminAndToken();
+
+      const regionResponse = await authenticatedAdminRequest(
+        `${baseURL}/api-v1/admin/locations/regions`,
+        token,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            name: 'Test Region',
+            code: 'TR404',
+          }),
+        }
+      );
+
+      const regionBody = await regionResponse.json();
+      const regionId = regionBody.data.region.id;
+      const fakeTownId = '00000000-0000-0000-0000-000000000000';
+
+      const deleteResponse = await authenticatedAdminRequest(
+        `${baseURL}/api-v1/admin/locations/regions/${regionId}/towns/${fakeTownId}`,
+        token,
+        {
+          method: 'DELETE',
+        }
+      );
+
+      await expectError(deleteResponse, 404);
+    });
+
+    it('prevents deleting region with towns', async () => {
+      const { token } = await createAdminAndToken();
+
+      const regionResponse = await authenticatedAdminRequest(
+        `${baseURL}/api-v1/admin/locations/regions`,
+        token,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            name: 'Region With Towns',
+            code: 'RWT',
+          }),
+        }
+      );
+
+      const regionBody = await regionResponse.json();
+      const regionId = regionBody.data.region.id;
+
+      // Add a town
+      await authenticatedAdminRequest(
+        `${baseURL}/api-v1/admin/locations/regions/${regionId}/towns`,
+        token,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            name: 'Test Town',
+          }),
+        }
+      );
+
+      // Try to delete region with towns
+      const deleteResponse = await authenticatedAdminRequest(
+        `${baseURL}/api-v1/admin/locations/regions/${regionId}`,
+        token,
+        {
+          method: 'DELETE',
+        }
+      );
+
+      const deleteBody = await expectError(deleteResponse, 409);
+      expect(deleteBody.message).toContain('Cannot delete region');
+      expect(deleteBody.message).toContain('town(s) exist');
     });
   });
 
@@ -496,15 +580,40 @@ describe('Admin Locations Management API', () => {
         token,
         {
           method: 'DELETE',
-          body: JSON.stringify({
-            reason: 'Region reorganization',
-          }),
         }
       );
 
       const deleteBody = await expectSuccess(deleteResponse, 200);
-      expect(deleteBody.data.message).toBeDefined();
-      expect(deleteBody.data.auditLogId).toBeDefined();
+      expect(deleteBody.success).toBe(true);
+      expect(deleteBody.data.success).toBe(true);
+      expect(deleteBody.data.message).toBe('Region deleted successfully');
+
+      // Verify region is actually deleted
+      const verifyResponse = await authenticatedAdminRequest(
+        `${baseURL}/api-v1/admin/locations/regions/${regionId}`,
+        token,
+        {
+          method: 'PUT',
+          body: JSON.stringify({ name: 'Test' }),
+        }
+      );
+
+      await expectError(verifyResponse, 404);
+    });
+
+    it('returns 404 for non-existent region', async () => {
+      const { token } = await createAdminAndToken();
+      const fakeRegionId = '00000000-0000-0000-0000-000000000000';
+
+      const deleteResponse = await authenticatedAdminRequest(
+        `${baseURL}/api-v1/admin/locations/regions/${fakeRegionId}`,
+        token,
+        {
+          method: 'DELETE',
+        }
+      );
+
+      await expectError(deleteResponse, 404);
     });
 
     it('POST /api-v1/admin/locations/bulk-import imports locations', async () => {

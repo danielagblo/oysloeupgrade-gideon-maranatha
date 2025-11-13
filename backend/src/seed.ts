@@ -13,6 +13,8 @@ import { Review } from "./entities/Review.js";
 import { Favorite } from "./entities/Favorite.js";
 import { Wallet } from "./entities/Wallet.js";
 import { AdminUser, AdminRole } from "./entities/AdminUser.js";
+import { Region } from "./entities/Region.js";
+import { Town } from "./entities/Town.js";
 import { hashPassword } from "./utils/password.js";
 
 async function seedDatabase() {
@@ -58,6 +60,10 @@ async function seedDatabase() {
     console.log("❤️ Creating favorites...");
     await createFavorites(products, testUser);
 
+    // Create regions and towns
+    console.log("📍 Creating regions and towns...");
+    await createRegionsAndTowns();
+
     console.log("✅ Database seeding completed successfully!");
     console.log("\n📋 Test Data Summary:");
     console.log(`   👤 Test User: ${testUser.email} (ID: ${testUser.id})`);
@@ -67,6 +73,13 @@ async function seedDatabase() {
     console.log(`   📂 Categories: ${categories.length}`);
     console.log(`   📦 Products: ${products.length}`);
     console.log(`   🎫 Support Cases: ${supportCases.length}`);
+    
+    const regionRepo = AppDataSource.getRepository(Region);
+    const townRepo = AppDataSource.getRepository(Town);
+    const totalRegions = await regionRepo.count();
+    const totalTowns = await townRepo.count();
+    console.log(`   📍 Regions: ${totalRegions}`);
+    console.log(`   🏘️  Towns: ${totalTowns}`);
     console.log("\n🔑 Test Credentials:");
     console.log("   User: testuser@example.com / password123");
     console.log("   Admin: testadmin / admin123");
@@ -637,6 +650,143 @@ async function createFavorites(products: Product[], user: User) {
     });
     await favoriteRepo.save(favorite);
   }
+}
+
+async function createRegionsAndTowns() {
+  const regionRepo = AppDataSource.getRepository(Region);
+  const townRepo = AppDataSource.getRepository(Town);
+
+  // Check if regions already exist
+  const existingRegions = await regionRepo.count();
+  if (existingRegions >= 16) {
+    console.log(
+      `   Regions already exist (${existingRegions} found), skipping creation`
+    );
+    return;
+  }
+
+  // All 16 regions of Ghana with their major towns
+  const ghanaRegions = [
+    {
+      name: "Greater Accra",
+      code: "GAR",
+      towns: ["Accra", "Tema", "Madina", "Teshie", "Nungua"],
+    },
+    {
+      name: "Ashanti",
+      code: "ASR",
+      towns: ["Kumasi", "Obuasi", "Ejisu", "Konongo", "Bekwai"],
+    },
+    {
+      name: "Western",
+      code: "WER",
+      towns: ["Takoradi", "Sekondi", "Tarkwa", "Axim", "Bogoso"],
+    },
+    {
+      name: "Central",
+      code: "CER",
+      towns: ["Cape Coast", "Winneba", "Elmina", "Mankessim", "Kasoa"],
+    },
+    {
+      name: "Eastern",
+      code: "EAS",
+      towns: ["Koforidua", "Nkawkaw", "Oda", "Akosombo", "Asamankese"],
+    },
+    {
+      name: "Volta",
+      code: "VOL",
+      towns: ["Ho", "Keta", "Aflao", "Kpando", "Akatsi"],
+    },
+    {
+      name: "Northern",
+      code: "NOR",
+      towns: ["Tamale", "Yendi", "Bimbilla", "Savelugu", "Karaga"],
+    },
+    {
+      name: "Upper East",
+      code: "UER",
+      towns: ["Bolgatanga", "Navrongo", "Bawku", "Zuarungu", "Sandema"],
+    },
+    {
+      name: "Upper West",
+      code: "UWR",
+      towns: ["Wa", "Tumu", "Nandom", "Lawra", "Jirapa"],
+    },
+    {
+      name: "Bono",
+      code: "BON",
+      towns: ["Sunyani", "Berekum", "Dormaa Ahenkro", "Wamfie"],
+    },
+    {
+      name: "Bono East",
+      code: "BEE",
+      towns: ["Techiman", "Atebubu", "Nkoranza", "Kintampo"],
+    },
+    {
+      name: "Ahafo",
+      code: "AHA",
+      towns: ["Goaso", "Bechem", "Hwidiem", "Duayaw Nkwanta"],
+    },
+    {
+      name: "Oti",
+      code: "OTI",
+      towns: ["Dambai", "Nkwanta", "Jasikan", "Kadjebi"],
+    },
+    {
+      name: "Savannah",
+      code: "SAV",
+      towns: ["Damongo", "Bole", "Salaga", "Larabanga"],
+    },
+    {
+      name: "North East",
+      code: "NEE",
+      towns: ["Nalerigu", "Walewale", "Gambaga", "Langbinsi"],
+    },
+    {
+      name: "Western North",
+      code: "WEN",
+      towns: ["Sefwi Wiawso", "Bibiani", "Juaboso", "Enchi"],
+    },
+  ];
+
+  for (const regionData of ghanaRegions) {
+    // Check if region already exists
+    let region = await regionRepo.findOne({
+      where: { code: regionData.code },
+    });
+
+    if (!region) {
+      region = regionRepo.create({
+        name: regionData.name,
+        code: regionData.code,
+      });
+      region = await regionRepo.save(region);
+      console.log(`   Created region: ${regionData.name}`);
+    } else {
+      console.log(`   Region already exists: ${regionData.name}`);
+    }
+
+    // Create towns for this region
+    for (const townName of regionData.towns) {
+      const existingTown = await townRepo.findOne({
+        where: { name: townName, regionId: region.id },
+      });
+
+      if (!existingTown) {
+        const town = townRepo.create({
+          name: townName,
+          regionId: region.id,
+          region: region,
+          isActive: true,
+        });
+        await townRepo.save(town);
+      }
+    }
+
+    console.log(`   Created ${regionData.towns.length} towns for ${regionData.name}`);
+  }
+
+  console.log(`   ✅ Created all 16 regions with their towns`);
 }
 
 // Run the seed script

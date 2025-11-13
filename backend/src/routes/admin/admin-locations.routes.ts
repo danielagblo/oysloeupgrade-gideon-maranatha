@@ -2,6 +2,8 @@ import { Router } from 'express';
 import {
   addTown,
   createRegion,
+  deleteRegion,
+  deleteTown,
   getLocations,
   updateTown,
 } from '../../controllers/admin-locations.controller.js';
@@ -30,6 +32,20 @@ router.put(
   requireAdminPermissions('content:manage'),
   auditLog('update_town', 'town'),
   updateTown
+);
+
+router.delete(
+  '/regions/:regionId/towns/:townId',
+  requireAdminPermissions('content:manage'),
+  auditLog('delete_town', 'town'),
+  deleteTown
+);
+
+router.delete(
+  '/regions/:regionId',
+  requireAdminPermissions('content:manage'),
+  auditLog('delete_region', 'region'),
+  deleteRegion
 );
 
 export default router;

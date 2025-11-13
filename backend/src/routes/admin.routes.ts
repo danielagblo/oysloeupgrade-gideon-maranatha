@@ -16,6 +16,7 @@ import adminReportsRoutes from "./admin/admin-reports.routes.js";
 import adminSearchRoutes from "./admin/admin-search.routes.js";
 import adminSettingsRoutes from "./admin/admin-settings.routes.js";
 import adminSupportRoutes from "./admin/admin-support.routes.js";
+import adminSubscriptionsRoutes from "./admin/admin-subscriptions.routes.js";
 import adminUploadsRoutes from "./admin/admin-uploads.routes.js";
 import adminUsersRoutes from "./admin/admin-users.routes.js";
 import { getFeedback } from "../controllers/admin-reports.controller.js";
@@ -51,6 +52,8 @@ router.use("/locations", adminLocationsRoutes);
 router.use("/alerts", adminAlertsRoutes);
 
 router.use("/applications", adminApplicationsRoutes);
+
+router.use("/subscriptions", adminSubscriptionsRoutes);
 
 router.use("/search", adminSearchRoutes);
 

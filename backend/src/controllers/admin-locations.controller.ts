@@ -1,11 +1,11 @@
-import { z } from 'zod';
+import type { z } from 'zod';
 import type { NextFunction, Request, Response } from 'express';
 import { AddTownSchema, CreateRegionSchema, UpdateTownSchema } from '../schemas/admin.js';
 import { AdminLocationsService } from '../services/admin-locations.service.js';
 
-type CreateRegionRequest = Zod.infer<typeof CreateRegionSchema>;
-type AddTownRequest = Zod.infer<typeof AddTownSchema>;
-type UpdateTownRequest = Zod.infer<typeof UpdateTownSchema>;
+type CreateRegionRequest = z.infer<typeof CreateRegionSchema>;
+type AddTownRequest = z.infer<typeof AddTownSchema>;
+type UpdateTownRequest = z.infer<typeof UpdateTownSchema>;
 
 const locationsService = new AdminLocationsService();
 
@@ -61,6 +61,43 @@ export const updateTown = async (req: Request, res: Response, next: NextFunction
     res.json({
       success: true,
       data: { town },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteTown = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const regionId = req.params.regionId;
+    const townId = req.params.townId;
+    const result = await locationsService.deleteTown(regionId, townId);
+
+    req.oldValues = { regionId, townId };
+    req.newValues = { deleted: true };
+
+    res.json({
+      success: true,
+      data: result,
+      message: 'Town deleted successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteRegion = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const regionId = req.params.regionId;
+    const result = await locationsService.deleteRegion(regionId);
+
+    req.oldValues = { regionId };
+    req.newValues = { deleted: true };
+
+    res.json({
+      success: true,
+      data: result,
+      message: 'Region deleted successfully',
     });
   } catch (error) {
     next(error);

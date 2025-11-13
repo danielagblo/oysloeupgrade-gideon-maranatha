@@ -193,6 +193,9 @@ export class User {
   @OneToMany("UserReport", (ur: any) => ur.reportedUser)
   reportsFiled?: any[];
 
+  @OneToMany("Subscription", (s: any) => s.user)
+  subscriptions?: any[];
+
   @Column({
     type: "varchar",
     length: 20,

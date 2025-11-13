@@ -297,6 +297,23 @@ export const DownloadApplicationSchema = z.object({
   documentType: z.enum(['cv', 'cover_letter', 'portfolio']),
 });
 
+export const GetSubscriptionsQuerySchema = z.object({
+  page: z.coerce.number().int().positive().optional().default(1),
+  limit: z.coerce.number().int().positive().max(100).optional().default(10),
+  planType: z.enum(['basic', 'business', 'platinum']).optional(),
+  status: z.enum(['active', 'expired', 'cancelled', 'pending']).optional(),
+  userId: z.string().uuid().optional(),
+  dateFrom: z.string().datetime().optional(),
+  dateTo: z.string().datetime().optional(),
+  sortBy: z.string().optional().default('createdAt'),
+  sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
+});
+
+export const UpdateSubscriptionStatusSchema = z.object({
+  status: z.enum(['active', 'expired', 'cancelled']),
+  cancellationReason: z.string().optional(),
+});
+
 export const UpdateApplicationStatusSchema = z.object({
   status: z.enum(['pending', 'reviewed', 'accepted', 'rejected']),
   notes: z.string().optional(),

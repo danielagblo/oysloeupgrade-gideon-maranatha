@@ -2,9 +2,11 @@ import type { NextFunction, Request, Response } from "express";
 import { AppDataSource } from "../config/database.js";
 import { AdModerationHistory } from "../entities/AdModerationHistory.js";
 import { Product } from "../entities/Product.js";
+import { Subscription } from "../entities/Subscription.js";
 import { SupportCase } from "../entities/SupportCase.js";
 import { SupportCaseAssignment } from "../entities/SupportCaseAssignment.js";
 import { User } from "../entities/User.js";
+import { WalletLedger } from "../entities/WalletLedger.js";
 import {
   AdsAnalyticsQuerySchema,
   RevenueAnalyticsQuerySchema,
@@ -19,6 +21,8 @@ export const getDashboardOverview = async (
   try {
     const userRepository = AppDataSource.getRepository(User);
     const productRepository = AppDataSource.getRepository(Product);
+    const walletLedgerRepository = AppDataSource.getRepository(WalletLedger);
+    const subscriptionRepository = AppDataSource.getRepository(Subscription);
 
     const totalUsers = await userRepository.count({
       where: { deleted: false },
@@ -33,6 +37,8 @@ export const getDashboardOverview = async (
     const now = new Date();
     const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const yesterdayStart = new Date(now.getTime() - 48 * 60 * 60 * 1000);
 
     const newUsersToday = await userRepository
       .createQueryBuilder("u")
@@ -40,9 +46,22 @@ export const getDashboardOverview = async (
       .andWhere("u.deleted = :deleted", { deleted: false })
       .getCount();
 
+    const newUsersYesterday = await userRepository
+      .createQueryBuilder("u")
+      .where("u.createdAt >= :yesterdayStart", { yesterdayStart })
+      .andWhere("u.createdAt < :dayAgo", { dayAgo })
+      .andWhere("u.deleted = :deleted", { deleted: false })
+      .getCount();
+
     const newUsersWeek = await userRepository
       .createQueryBuilder("u")
       .where("u.createdAt >= :weekAgo", { weekAgo })
+      .andWhere("u.deleted = :deleted", { deleted: false })
+      .getCount();
+
+    const newUsersMonth = await userRepository
+      .createQueryBuilder("u")
+      .where("u.createdAt >= :monthAgo", { monthAgo })
       .andWhere("u.deleted = :deleted", { deleted: false })
       .getCount();
 
@@ -58,6 +77,9 @@ export const getDashboardOverview = async (
     const suspendedAds = await productRepository.count({
       where: { moderationStatus: "suspended", deleted: false },
     });
+    const takenAds = await productRepository.count({
+      where: { status: "sold", deleted: false },
+    });
 
     const newAdsToday = await productRepository
       .createQueryBuilder("p")
@@ -71,10 +93,25 @@ export const getDashboardOverview = async (
       .andWhere("p.deleted = :deleted", { deleted: false })
       .getCount();
 
-    const totalRevenue = 0;
-    const revenueToday = 0;
-    const revenueWeek = 0;
-    const revenueMonth = 0;
+    // Revenue Summary - count transactions (orders/payments)
+    const ordersToday = await walletLedgerRepository
+      .createQueryBuilder("wl")
+      .where("wl.createdAt >= :dayAgo", { dayAgo })
+      .andWhere("wl.transactionType = :type", { type: "credit" })
+      .getCount();
+
+    const ordersYesterday = await walletLedgerRepository
+      .createQueryBuilder("wl")
+      .where("wl.createdAt >= :yesterdayStart", { yesterdayStart })
+      .andWhere("wl.createdAt < :dayAgo", { dayAgo })
+      .andWhere("wl.transactionType = :type", { type: "credit" })
+      .getCount();
+
+    const ordersWeekAgo = await walletLedgerRepository
+      .createQueryBuilder("wl")
+      .where("wl.createdAt >= :weekAgo", { weekAgo })
+      .andWhere("wl.transactionType = :type", { type: "credit" })
+      .getCount();
 
     const supportCaseRepository = AppDataSource.getRepository(SupportCase);
     const openCases = await supportCaseRepository.count({
@@ -87,13 +124,40 @@ export const getDashboardOverview = async (
       .getCount();
     const avgResponseTime = 0;
 
+    // Subscription statistics
+    const totalSubscriptions = await subscriptionRepository.count();
+    const activeSubscriptions = await subscriptionRepository.count({
+      where: { status: "active" },
+    });
+    const subscriptionsByPlan = await subscriptionRepository
+      .createQueryBuilder("s")
+      .select("s.planType", "planType")
+      .addSelect("COUNT(*)", "count")
+      .where("s.status = :status", { status: "active" })
+      .groupBy("s.planType")
+      .getRawMany();
+
+    const subscriptions = {
+      total: totalSubscriptions,
+      active: activeSubscriptions,
+      byPlan: subscriptionsByPlan.reduce(
+        (acc, curr: { planType: string; count: string }) => {
+          acc[curr.planType] = parseInt(curr.count, 10);
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
+    };
+
     res.json({
       success: true,
       data: {
         users: {
           total: totalUsers,
           newToday: newUsersToday,
+          newYesterday: newUsersYesterday,
           newWeek: newUsersWeek,
+          newMonth: newUsersMonth,
           verified: verifiedUsers,
           active: activeUsers,
         },
@@ -102,14 +166,17 @@ export const getDashboardOverview = async (
           active: activeAds,
           pending: pendingAds,
           suspended: suspendedAds,
+          taken: takenAds,
           newToday: newAdsToday,
           newWeek: newAdsWeek,
         },
+        subscriptions,
         revenue: {
-          total: totalRevenue,
-          today: revenueToday,
-          week: revenueWeek,
-          month: revenueMonth,
+          summary: {
+            todayOrders: ordersToday,
+            yesterday: ordersYesterday,
+            weekAgo: ordersWeekAgo,
+          },
         },
         support: {
           openCases,
@@ -119,7 +186,7 @@ export const getDashboardOverview = async (
       },
     });
   } catch (error) {
-    next(error);
+    _next(error);
   }
 };
 
@@ -398,14 +465,118 @@ export const getRevenueAnalytics = async (
   next: NextFunction
 ) => {
   try {
-    RevenueAnalyticsQuerySchema.parse(req.query);
+    const query = RevenueAnalyticsQuerySchema.parse(req.query);
+    const { dateFrom, dateTo, type } = query;
+
+    const walletLedgerRepository = AppDataSource.getRepository(WalletLedger);
+    const subscriptionRepository = AppDataSource.getRepository(Subscription);
+
+    const startDate = dateFrom
+      ? new Date(dateFrom)
+      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const endDate = dateTo ? new Date(dateTo) : new Date();
+
+    // Revenue from WalletLedger (credit transactions)
+    const walletRevenueQuery = walletLedgerRepository
+      .createQueryBuilder("wl")
+      .select("wl.reason", "source")
+      .addSelect("SUM(wl.amount)", "total")
+      .where("wl.transactionType = :type", { type: "credit" })
+      .andWhere("wl.createdAt >= :startDate", { startDate })
+      .andWhere("wl.createdAt <= :endDate", { endDate });
+
+    if (type) {
+      const reasonMap: Record<string, string> = {
+        subscription: "subscription",
+        commission: "commission",
+        ads: "ad_promotion",
+      };
+      walletRevenueQuery.andWhere("wl.reason = :reason", {
+        reason: reasonMap[type] || type,
+      });
+    }
+
+    const walletRevenueRaw = await walletRevenueQuery
+      .groupBy("wl.reason")
+      .getRawMany();
+
+    const walletRevenue = walletRevenueRaw.map(
+      (r: { source: string; total: string }) => ({
+        source: r.source,
+        amount: parseFloat(r.total || "0"),
+      })
+    );
+
+    // Revenue from Subscriptions
+    const subscriptionRevenueQuery = subscriptionRepository
+      .createQueryBuilder("s")
+      .select("SUM(s.price)", "total")
+      .where("s.status = :status", { status: "active" })
+      .andWhere("s.createdAt >= :startDate", { startDate })
+      .andWhere("s.createdAt <= :endDate", { endDate });
+
+    if (type === "subscription" || !type) {
+      const subscriptionRevenueRaw = await subscriptionRevenueQuery.getRawOne();
+      const subscriptionTotal = parseFloat(
+        subscriptionRevenueRaw?.total || "0"
+      );
+      if (subscriptionTotal > 0) {
+        walletRevenue.push({
+          source: "subscription",
+          amount: subscriptionTotal,
+        });
+      }
+    }
+
+    // Revenue trends over time
+    const trendsRaw = await walletLedgerRepository
+      .createQueryBuilder("wl")
+      .select("DATE_TRUNC('day', wl.createdAt)", "date")
+      .addSelect("SUM(wl.amount)", "total")
+      .where("wl.transactionType = :type", { type: "credit" })
+      .andWhere("wl.createdAt >= :startDate", { startDate })
+      .andWhere("wl.createdAt <= :endDate", { endDate })
+      .groupBy("date")
+      .orderBy("date", "ASC")
+      .getRawMany();
+
+    const trends = trendsRaw.map((r: { date: Date; total: string }) => ({
+      date: r.date.toISOString(),
+      amount: parseFloat(r.total || "0"),
+    }));
+
+    // Calculate total revenue
+    const total = walletRevenue.reduce((sum, item) => sum + item.amount, 0);
+
+    // Simple projection: average daily revenue * 30 days
+    const avgDailyRevenue =
+      trends.length > 0
+        ? trends.reduce((sum, t) => sum + t.amount, 0) / trends.length
+        : 0;
+    const projectionDays = 30;
+    const projections = Array.from({ length: projectionDays }, (_, i) => {
+      const date = new Date(endDate);
+      date.setDate(date.getDate() + i + 1);
+      return {
+        date: date.toISOString(),
+        projectedAmount: avgDailyRevenue,
+      };
+    });
+
+    // Breakdown by source
+    const breakdown = walletRevenue.map((item) => ({
+      source: item.source,
+      amount: item.amount,
+      percentage: total > 0 ? (item.amount / total) * 100 : 0,
+    }));
+
     res.json({
       success: true,
       data: {
-        total: 0,
-        breakdown: [],
-        trends: [],
-        projections: [],
+        total,
+        breakdown,
+        trends,
+        projections,
       },
     });
   } catch (error) {

@@ -2,7 +2,11 @@ import { Router } from 'express';
 import {
   createCategory,
   createSubcategory,
+  deleteCategory,
+  deleteFeature,
+  deleteSubcategory,
   getCategories,
+  reorderCategories,
   updateCategory,
   updateSubcategory,
 } from '../../controllers/admin-categories.controller.js';
@@ -38,6 +42,34 @@ router.put(
   requireAdminPermissions('content:manage'),
   auditLog('update_subcategory', 'subcategory'),
   updateSubcategory
+);
+
+router.put(
+  '/reorder',
+  requireAdminPermissions('content:manage'),
+  auditLog('reorder_categories', 'category'),
+  reorderCategories
+);
+
+router.delete(
+  '/:id',
+  requireAdminPermissions('content:manage'),
+  auditLog('delete_category', 'category'),
+  deleteCategory
+);
+
+router.delete(
+  '/:catId/subcategories/:subId',
+  requireAdminPermissions('content:manage'),
+  auditLog('delete_subcategory', 'subcategory'),
+  deleteSubcategory
+);
+
+router.delete(
+  '/:catId/subcategories/:subId/features/:featureId',
+  requireAdminPermissions('content:manage'),
+  auditLog('delete_feature', 'feature'),
+  deleteFeature
 );
 
 export default router;
